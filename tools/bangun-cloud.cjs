@@ -459,7 +459,16 @@ var jadikanRiwayat = [];
 skrip = skrip.replace(
   `document.getElementById('btnBack').addEventListener('click', kembali);`,
   `document.getElementById('btnBack').addEventListener('click', kembali);
-document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });`,
+document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });
+
+/* Tombol "Buka bulan baru" ada di DUA tempat (pita Dashboard & Pengaturan)
+   dan keduanya baru dibuat saat layarnya digambar. Jadi dipasang lewat satu
+   pendengar klik di seluruh halaman — lebih andal daripada memasang satu-satu
+   (bug nyata: 'Cannot read properties of null'). */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('#pitaBuka, #btnBukaBulan') : null;
+  if (b) bukaBulanBaru();
+});`,
 );
 
 /* 2b2. tombol "Buka Bulan Baru" di layar Pengaturan.
@@ -501,10 +510,7 @@ skrip = skrip.replace(
 skrip = skrip.replace(
   `  document.getElementById('tbSet').textContent = t('Pengaturan');`,
   `  document.getElementById('tbSet').textContent = t('Pengaturan');
-  var pb = document.getElementById('pitaBuka');
-  if (pb) pb.addEventListener('click', bukaBulanBaru);
-  var bb = document.getElementById('btnBukaBulan');
-  if (bb) bb.addEventListener('click', bukaBulanBaru);`,
+`,
 );
 
 /* tambahkan baris menu "Bulan Baru" di daftar Pengaturan */
