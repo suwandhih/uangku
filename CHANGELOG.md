@@ -6,6 +6,44 @@
 
 ---
 
+## 13 Oktober 2026 (malam) — 🔢 Angka saldo tidak disingkat lagi
+
+> **Permintaan Bapak:** *"nilai saldo jangan di singkat karena ini harus akurat..
+> jadi jangan 25,5jt ini tidak memberi informasi yg tepat.. seharusnya ditulis 26.504.730,59"*
+
+### ✅ Yang diperbaiki
+
+| Sebelum | Sesudah |
+|---|---|
+| `26,50 jt` | **`26.504.730,59`** |
+| `264,15 jt` | **`264.145.087,19`** |
+| `28,96 jt` | **`28.651.268,68`** |
+| `613.273` (titipan) | **`613.272,77`** |
+| `awal 23,72 jt` | **`awal 23.717.634,53`** |
+
+**Semua angka sekarang penuh sampai sen** — di Dashboard, Daftar Fund, Daftar Tag,
+Transaksi, dan kepala pemilih fund.
+
+### 📐 Supaya angka panjang tetap muat
+
+Angka penuh lebih panjang daripada angka singkat, jadi hurufnya dikecilkan **sedikit**
+dan angka boleh **patah di titik ribuan** (bukan dipotong `…`).
+
+**Bukti uji — angka `26.504.730,59` tampil UTUH di semua lebar layar:**
+
+| Lebar layar | Kolom | Angka terpotong | Meluber |
+|---|---|---|---|
+| 360 px | 2 | **0** | 0 |
+| 390 px (HP umum) | 2 | **0** | 0 |
+| 430 px | 3 | **0** | 0 |
+| 560 px | 4 | **0** | 0 |
+| 960 px (layar 50% Bapak) | 5 | **0** | 0 |
+
+> ✅ Diuji di **kedua berkas**: `uangku-cloud.html` (yang Bapak pakai) **dan** `uangku.html` —
+> hasilnya sama (aturan C19: satu tampilan = satu perilaku).
+
+---
+
 ## 13 Oktober 2026 (malam) — 🔴 Perbaikan: tag salah membuat saldo beda
 
 > **Keluhan Bapak:** *"setelah saya update transaksi tgl 13 berbeda dengan catatan bank superbank

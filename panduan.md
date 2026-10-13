@@ -249,6 +249,7 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 |---|---|
 | **Bisa melihat DAN mencatat** | Yang dicatat langsung tersimpan di server — dari HP maupun komputer |
 | **Angka pasti sama di mana saja** | Angka memakai aturan yang sama dengan `core/saldo.ts`. Kalau berbeda → itu **bug**, bukan beda tampilan |
+| **Angka selalu penuh** | Saldo ditulis lengkap sampai sen — mis. **26.504.730,59**, bukan "26,50 jt". Supaya Bapak bisa mencocokkan dengan catatan bank |
 | **6 bulan terakhir** | Bisa dipilih di **Pengaturan → Bulan** |
 | **Terang / gelap** | Bisa dipilih di Pengaturan |
 | **Simpan ke layar utama** | Bisa — supaya seperti aplikasi biasa (ada di Pengaturan) |

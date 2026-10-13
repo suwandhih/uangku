@@ -471,6 +471,7 @@ akar semua bug. Di UangKu: **satu logika = satu berkas**. Yang lama **dihapus**.
 | **6** | **PIN ada di DUA tempat** — `.env` (`LB_PIN`) dan secret Cloudflare (`PIN`). Ganti harus **keduanya** |
 | **7** | 🔴 **TAG BAWAAN FORM = tag pertama yang mengunci arah** (mis. `Rumah`), **BUKAN** `Transfer`. `Transfer` adalah tag **dua arah** yang tidak mengunci D/K → kalau Bapak lupa mengganti tag, catatan tersimpan sebagai Transfer dan **hilang dari Ringkasan** (bug nyata 13 Okt 2026) |
 | **8** | 🔴 **Kalau Bapak mengeluh "saldo beda dengan bank"** → **periksa TAG dulu**, bukan rumusnya. Tag `Transfer` pada belanja biasa = penyebab paling sering |
+| **9** | 🔴 **ANGKA SALDO JANGAN DISINGKAT.** Bapak: *"jangan 25,5jt ini tidak memberi informasi yg tepat.. seharusnya ditulis 26.504.730,59"*. `rpRingkas()` sekarang = `rp2()` (angka penuh sampai sen). Angka panjang boleh **patah di titik ribuan**, **jangan** dipotong `…` |
 
 ### ⚠️ Dokumen sumber yang sudah dihapus — di mana isinya sekarang
 
