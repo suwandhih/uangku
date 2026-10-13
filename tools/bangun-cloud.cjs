@@ -497,6 +497,30 @@ skrip = skrip.replace(
   else if (subNama === 'Tentang') {`,
 );
 
+/* 2b2a. 🔴 ANGKA SALDO JANGAN DISINGKAT (permintaan Bapak 13 Okt 2026):
+   *"nilai saldo jangan di singkat karena ini harus akurat.. jadi jangan 25,5jt
+     ini tidak memberi informasi yg tepat.. seharusnya ditulis 26.504.730,59"*
+   Fungsi `rpRingkas` dulu mengubah 26.504.730,59 menjadi "26,50 jt".
+   Sekarang SELALU angka penuh. Nama fungsi dipertahankan supaya semua
+   pemanggilnya (13 tempat) tetap jalan tanpa diubah satu-satu. */
+skrip = skrip.replace(
+  `function rpRingkas(n) {
+  var a = Math.abs(n);
+  if (a >= 1e9) return (n < 0 ? '−' : '') + (a / 1e9).toFixed(2).replace('.', ',') + ' M';
+  if (a >= 1e6) return (n < 0 ? '−' : '') + (a / 1e6).toFixed(2).replace('.', ',') + ' jt';
+  if (a >= 1000) return rp(n);
+  return rp2(n);   /* di bawah 1.000 → tampilkan sen juga (mis. 0,29) */
+}`,
+  `/* 🔴 ANGKA SALDO TIDAK DISINGKAT — harus akurat sampai sen.
+   Permintaan Bapak 13 Okt 2026: *"jangan 25,5jt ini tidak memberi informasi
+   yg tepat.. seharusnya ditulis 26.504.730,59"*.
+   Nama fungsi dipertahankan supaya semua pemanggil tetap jalan. */
+function rpRingkas(n) {
+  return rp2(n);
+}`,
+);
+catat.push('angka saldo: tidak disingkat lagi');
+
 /* 2b2b. 🔴 TAG BAWAAN FORM — jangan 'Transfer'.
    MASALAH NYATA 13 Okt 2026: tag bawaan form adalah 'Transfer' — tag DUA ARAH
    yang TIDAK mengunci D/K. Bapak mencatat 3 transaksi (service ac, ayam mentah,
@@ -685,6 +709,16 @@ const HTML_TAMBAHAN = `
   border:1px solid #ddd; background:none; color:inherit; font-size:12px;
   padding:4px 8px; border-radius:6px; margin-left:auto;
 }
+/* 🔴 ANGKA SALDO PANJANG — jangan terpotong (permintaan Bapak 13 Okt 2026).
+   Angka penuh seperti 26.504.730,59 lebih panjang daripada "26,50 jt".
+   Kartu fund: angka boleh PATAH di titik ribuan (bukan dipotong "…").
+   Kotak 4 kolom & kepala chip: huruf dikecilkan sedikit supaya tetap utuh. */
+.item .val{font-size:10.5px;letter-spacing:-.2px}
+.saldo .grid.k4 .cell .v{font-size:11.5px;letter-spacing:-.3px}
+.saldo .grid .cell .v{font-size:12px;letter-spacing:-.3px}
+.chips .kepala .pn{font-size:10px;letter-spacing:-.2px}
+.item .sub{font-size:8.5px}
+
 /* pita peringatan "bulan ini belum dibuka" — hitam-putih, warna hanya untuk peringatan */
 .pita-perlu{
   display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0;
