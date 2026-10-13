@@ -291,6 +291,45 @@ const TAMBAHAN = `
    14. CLOUD — pemuat data, gerbang PIN, layar Riwayat
    ============================================================ */
 
+/** Bulan berikutnya dari sebuah kunci 'YYYY-MM'. */
+function bulanBerikut(kunci) {
+  var p = String(kunci).split('-');
+  var th = Number(p[0]), bl = Number(p[1]);
+  if (bl === 12) { th += 1; bl = 1; } else { bl += 1; }
+  return th + '-' + (bl < 10 ? '0' + bl : String(bl));
+}
+
+/** Nama bulan yang enak dibaca dari kunci 'YYYY-MM'. */
+function namaBulanKunci(kunci) {
+  var p = String(kunci).split('-');
+  var nm = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
+    'Agustus','September','Oktober','November','Desember'];
+  return nm[Number(p[1]) - 1] + ' ' + p[0];
+}
+
+/**
+ * Buka bulan baru — saldo awal diambil dari saldo akhir bulan terakhir.
+ * Tanpa ini, mulai tanggal 1 bulan depan Bapak TIDAK BISA mencatat,
+ * karena bulan baru belum punya saldo awal.
+ */
+function bukaBulanBaru() {
+  if (!BULAN.length) { alert(t('Belum ada data di server')); return; }
+  var terakhir = BULAN[0].kunci;
+  var tujuan = bulanBerikut(terakhir);
+  if (!confirm(t('Buka bulan baru?') + '\\n\\n' + namaBulanKunci(terakhir) +
+      ' → ' + namaBulanKunci(tujuan) + '\\n' +
+      t('Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci.'))) return;
+
+  panggilServer('bukaBulan', { bulan: tujuan }).then(function (r) {
+    return muatDariServer().then(function () { return r; });
+  }).then(function (r) {
+    alert(r.sudahAda
+      ? t('Bulan itu sudah siap') + ': ' + namaBulanKunci(r.bulan)
+      : t('Bulan baru siap') + ': ' + namaBulanKunci(r.bulan) + '\\n' +
+        r.fund + ' fund · total ' + rp2(r.total) + ' Rp');
+  }).catch(function (e) { alert(e.message); });
+}
+
 /** Ambil seluruh data bulan dari server, lalu gambar ulang seperti biasa. */
 function muatDariServer() {
   return panggilServer('bulan', { batas: CLOUD.bulanMaks }).then(function (r) {
@@ -306,6 +345,29 @@ function muatDariServer() {
     gambarUlang();
     return true;
   });
+}
+
+/**
+ * Apakah bulan berjalan sudah punya saldo awal?
+ * Kalau belum, Bapak TIDAK BISA mencatat — jadi harus diberi tahu.
+ * Dibandingkan dengan tanggal hari ini (WIB), bukan tanggal komputer.
+ */
+function bulanBerjalanBelumSiap() {
+  if (!BULAN.length) return null;
+  var kini = new Date(Date.now() + 7 * 3600 * 1000);
+  var kunci = kini.getUTCFullYear() + '-' +
+    (kini.getUTCMonth() + 1 < 10 ? '0' : '') + (kini.getUTCMonth() + 1);
+  var ada = BULAN.some(function (b) { return b.kunci === kunci; });
+  return ada ? null : kunci;
+}
+
+/** Pita peringatan di Dashboard — hanya muncul kalau memang perlu. */
+function pitaBulanBaru() {
+  var kurang = bulanBerjalanBelumSiap();
+  if (!kurang) return '';
+  return '<div class="pita-perlu">⚠️ ' + t('Bulan ini belum dibuka') + ': ' +
+    esc(namaBulanKunci(kurang)) + ' — ' + t('buka dulu supaya bisa mencatat') +
+    '<button class="btn-kecil" id="pitaBuka">' + t('Buka sekarang') + '</button></div>';
 }
 
 /* ---------- gerbang PIN ---------- */
@@ -397,7 +459,72 @@ var jadikanRiwayat = [];
 skrip = skrip.replace(
   `document.getElementById('btnBack').addEventListener('click', kembali);`,
   `document.getElementById('btnBack').addEventListener('click', kembali);
-document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });`,
+document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });
+document.getElementById('btnBukaBulan').addEventListener('click', bukaBulanBaru);`,
+);
+
+/* 2b2. tombol "Buka Bulan Baru" di layar Pengaturan.
+   Tanpa ini, mulai tanggal 1 bulan depan Bapak tidak bisa mencatat. */
+skrip = skrip.replace(
+  `      '<div class="r"><span class="k">Bulan</span><span class="v">' + BULAN.length + ' bulan</span></div>' +`,
+  `      '<div class="r"><span class="k">Bulan</span><span class="v">' + BULAN.length + ' bulan</span></div>' +`,
+);
+skrip = skrip.replace(
+  `  else if (subNama === 'Tentang') {`,
+  `  else if (subNama === 'Bulan Baru') {
+    var terakhir = BULAN.length ? BULAN[0].kunci : '';
+    var tujuan = terakhir ? bulanBerikut(terakhir) : '';
+    h += '<div class="dl">' +
+      '<div class="r"><span class="k">' + t('Bulan terakhir') + '</span><span class="v">' +
+        esc(terakhir ? namaBulanKunci(terakhir) : '—') + '</span></div>' +
+      '<div class="r"><span class="k">' + t('Bulan berikutnya') + '</span><span class="v">' +
+        esc(tujuan ? namaBulanKunci(tujuan) : '—') + '</span></div>' +
+      '</div>';
+    h += '<div class="sec">' + t('Cara kerja') + '</div>' +
+      '<div class="hint">' + t('Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci supaya tidak berubah lagi.') +
+      '<br><br>' + t('Lakukan ini sekali setiap awal bulan, sebelum mencatat transaksi pertama.') + '</div>';
+    h += '<div class="tl-card"><button class="btn-utama" id="btnBukaBulan" style="width:100%">' +
+      t('Buka bulan baru') + '</button></div>';
+  }
+  else if (subNama === 'Tentang') {`,
+);
+
+/* 2b3. pita peringatan "bulan ini belum dibuka" di paling atas Dashboard.
+   Tanpa ini Bapak baru sadar tidak bisa mencatat setelah mencoba. */
+skrip = skrip.replace(
+  `  h += '<div class="sec">' + t('Sumber fund · saldo akhir') + '</div>' +
+    kisiFund(document.getElementById('dashIsi'));`,
+  `  h += pitaBulanBaru();
+  h += '<div class="sec">' + t('Sumber fund · saldo akhir') + '</div>' +
+    kisiFund(document.getElementById('dashIsi'));`,
+);
+/* tombol di dalam pita harus dipasang setelah Dashboard digambar */
+skrip = skrip.replace(
+  `  document.getElementById('tbSet').textContent = t('Pengaturan');`,
+  `  document.getElementById('tbSet').textContent = t('Pengaturan');
+  var pb = document.getElementById('pitaBuka');
+  if (pb) pb.addEventListener('click', bukaBulanBaru);`,
+);
+
+/* tambahkan baris menu "Bulan Baru" di daftar Pengaturan */
+skrip = skrip.replace(
+  `  { n: 'Daftar Istilah', i: '📖', s: 'padanan istilah keuangan' },`,
+  `  { n: 'Bulan Baru', i: '📅', s: 'siapkan saldo awal bulan depan' },
+  { n: 'Daftar Istilah', i: '📖', s: 'padanan istilah keuangan' },`,
+);
+/* terjemahan nama menu baru */
+skrip = skrip.replace(
+  `'Bahasa':'Language','Daftar Istilah':'Glossary','Tentang':'About',`,
+  `'Bahasa':'Language','Daftar Istilah':'Glossary','Tentang':'About',
+  'Bulan Baru':'New month','Bulan terakhir':'Last month','Bulan berikutnya':'Next month',
+  'Buka bulan baru':'Open new month','Buka bulan baru?':'Open a new month?',
+  'Bulan baru siap':'New month is ready','Bulan itu sudah siap':'That month is already ready',
+  'Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci.':'The opening balance of the new month comes from the closing balance of the last month, then the old month is locked.',
+  'Lakukan ini sekali setiap awal bulan, sebelum mencatat transaksi pertama.':'Do this once at the start of each month, before recording the first transaction.',
+  'Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci supaya tidak berubah lagi.':'The opening balance of the new month comes from the closing balance of the last month, then the old month is locked so it cannot change again.',
+  'Bulan ini belum dibuka':'This month is not open yet',
+  'buka dulu supaya bisa mencatat':'open it first so you can record',
+  'Buka sekarang':'Open now',`,
 );
 
 /* pemuat awal: ganti blok "13. MULAI" agar menunggu server */
@@ -493,6 +620,13 @@ const HTML_TAMBAHAN = `
   border:1px solid #ddd; background:none; color:inherit; font-size:12px;
   padding:4px 8px; border-radius:6px; margin-left:auto;
 }
+/* pita peringatan "bulan ini belum dibuka" — hitam-putih, warna hanya untuk peringatan */
+.pita-perlu{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0;
+  padding:8px 10px; border:1px solid currentColor; border-radius:8px;
+  font-size:13px; line-height:1.35;
+}
+.pita-perlu .btn-kecil{margin-left:auto}
 @media (prefers-color-scheme: dark){
   #gerbang{background:#000; color:#eee}
   .gerbang-kartu{border-color:#333}

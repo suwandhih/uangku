@@ -10,6 +10,7 @@
    BACA  : bulan · dashboard · fund · tag · snapshot · transaksi · saldo
            · ringkasan · riwayat
    TULIS : catat (1 atau banyak jurnal) · ubah · batalkan · pulihkan
+           · bukaBulan (siapkan saldo awal bulan baru)
    ============================================================ */
 
 const CORS = {
@@ -60,8 +61,8 @@ function angka(v) {
 
 function bulat(v) {
   const n = Number(v);
-  if (!Number.isInteger(n)) throw new Error("Angka bulat tidak sah");
-  return String(n);
+  if (!Number.isFinite(n)) throw new Error("Angka bulat tidak sah");
+  return String(Math.trunc(n));
 }
 
 /** Waktu lokal WIB (UTC+7) — sama seperti datetime('now','localtime') di SQLite. */
@@ -379,6 +380,97 @@ async function aksiBulan(env, skema, isi) {
 }
 
 /**
+ * bukaBulan — siapkan bulan baru supaya bisa dicatat.
+ *
+ * 🔴 KENAPA PERLU: saldo awal tiap bulan disimpan di `monthly_snapshots`.
+ *    Kalau bulan baru belum punya snapshot, halaman tidak bisa membukanya
+ *    (daftar bulan diambil dari snapshot) → Bapak TIDAK BISA mencatat.
+ *
+ * Cara kerja (sama seperti "Proses Akhir Bulan" di sistem lama):
+ *   1. ambil bulan terakhir yang punya snapshot
+ *   2. hitung saldo akhir bulan itu per fund (rumus core/saldo.ts)
+ *   3. tulis sebagai saldo_awal bulan baru
+ *   4. kunci bulan lama (is_locked = 1)
+ *
+ * Aman dipanggil berulang: kalau bulan tujuan sudah ada, tidak diapa-apakan.
+ */
+async function aksiBukaBulan(env, skema, isi) {
+  const tujuan = bulanValid(isi.bulan);
+  if (!tujuan) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
+
+  /* bulan terakhir yang sudah punya snapshot */
+  const terakhir = await jalankanSQL(env, `
+    SELECT year, month FROM ${skema}.monthly_snapshots
+    GROUP BY year, month ORDER BY year DESC, month DESC LIMIT 1`);
+  if (!terakhir.length) return balas({ ok: false, error: "Belum ada snapshot sama sekali" }, 400);
+
+  const dari = { tahun: Number(terakhir[0].year), bulan: Number(terakhir[0].month) };
+  const kunciDari = `${dari.tahun}-${String(dari.bulan).padStart(2, "0")}`;
+
+  if (kunciDari === tujuan.kunci) {
+    return balas({ ok: true, sudahAda: true, bulan: tujuan.kunci, pesan: "Bulan itu sudah siap" });
+  }
+  if (kunciDari > tujuan.kunci) {
+    return balas({ ok: false, error: `Bulan ${tujuan.kunci} lebih lama dari ${kunciDari} — tidak bisa dibuka` }, 400);
+  }
+
+  /* bulan tujuan sudah ada? → tidak perlu apa-apa */
+  const sudah = await jalankanSQL(env, `
+    SELECT COUNT(*)::int AS n FROM ${skema}.monthly_snapshots
+    WHERE year = ${bulat(tujuan.y)} AND month = ${bulat(tujuan.b)}`);
+  if (Number(sudah[0].n) > 0) {
+    return balas({ ok: true, sudahAda: true, bulan: tujuan.kunci, pesan: "Bulan itu sudah siap" });
+  }
+
+  /* saldo akhir bulan terakhir = saldo awal bulan baru */
+  const akhir = new Date(Date.UTC(dari.tahun, dari.bulan, 0)).getUTCDate();
+  const tanggalDari = `${kunciDari}-01`;
+  const tanggalSampai = `${kunciDari}-${String(akhir).padStart(2, "0")}`;
+
+  const saldo = await jalankanSQL(env, `
+    SELECT f.id,
+      COALESCE(s.saldo_awal, 0)
+      + COALESCE(SUM(CASE WHEN j.type = 'D' THEN t.amount ELSE 0 END), 0)
+      - COALESCE(SUM(CASE WHEN j.type = 'K' THEN t.amount ELSE 0 END), 0) AS saldo
+    FROM ${skema}.source_funds f
+    LEFT JOIN ${skema}.monthly_snapshots s
+      ON s.source_fund_id = f.id AND s.year = ${bulat(dari.tahun)} AND s.month = ${bulat(dari.bulan)}
+    LEFT JOIN ${skema}.transactions t
+      ON t.source_fund_id = f.id
+      AND t.date >= ${teks(tanggalDari)} AND t.date <= ${teks(tanggalSampai)}
+      AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0
+    LEFT JOIN ${skema}.journals j ON j.id = t.journal_id
+    WHERE f.deleted_at IS NULL
+    GROUP BY f.id, s.saldo_awal
+    ORDER BY f.id`);
+
+  if (!saldo.length) return balas({ ok: false, error: "Tidak ada fund aktif" }, 400);
+
+  const sekarang = waktuSekarang();
+  const perintah = saldo.map((s) =>
+    `INSERT INTO ${skema}.monthly_snapshots ` +
+    `(source_fund_id, year, month, saldo_awal, saldo_akhir, is_locked) VALUES (` +
+    `${bulat(s.id)}, ${bulat(tujuan.y)}, ${bulat(tujuan.b)}, ` +
+    `${angka(r2(s.saldo))}, 0, 0)`);
+
+  /* kunci bulan lama — supaya tidak bisa diubah lagi (aturan: bulan terkunci) */
+  perintah.push(
+    `UPDATE ${skema}.monthly_snapshots SET is_locked = 1, locked_at = ${teks(sekarang)}, locked_by = 'hp' ` +
+    `WHERE year = ${bulat(dari.tahun)} AND month = ${bulat(dari.bulan)}`);
+
+  perintah.push(catatRiwayat(skema, "CREATE", 0, null,
+    { aksi: "bukaBulan", dari: kunciDari, ke: tujuan.kunci, fund: saldo.length }));
+
+  await jalankanSekaligus(env, perintah);
+
+  return balas({
+    ok: true, sudahAda: false, bulan: tujuan.kunci, dari: kunciDari,
+    fund: saldo.length,
+    total: r2(saldo.reduce((s, x) => s + Number(x.saldo), 0)),
+  });
+}
+
+/**
  * dashboard — SELURUH data satu bulan (atau beberapa bulan sekaligus).
  * Bentuk hasilnya SAMA dengan yang dipakai halaman UangKu
  * (lihat tools/siapkan-data.cjs) supaya tampilan tidak perlu diubah.
@@ -633,6 +725,7 @@ export default {
     try {
       switch (isi.aksi) {
         case "bulan":      return await aksiBulan(env, skema, isi);
+        case "bukaBulan":  return await aksiBukaBulan(env, skema, isi);
         case "dashboard":  return await aksiDashboard(env, skema, isi);
         case "fund":       return await aksiFund(env, skema);
         case "tag":        return await aksiTag(env, skema);

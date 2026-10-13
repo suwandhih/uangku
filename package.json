@@ -13,7 +13,9 @@
     "uji-periode": "tsx server/uji/uji-periode.ts",
     "uji-uang": "tsx server/uji/uji-uang.ts",
     "uji-bunga": "tsx server/uji/uji-bunga.ts",
-    "uji": "npm run uji-uang && npm run uji-periode && npm run uji-bunga && npm run uji-saldo"
+    "uji": "npm run uji-uang && npm run uji-periode && npm run uji-bunga && npm run uji-saldo",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

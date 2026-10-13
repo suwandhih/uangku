@@ -40,3 +40,8 @@ desktop.ini
 
 # --- catatan sementara AI (aturan G/H2 agents.md) ---
 catatanAI.md
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
