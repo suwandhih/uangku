@@ -469,6 +469,8 @@ akar semua bug. Di UangKu: **satu logika = satu berkas**. Yang lama **dihapus**.
 | **4** | **Jangan menaruh angka saldo asli / nama fund asli** di berkas yang masuk repo publik (termasuk alat pemeriksa) |
 | **5** | **`uangku.html` · `lab-uang2.html` · `data/` · `.env`** → 🔴 **DILARANG** masuk repo (sudah dijaga `.gitignore`) |
 | **6** | **PIN ada di DUA tempat** — `.env` (`LB_PIN`) dan secret Cloudflare (`PIN`). Ganti harus **keduanya** |
+| **7** | 🔴 **TAG BAWAAN FORM = tag pertama yang mengunci arah** (mis. `Rumah`), **BUKAN** `Transfer`. `Transfer` adalah tag **dua arah** yang tidak mengunci D/K → kalau Bapak lupa mengganti tag, catatan tersimpan sebagai Transfer dan **hilang dari Ringkasan** (bug nyata 13 Okt 2026) |
+| **8** | 🔴 **Kalau Bapak mengeluh "saldo beda dengan bank"** → **periksa TAG dulu**, bukan rumusnya. Tag `Transfer` pada belanja biasa = penyebab paling sering |
 
 ### ⚠️ Dokumen sumber yang sudah dihapus — di mana isinya sekarang
 

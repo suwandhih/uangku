@@ -6,6 +6,56 @@
 
 ---
 
+## 13 Oktober 2026 (malam) — 🔴 Perbaikan: tag salah membuat saldo beda
+
+> **Keluhan Bapak:** *"setelah saya update transaksi tgl 13 berbeda dengan catatan bank superbank
+> dan juga berbeda dengan keuangan"*
+
+### 🔍 Apa yang terjadi
+
+Bapak mencatat **3 transaksi** dari HP (service ac, ayam mentah, makan siang) — tetapi **tagnya
+tidak diganti**, jadi tersimpan sebagai **`Transfer`**.
+
+**Kenapa itu membuat saldo beda:**
+
+| Akibat | Penjelasan |
+|---|---|
+| **Tidak muncul di Ringkasan** | Tag `Transfer` **sengaja dikecualikan** dari Ringkasan bulan ini (uang pindah tempat, bukan belanja) |
+| **Saldo terlihat beda** | Di Ringkasan, pengeluaran itu "hilang" — padahal di catatan bank tetap keluar |
+
+**Akar masalahnya:** tag bawaan form adalah **`Transfer`** — tag **dua arah** yang **tidak mengunci D/K**.
+Jadi kalau Bapak lupa mengganti tag, catatannya langsung tersimpan sebagai Transfer tanpa peringatan apa pun.
+
+### ✅ Yang diperbaiki
+
+| # | Perbaikan |
+|---|---|
+| 1 | **3 transaksi diperbaiki** — tag & jumlah disamakan dengan `keuangan.db` |
+| 2 | **Tag bawaan form diganti** — sekarang tag pertama yang **mengunci arah** (mis. `Rumah`), **bukan** `Transfer` |
+| 3 | **Peringatan baru** di layar Catat: kalau ada baris bertag `Transfer`, muncul tulisan *"Tag Transfer artinya uang PINDAH TEMPAT — tidak dihitung di Ringkasan bulan ini. Kalau ini belanja biasa, ganti tagnya."* |
+| 4 | **Salinan kerja disegarkan** dari `keuangan.db` (1.892 transaksi) |
+
+### 📊 Hasil pemeriksaan
+
+```
+=== 18 FUND — Oktober 2026 ===
+Superbank                26.504.730,59  =  26.504.730,59   SAMA
+SeaBank                     231.913,00  =     231.913,00   SAMA
+... (18 fund, semuanya SAMA)
+TOTAL                   293.409.628,64  = 293.409.628,64   SAMA
+
+✅ SEMUA 18 FUND COCOK
+✅ IDENTIK 100% — 15 tabel, 18 fund. Data server = c:\data\keuangan
+```
+
+### ⚠️ Yang perlu Bapak tahu
+
+- 🔴 **Selalu ganti tag** sebelum menyimpan. Tag bawaan sekarang `Rumah` — **bukan** tag yang benar untuk semua hal
+- 💡 Kalau muncul peringatan **"Tag Transfer artinya uang PINDAH TEMPAT"** → berarti tagnya belum diganti
+- 📌 Tag yang benar: **Rumah** (perbaikan rumah) · **Pribadi** (makan, jajan) · **Pet** (hewan) · **Mobil** · **biaya** (admin) · **Pendapatan** (uang masuk)
+
+---
+
 ## 13 Oktober 2026 — 🎉 UangKu SIAP DIPAKAI SETIAP HARI
 
 > **Alamat:** https://suwandhih.github.io/uangku/uangku-cloud.html

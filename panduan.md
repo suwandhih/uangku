@@ -59,12 +59,36 @@ Transaksi  →  tekan tombol ＋ (kanan atas)  →  isi  →  Simpan
 | **Tanggal** | Sudah terisi hari ini. Bisa diganti |
 | **Keterangan** | Mis. "makan siang", "biaya admin" |
 | **Fund** | Kotak uangnya (Superbank, SeaBank, …) |
-| **Tag** | Untuk apa — ini yang menentukan artinya |
+| **Tag** | Untuk apa — ini yang menentukan artinya. 🔴 **WAJIB diganti** — jangan dibiarkan |
 | **D / K** | Masuk (D) atau keluar (K). **Untuk sebagian besar tag, ini terisi sendiri** |
 | **Jumlah** | Angkanya saja, mis. `30000` |
 
 > 💡 **Satu tindakan boleh berisi beberapa baris.** Contoh: transfer Superbank → SeaBank
 > = 2 baris (Superbank keluar, SeaBank masuk). Tekan **"＋ Tambah baris jurnal"**.
+
+### 🔴 PENTING — jangan lupa ganti TAG
+
+Tag bawaan form adalah **`Rumah`**. Itu **bukan** tag yang benar untuk semua hal.
+**Selalu ganti tag** sesuai keperluan:
+
+| Kalau belanjanya untuk… | Pilih tag |
+|---|---|
+| Perbaikan rumah, service AC, perabot | **🏠 Rumah** |
+| Makan, jajan, pakaian, obat | **👤 Pribadi** |
+| Hewan (ayam, kucing, pakan) | **🐕 Pet** |
+| Mobil (bensin, servis) | **🚗 Mobil** |
+| Biaya admin bank, transfer fee | **✂️ biaya** |
+| Uang masuk (gaji, jual) | **💵 Pendapatan** |
+| Bunga bank | **🌸 Bunga** |
+| Pajak | **🧾 Pajak** |
+| Uang pindah antar kotak sendiri | **🔄 Transfer** |
+
+> ⚠️ **Kalau muncul tulisan kuning** *"Tag Transfer artinya uang PINDAH TEMPAT — tidak dihitung
+> di Ringkasan bulan ini"* → berarti tagnya **belum diganti**. Ganti dulu sebelum menyimpan.
+
+> 🔴 **Kenapa penting:** tag `Transfer` **sengaja tidak dihitung** di Ringkasan (karena uang
+> pindah tempat, bukan belanja). Kalau belanja biasa diberi tag Transfer, pengeluaran itu
+> **hilang dari Ringkasan** — dan saldo terlihat beda dengan catatan bank.
 
 **Kalau salah?** Di daftar bawah ada tombol **↩️ Batalkan** pada tiap baris.
 Saldo langsung kembali seperti sebelum transaksi itu.
@@ -243,6 +267,8 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 | Angka beda dengan komputer | **Laporkan** — itu bug (aturan C18) |
 | Tampilan terpotong | Putar HP / kecilkan huruf di Chrome, lalu laporkan |
 | Salah mencatat | Buka **Transaksi → Riwayat → ↩️ Pulihkan**, atau **Batalkan** di daftar transaksi |
+| **Saldo beda dengan catatan bank** | Cek tag transaksinya — kalau tertulis **Transfer** padahal belanja biasa, tagnya salah. Minta AI memperbaiki |
+| Muncul tulisan kuning soal tag Transfer | Tagnya belum diganti — pilih tag yang benar sebelum menyimpan |
 
 ---
 
