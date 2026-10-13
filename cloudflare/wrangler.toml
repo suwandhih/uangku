@@ -6,7 +6,8 @@ compatibility_date = "2026-10-01"
 [vars]
 LB_API_HOST = "https://sage.cloud.layerbase.dev"
 LB_DB_ID = "3169824f-0de6-449f-8715-f5b1c697ac9a"
-SKEMA = "cadangan_202610081330"
+# Skema KERJA (bukan cadangan) — dibuat oleh tools/siapkan-cloud.cjs
+SKEMA = "uangku"
 
 # Secret (diisi lewat `wrangler secret put`, BUKAN di berkas ini):
 #   LB_API_KEY  — kunci per-database Layerbase
