@@ -327,6 +327,83 @@ async function aksiPulihkan(env, skema, isi) {
    AKSI BACA
    ------------------------------------------------------------------ */
 
+/**
+ * saldo — SALDO TIAP FUND untuk satu bulan.
+ * 🔴 Rumus WAJIB sama dengan server/core/saldo.ts:
+ *      Saldo = Saldo Awal + Debit − Kredit
+ *    Jangan ubah salah satu tanpa yang lain.
+ */
+async function aksiSaldo(env, skema, isi) {
+  const b = bulanValid(isi.bulan);
+  if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
+
+  const r = await jalankanSQL(env, `
+    SELECT f.id AS "fundId", f.name AS nama, f.sort_order AS "sortOrder",
+           f.is_blocked AS "isBlocked", f.is_titipan AS "isTitipan",
+           f.minimum_saldo AS "minimumSaldo",
+           COALESCE(s.saldo_awal, 0) AS "saldoAwal",
+           COALESCE(SUM(CASE WHEN j.type = 'D' THEN t.amount ELSE 0 END), 0) AS debit,
+           COALESCE(SUM(CASE WHEN j.type = 'K' THEN t.amount ELSE 0 END), 0) AS kredit,
+           COUNT(t.id) AS "jumlahTransaksi"
+    FROM ${skema}.source_funds f
+    LEFT JOIN ${skema}.monthly_snapshots s
+           ON s.source_fund_id = f.id AND s.year = ${bulat(b.y)} AND s.month = ${bulat(b.b)}
+    LEFT JOIN ${skema}.transactions t
+           ON t.source_fund_id = f.id
+          AND t.date >= ${teks(b.awal)} AND t.date <= ${teks(b.akhir)}
+          AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0
+    LEFT JOIN ${skema}.journals j ON j.id = t.journal_id
+    WHERE f.deleted_at IS NULL
+    GROUP BY f.id, f.name, f.sort_order, f.is_blocked, f.is_titipan, f.minimum_saldo, s.saldo_awal
+    ORDER BY f.sort_order, f.id`);
+
+  const data = r.map((x) => {
+    const saldoAwal = Number(x.saldoAwal), debit = Number(x.debit), kredit = Number(x.kredit);
+    return {
+      fundId: Number(x.fundId), nama: x.nama, sortOrder: Number(x.sortOrder),
+      isBlocked: Number(x.isBlocked) === 1, isTitipan: Number(x.isTitipan) === 1,
+      minimumSaldo: x.minimumSaldo === null ? null : Number(x.minimumSaldo),
+      saldoAwal, debit, kredit,
+      saldo: saldoAwal + debit - kredit, // ← rumus sama dengan core/saldo.ts
+      jumlahTransaksi: Number(x.jumlahTransaksi)
+    };
+  });
+
+  return balas({ ok: true, bulan: isi.bulan, data });
+}
+
+/**
+ * ringkasan — MASUK / KELUAR bulan ini.
+ * 🔴 5 tag DIKECUALIKAN (agents.md Bagian 9):
+ *      Transfer · Koreksi · Pinjam · Hutang · Reimburse
+ *    Pajak & Bunga TIDAK dikecualikan.
+ */
+async function aksiRingkasan(env, skema, isi) {
+  const b = bulanValid(isi.bulan);
+  if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
+
+  const kecuali = ["Transfer", "Koreksi", "Pinjam", "Hutang", "Reimburse"];
+  const daftar = kecuali.map((n) => teks(n)).join(",");
+
+  const r = await jalankanSQL(env, `
+    SELECT
+      COALESCE(SUM(CASE WHEN j.type = 'D' THEN t.amount ELSE 0 END), 0) AS masuk,
+      COALESCE(SUM(CASE WHEN j.type = 'K' THEN t.amount ELSE 0 END), 0) AS keluar,
+      COUNT(t.id) AS jumlah
+    FROM ${skema}.transactions t
+    JOIN ${skema}.journals j ON j.id = t.journal_id
+    WHERE t.date >= ${teks(b.awal)} AND t.date <= ${teks(b.akhir)}
+      AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0
+      AND (t.tag IS NULL OR t.tag NOT IN (${daftar}))`);
+
+  const x = r[0] || { masuk: 0, keluar: 0, jumlah: 0 };
+  const masuk = Number(x.masuk), keluar = Number(x.keluar);
+  return balas({
+    ok: true, bulan: isi.bulan,
+    data: { masuk, keluar, selisih: masuk - keluar, jumlah: Number(x.jumlah) }
+  });
+}
+
 async function aksiRiwayat(env, skema, isi) {
   const batas = Math.min(Math.max(Number(isi.batas) || 30, 1), 200);
   const r = await jalankanSQL(env,
@@ -390,6 +467,12 @@ export default {
 
         case "riwayat":
           return await aksiRiwayat(env, skema, isi);
+
+        case "saldo":
+          return await aksiSaldo(env, skema, isi);
+
+        case "ringkasan":
+          return await aksiRingkasan(env, skema, isi);
 
         /* ---------- TULIS ---------- */
         case "catat":
