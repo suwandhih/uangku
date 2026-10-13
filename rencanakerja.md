@@ -55,6 +55,7 @@
 |---|---|---|---|
 | **K33** | 🎉 **PINDAH KE SERVER + AKTIFKAN UANGKU** (perintah Bapak 13 Okt: *"tuntaskan semuanya.. saya mau hasil akhir dengan data sama seperti c:\data\keuangan"*) | ✅ **Data pindah** — 1.889 tx · 21 fund · 20 tag · 225 snapshot · 63 rutin · 1.817 riwayat<br/>✅ **IDENTIK 100%** dibuktikan `tools/cek-sama-cloud.cjs` (sidik jari SHA-256 seluruh baris+kolom, 15 tabel, 18 saldo fund)<br/>✅ **Halaman `uangku-cloud.html`** — seluruh kode tampilan `uangku.html` dipakai apa adanya; hanya sumber data & tempat simpan yang berganti<br/>✅ **Gerbang PIN** (salah/kosong → 401) · **Riwayat** · **Catat multi-jurnal** · **Batalkan** · **Pulihkan**<br/>✅ **Buka Bulan Baru** + pita pengingat di Dashboard (tanpa ini mulai 1 Nov tidak bisa mencatat)<br/>✅ **GitHub Pages** aktif · repo publik **tanpa data keuangan & tanpa kunci**<br/>✅ Tampilan **identik** dengan versi lama di 360/390/430/560/960 px<br/>✅ 99 uji lolos · `npm run cek` bersih<br/>⚠️ Belum ada pembatas percobaan PIN<br/>⬜ Bapak tes di HP Android sungguhan | 13 Okt |
 | **K34** | 🧾 **Form Catat jadi SATU BARIS** (permintaan Bapak 13 Okt: *"tolong dibuat 1 baris .. memungkinkankah ?"*) | ✅ Susunan **fund · tag · D/K · harga · ✕** dalam **satu baris**<br/>✅ **Fund disingkat 3 huruf** (`SPB` `SEA` `CEL` …) — 18 fund punya singkatan; **nilai `<option>` tetap nama lengkap** supaya data & laporan tidak berubah<br/>✅ Tag tetap emoji+3 huruf · D/K tetap 1 huruf · **harga mengambil seluruh sisa lebar**<br/>✅ `aturLebarBaris()` menghitung lebar dari **lebar baris yang diukur** (bukan lebar jendela) · kelas `tl-sempit` merapatkan jarak & padding di layar ≤ 340 px<br/>✅ `formatJml()` memunculkan titik ribuan saat mengetik (`26504730` → `26.504.730`)<br/>✅ Diuji **256 / 288 / 312 / 344 / 448 / 768 px** (viewport nyata): **1 baris · angka utuh · tag utuh · 0 meluber**<br/>✅ Diuji juga di halaman **live** GitHub Pages — hasil sama<br/>✅ `uangku-cloud.html` dibangun ulang & dikirim (`bcb368e`) | 13 Okt |
+| **K37** | 🔁 **RANCANGAN PLUGIN RUTIN** — order Bapak 13 Okt 2026 (4 butir). **STATUS: 📝 DICATAT, MENUNGGU ABA-GABA "proses"** (aturan B7) | Lihat **Bagian 18** di bawah untuk rincian lengkap + pertanyaan terbuka | 13 Okt |
 | **K36** | 💰 **Angka selalu 2 desimal** (pertanyaan Bapak 13 Okt: *"apakah angka di sediakan desimal 2 digit minimal"* → **Ya**) | ✅ `rp2()` **selalu** menulis 2 desimal — `10.000` → `10.000,00` · `0` → `0,00`<br/>✅ Berlaku di **semua tempat**: kartu fund · total semua fund · ringkasan bulan · daftar transaksi · riwayat · bunga & pajak · saldo awal<br/>✅ Kotak angka melengkapi `,00` saat **selesai** mengetik (`change`), **bukan** saat mengetik — supaya tidak mengganggu<br/>✅ Uji: `30000` → `30.000,00` · `30000,5` → `30.000,50` · `0,05` → `0,05` · `100000000` → `100.000.000,00`<br/>🔴 **Bug nyata ditemukan & diperbaiki:** handler `resize` **tidak** memanggil `gbrDash()` → jumlah kolom kartu fund tetap memakai lebar layar **sebelumnya** → pernah jadi **5 kolom @ 50 px** sehingga angka saldo **patah 2 baris**<br/>✅ Diuji **256 / 288 / 312 / 344 / 448 / 768 px**: 1 baris · 0 terpotong · 0 meluber · **0 angka tanpa desimal**<br/>✅ Diuji juga di halaman **live** GitHub Pages — hasil sama<br/>✅ `uangku-cloud.html` dibangun ulang & dikirim (`d1d9dd9`) | 13 Okt |
 | **K35** | 📐 **Lebar kolom baris jurnal diperbaiki** (usulan Bapak 13 Okt: *"ruang isi angka itu terlalu besar.. sumber sampai terlihat pulldown bisa terlihat dan tag juga dapat ruang yg cukup 3 digit terlihat.. minimal 100.000.000,00 bisa isi"*) | 🔴 **Masalah nyata:** kolom fund hanya 24 px → **panah pulldown terpotong**, Bapak tidak tahu kotak itu bisa dibuka<br/>✅ Lebar minimum baru: **fund 46 · tag 58 · D/K 38 · hapus 26 · harga 78 px** (cukup `100.000.000,00`)<br/>✅ `padding-right:14px` pada fund & tag → **panah ▾ tidak terpotong**<br/>✅ **7 langkah pengecilan bertahap** untuk layar sangat sempit (D/K → hapus → tag → fund)<br/>✅ Harga masih lega → **ruang dikembalikan ke fund & tag** (maks 8 px)<br/>✅ Diuji **256 / 288 / 312 / 344 / 448 / 768 px** dengan angka `100.000.000,00`: **1 baris · angka utuh · tag utuh · fund utuh · 0 meluber**<br/>✅ Diuji juga di halaman **live** GitHub Pages — hasil sama<br/>✅ `uangku-cloud.html` dibangun ulang & dikirim (`e715bb2`) | 13 Okt |
 | **K27** | 🌐 **Penerapan konsep Peta Indonesia ke UangKu** — browser HP ↔ Cloudflare Worker (perantara, pegang kunci) ↔ Layerbase | 🔨 **Sedang dikerjakan** — keputusan Bapak 8 Okt: "Ya, terapkan dengan PIN"<br/>✅ Kunci per-database dibuat 8 Okt (ganti dengan Rotate), tersimpan di `.env` PC (bukan di HTML)<br/>✅ Uji query lewat API dari PC: OK (`SELECT 1` · 1.837 transaksi cadangan terbaca) · alamat: `sage.cloud.layerbase.dev` (sama dengan Peta Indonesia)<br/>⚠️ Kunci lama dari "Generate" tercabut otomatis setelah 24 jam (Rotate)<br/>✅ Worker **`uangku-api`** dipasang: https://uangku-api.suwandhih.workers.dev · **BACA SAJA** (fund, tag, snapshot, transaksi per bulan) · PIN wajib · kunci & PIN = secret Cloudflare<br/>✅ Uji 5/5: PIN salah 401 · PIN benar 200 · bulan tidak valid 400 · Okt 83 tx · CORS untuk file lokal<br/>⚠️ Belum ada pembatas percobaan PIN (perlu aturan rate-limit di Cloudflare)<br/>✅ Pengecualian aturan **C18** (tanpa server) — **disetujui Bapak 8 Okt**, dicatat<br/>⬜ HP membaca dari Worker (halaman baru, belum dibuat — perlu aba-aba Bapak)<br/>⬜ HP membaca dari Worker · Bapak tes di HP | 8 Okt |
@@ -2533,6 +2534,121 @@ flowchart TD
 | **10** | 🆕 **Perlu isi kartu kredit untuk Layerbase?** | **Tidak** — daun gratis tidak butuh kartu |
 | **11** | 🆕 **Kalau database Layerbase tidur 14 hari** | Data **tidak hilang**, hanya diarsipkan (butuh Restore 10–30 detik). Perlu saya buatkan pengingat? |
 | **12** | 🆕 **API key Layerbase disimpan di mana?** | `.env` di PC — **jangan** masuk git, **jangan** tampil di dokumen |
+
+---
+
+## 18. 🔁 PLUGIN RUTIN — RANCANGAN (order Bapak 13 Okt 2026)
+
+> **Status: 📝 DICATAT — menunggu aba-gaba "proses" dari Bapak** (aturan B7).
+> **Kalimat Bapak:**
+>> *"1. rutin — jika di aktifkan user tidak perlu isi form transaksi hal yg sama berulang
+>> user cukup masuk 1x jurnal atau 2 atau 3. setiap klik rutin transaksi ini akan proses yg sama,
+>> user tidak perlu menjurnal setiap kali transaksi ini.. user klik pada notifikasi rutin
+>> 2. rutin mempunyai fitur pengingat.. H-1 atau -2,-3 user yg pilih.. dan akan di ingatkan
+>> sebelum hari transaksi tiba.
+>> 3. rutin mempunuai fitur pengingat dimana user tidak tau kapan akan terulang transaksi lagi..
+>> contoh order air galon.. habis galon sulit diprediksi.. sistem pengingat jenis ini beda yg jelas..
+>> rumus bisa dilihat pada keuangan.. jadi kasus ini km buatkan rumus ke dalam sistem..
+>> dan jika ada selisih di waktu saat pengulangan misal selisih 1 atau 2 hari di abaikan
+>> misalkan lebih dari 3 sistem akan menghitung ulang.. kapan akan diorder lagi..
+>> 4. ada begitu sistem plugin.. user bisa set beberapa item untuk tayang ke dashboard
+>> berdasarkan nama barang dan berapa hari lagi untuk order kembali.."*
+
+### 18.1 Empat butir yang diminta
+
+| # | Butir | Arti |
+|---|---|---|
+| **1** | **Klik rutin = langsung jadi transaksi** | Bapak **tidak mengetik form lagi**. Pola jurnal disimpan **sekali** saat membuat rutin (1, 2, atau 3 baris jurnal). Setiap kali jatuh tempo → Bapak cukup **klik notifikasi rutin** → sistem mengulang pola itu |
+| **2** | **Pengingat H-1 / H-2 / H-3** | Bapak pilih **berapa hari sebelum** mau diingatkan (kolom `remind_before_days` sudah ada). Muncul **sebelum** hari transaksi tiba |
+| **3** | **Pengingat "tidak terduga"** (mis. galon air habis) | Waktunya **tidak bisa diprediksi per kalender**. Pakai **rumus rata-rata bergerak** dari riwayat order. Selisih **≤ 2 hari diabaikan**; **> 3 hari → sistem hitung ulang** |
+| **4** | **Pantau di Dashboard** | Bapak pilih beberapa item → tayang di Dashboard dengan **nama barang + berapa hari lagi** harus order |
+
+### 18.2 🔍 Rumus poin 3 — SUDAH ADA di sistem lama (dipelajari 13 Okt)
+
+> ✅ **Kabar baik:** rumusnya **sudah ada**. Tidak perlu mengarang.
+> Sumber: `c:\data\keuangan\server\routes\recurring.ts` baris 975–1027.
+
+**Nama rumus: Weighted Moving Average (WMA) — rata-rata bergerak berbobot.**
+
+```
+① Ambil transaksi bertanda "[Rutin] {nama barang}" — minimal 2 order
+② Ambil 6 order terakhir  →  dapat 5 jarak hari
+③ Jarak = selisih hari antar order (buang jarak ≤ 0 atau ≥ 365)
+④ Ambil maksimal 5 jarak terakhir
+⑤ Bobot makin besar untuk jarak makin baru:
+      bobot_i = (i + 1) / (1 + 2 + ... + n)
+⑥ Jarak perkiraan = Σ (jarak_i × bobot_i)   → dibulatkan
+⑦ Order berikutnya = tanggal order TERAKHIR + jarak perkiraan
+```
+
+**Contoh:** jarak order galon = **6, 8, 7, 6, 9** hari (dari lama → baru)
+
+| Jarak | Bobot | Jarak × bobot |
+|---|---|---|
+| 6 | 1/15 = 0,067 | 0,40 |
+| 8 | 2/15 = 0,133 | 1,07 |
+| 7 | 3/15 = 0,200 | 1,40 |
+| 6 | 4/15 = 0,267 | 1,60 |
+| 9 | 5/15 = 0,333 | 3,00 |
+| | | **Σ = 7,47 → 7 hari** |
+
+> 🎯 **Artinya:** order yang **paling baru paling menentukan**. Kalau akhir-akhir ini galon makin cepat habis, perkiraan ikut menyesuaikan sendiri.
+
+### 18.3 Dua mode pengingat yang tersedia
+
+| Mode | Kolom DB | Cara kerja | Dipakai untuk |
+|---|---|---|---|
+| **① Tetap** (`fixed`) | `cycle_days` | tanggal bayar + `cycle_days` | Tagihan tetap: Laundry 7 hari, FexMax 28 hari, Service AC 120 hari, Vaksin 365 hari |
+| **② Otomatis** (`auto`) | `prediction_mode='auto'` | **WMA** dari riwayat order | Barang habis pakai: **Galon Air**, Token PLN, gula pasir, kopi kapal api, Palet Royal Canin, Pembersih Kerak, Sabun Palmolive, Gunting Rambut |
+
+### 18.4 Data nyata di server (dibaca 13 Okt)
+
+| Hal | Jumlah |
+|---|---|
+| Total rutin aktif | **44** |
+| Dilacak (`needs_tracking=1`) | **31** |
+| Mode **otomatis** (WMA) | **9** |
+| Mode tetap (`cycle_days`) | **35** |
+| Ada pengingat (`remind_before_days`) | **39** |
+| Dipantau di Dashboard (`monitor=1`) | **14** |
+| Frekuensi | bulanan 33 · harian 6 · mingguan 3 · tahunan 2 |
+
+**9 item mode WMA:** Galon Air · Gunting Rambut · Palet Royal Canin · Pembersih Kerak Logeski · Sabun Palmolive · Token PLN · gula pasir · kopi kapal api · gas 12kg
+
+**Aturan pengingat yang sudah ada di data:** H-1 (mayoritas) · H-2 (Ayam mentah, FexMax, Service Toren) · **H-5 (Internet HIFI, Obat, Vaksin Bordotella)** · H-0 (Sumbang KK, Service AC)
+
+### 18.5 ⚠️ Temuan: kolom selisih belum ada
+
+Aturan Bapak *"selisih 1–2 hari diabaikan, > 3 hari hitung ulang"* **belum ada di sistem lama.**
+Sistem lama menghitung WMA **dari tanggal bayar terakhir** setiap kali dibayar — tanpa membandingkan perkiraan vs kenyataan.
+
+**Bukti selisih nyata di data:** Service Toren Air (`cycle_days`=120) → jatuh tempo **22 Jan 2027** tetapi perkiraan order **28 Jan 2027** = **selisih 6 hari**.
+
+**Usulan:** tambah kolom `toleransi_hari` (bawaan **3**). Kalau selisih > toleransi → tandai **"perlu hitung ulang"** di Dashboard. Tidak menghapus aturan lama (aturan E2).
+
+### 18.6 Yang sudah ada vs belum ada
+
+| Bagian | Keadaan |
+|---|---|
+| Tabel `recurring` di server (27 kolom) | ✅ **ada** — 44 baris |
+| Kolom `monitor` (pantau di Dashboard) | ✅ ada — 14 aktif |
+| Kolom `remind_before_days` (H-n) | ✅ ada — 39 terisi |
+| Kolom `prediction_mode` + `cycle_days` | ✅ ada |
+| Rumus WMA | ✅ ada (di sistem lama, tinggal dipindah) |
+| Layar Rutin di UangKu | ❌ **belum** — inilah yang akan dibangun |
+| Handler `catat` multi-jurnal di Worker | ✅ ada (T2 sudah jalan) |
+| Tombol **Bayar** rutin (buat transaksi + jadwal berikutnya) | ❌ belum |
+| Aturan selisih ≤ 2 / > 3 hari | ❌ belum — lihat 18.5 |
+
+### 18.7 Rencana tahap (setelah aba-gaba Bapak)
+
+| Tahap | Isi | Perkiraan |
+|---|---|---|
+| **R1** | Tampilkan daftar rutin + pengingat H-n (siap dibayar) | 1 sesi |
+| **R2** | Tombol **Bayar** → jurnal otomatis + jadwal berikutnya | 1 sesi |
+| **R3** | Pindahkan rumus **WMA** + tampilan "berapa hari lagi" | 1 sesi |
+| **R4** | Aturan selisih (≤ 2 abaikan, > 3 hitung ulang) | 1 sesi |
+| **R5** | **Pantau di Dashboard** — pilih item, tampil nama + sisa hari | 1 sesi |
 
 ---
 

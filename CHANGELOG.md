@@ -6,6 +6,53 @@
 
 ---
 
+## 13 Oktober 2026 (malam) — 🔁 RANCANGAN PLUGIN RUTIN **DICATAT**
+
+> **Order Bapak:** 4 butir tentang plugin **Rutin** (klik = langsung transaksi ·
+> pengingat H-n · pengingat "tidak terduga" · pantau di Dashboard).
+> → **Belum dikerjakan** — sesuai aturan B7, fitur baru **dicatat dulu**, menunggu
+> aba-gaba **"proses"** dari Bapak.
+
+### ✅ Kabar baik: rumusnya SUDAH ADA
+
+Saya pelajari sistem lama `c:\data\keuangan\server\routes\recurring.ts`.
+Rumus pengingat "tidak terduga" (butir 3) **sudah ada** — namanya
+**Weighted Moving Average (WMA)**, rata-rata bergerak berbobot:
+
+```
+Ambil 6 order terakhir → 5 jarak hari
+Bobot makin besar untuk jarak makin BARU
+Jarak perkiraan = Σ (jarak × bobot)
+Order berikutnya = tanggal order terakhir + jarak perkiraan
+```
+
+> 🎯 Artinya: kalau akhir-akhir ini galon makin cepat habis, perkiraan **ikut menyesuaikan sendiri**.
+
+### 📋 Rincian lengkap
+
+Ditulis di **`rencanakerja.md` Bagian 18** — 7 sub-bagian:
+empat butir yang diminta · rumus WMA + contoh hitung · dua mode pengingat ·
+data nyata di server · temuan kolom selisih · yang sudah vs belum ada · rencana 5 tahap (R1–R5).
+
+### 📊 Data plugin Rutin di server (dibaca 13 Okt)
+
+| Hal | Jumlah |
+|---|---|
+| Total rutin aktif | **44** |
+| Dilacak | **31** |
+| Mode **otomatis (WMA)** | **9** — termasuk **Galon Air**, Token PLN, gula pasir, kopi kapal api |
+| Mode tetap | **35** |
+| Ada pengingat H-n | **39** |
+| Dipantau di Dashboard | **14** |
+
+### ⚠️ Satu temuan
+
+Aturan Bapak *"selisih 1–2 hari diabaikan, > 3 hari hitung ulang"* **belum ada** di sistem lama.
+Bukti: Service Toren Air → jatuh tempo 22 Jan 2027, perkiraan order 28 Jan 2027 = **selisih 6 hari**.
+Usulan: tambah kolom `toleransi_hari` (bawaan 3).
+
+---
+
 ## 13 Oktober 2026 (malam) — 💰 ANGKA SELALU 2 DESIMAL
 
 > **Pertanyaan Bapak:** *"apakah angka di sediakan desimal 2 digit minimal"*
