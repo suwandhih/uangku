@@ -6,6 +6,57 @@
 
 ---
 
+## 13 Oktober 2026 (malam) — 🧾 FORM CATAT JADI **1 BARIS**
+
+> **Permintaan Bapak:** *"apakah bisa sumber fund < di buat seringkas mungkin kalau bisa
+> disingkat 3 digit.. lalu Tag < sudah benar dan D/K < sudah benar.. lalu harga cukup besar..
+> bisa disesuaikan / tolong dibuat 1 baris .. memungkinkankah ?"*
+> → **Bisa.** Sudah dikerjakan.
+
+### 🆕 Apa yang berubah di layar Catat
+
+| Bagian | Sebelum | Sekarang |
+|---|---|---|
+| **Susunan** | 2 baris (fund+tag di atas, D/K+harga di bawah) | ✅ **1 baris saja** |
+| **Sumber fund** | nama panjang ("Superbank") | ✅ **3 huruf: `SPB`** |
+| **Tag** | emoji + 3 huruf | ✅ tetap (`🏠RMH`) |
+| **D/K** | 2 tombol | ✅ tetap (`D` `K`) |
+| **Harga** | sedang | ✅ **paling besar** — mengambil seluruh sisa lebar |
+| **Hapus** | `✕` | ✅ tetap |
+
+### 🔤 Daftar singkatan fund (3 huruf)
+
+| Fund | Singkat | Fund | Singkat |
+|---|---|---|---|
+| Superbank | `SPB` | BCA tabungan | `BCA` |
+| SeaBank | `SEA` | BCA Saham | `SHM` |
+| Celengan | `CEL` | Deposito | `DEP` |
+| Dana Sopir | `SOP` | Tabungan A | `TBA` |
+| Dana swn | `SWN` | Tabungan B | `TBB` |
+| Tunai | `TUN` | Tabungan C | `TBC` |
+| Sopir pinjam uang | `SPJ` | Tabungan D | `TBD` |
+| ShopeePay | `SHP` | Tabungan E | `TBE` |
+| OVO | `OVO` | GoPay | `GOP` |
+
+> 🔑 **Nama lengkap tidak hilang** — kalau kursor diarahkan ke kotak fund (atau ditekan lama di HP),
+> muncul nama penuhnya. Yang tersimpan di server **tetap nama lengkap** — singkatan itu **hanya tampilan**.
+
+### 📐 Hasil ukur (sudah diuji)
+
+| Lebar layar | 1 baris? | Angka utuh? | Tag utuh? | Meluber? |
+|---|---|---|---|---|
+| 256 px (sangat sempit) | ✅ | ✅ | ✅ | 0 |
+| 288 px | ✅ | ✅ | ✅ | 0 |
+| 312 px (HP umum) | ✅ | ✅ | ✅ | 0 |
+| 344 px | ✅ | ✅ | ✅ | 0 |
+| 448 px | ✅ | ✅ | ✅ | 0 |
+| 768 px (layar 50% Bapak) | ✅ | ✅ | ✅ | 0 |
+
+> ✅ Angka `26.504.730,59` **tidak pernah terpotong** di semua lebar.
+> ✅ Diuji juga di halaman **live** (GitHub Pages) — hasil sama.
+
+---
+
 ## 13 Oktober 2026 (malam) — 🔑 PIN DIKUNCI: **745702**
 
 > **Keluhan Bapak:** *"pin sudah tidak bisa 616098 .. apa berubah lagi kode pin"*

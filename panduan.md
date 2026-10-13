@@ -58,13 +58,47 @@ Transaksi  →  tekan tombol ＋ (kanan atas)  →  isi  →  Simpan
 |---|---|
 | **Tanggal** | Sudah terisi hari ini. Bisa diganti |
 | **Keterangan** | Mis. "makan siang", "biaya admin" |
-| **Fund** | Kotak uangnya (Superbank, SeaBank, …) |
+| **Fund** | Kotak uangnya — ditulis **3 huruf** (`SPB` = Superbank, `SEA` = SeaBank, …) |
 | **Tag** | Untuk apa — ini yang menentukan artinya. 🔴 **WAJIB diganti** — jangan dibiarkan |
 | **D / K** | Masuk (D) atau keluar (K). **Untuk sebagian besar tag, ini terisi sendiri** |
-| **Jumlah** | Angkanya saja, mis. `30000` |
+| **Jumlah** | Angkanya saja, mis. `30000` — titik ribuan muncul sendiri saat mengetik |
 
 > 💡 **Satu tindakan boleh berisi beberapa baris.** Contoh: transfer Superbank → SeaBank
 > = 2 baris (Superbank keluar, SeaBank masuk). Tekan **"＋ Tambah baris jurnal"**.
+
+### 🧾 Satu baris saja — hemat ruang
+
+Sejak 13 Okt 2026, **satu catatan bank = satu baris**:
+
+```
+[ SPB ▾ ] [ 🏠RMH ▾ ] [ D | K ] [        30.000 ] [ ✕ ]
+   fund        tag       arah         harga        hapus
+```
+
+| Bagian | Lebar | Catatan |
+|---|---|---|
+| **Fund** | kecil (3 huruf) | Arahkan kursor / tekan lama → muncul **nama lengkap** |
+| **Tag** | kecil | emoji + 3 huruf |
+| **D / K** | kecil | 1 huruf |
+| **Harga** | **paling besar** | mengambil seluruh sisa lebar — angka **tidak pernah terpotong** |
+| **✕** | kecil | hapus baris ini |
+
+> 🔑 **Singkatan fund hanya untuk tampilan.** Yang tersimpan di server **tetap nama lengkap**
+> ("Superbank"), jadi laporan dan saldo tidak terpengaruh sama sekali.
+
+### 🔤 Daftar singkatan fund
+
+| Fund | Singkat | Fund | Singkat |
+|---|---|---|---|
+| Superbank | `SPB` | BCA tabungan | `BCA` |
+| SeaBank | `SEA` | BCA Saham | `SHM` |
+| Celengan | `CEL` | Deposito | `DEP` |
+| Dana Sopir | `SOP` | Tabungan A | `TBA` |
+| Dana swn | `SWN` | Tabungan B | `TBB` |
+| Tunai | `TUN` | Tabungan C | `TBC` |
+| Sopir pinjam uang | `SPJ` | Tabungan D | `TBD` |
+| ShopeePay | `SHP` | Tabungan E | `TBE` |
+| OVO | `OVO` | GoPay | `GOP` |
 
 ### 🔴 PENTING — jangan lupa ganti TAG
 
