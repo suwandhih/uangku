@@ -394,6 +394,11 @@ body{
   font-size:13px; line-height:1.35;
 }
 .pita-perlu .btn-kecil{margin-left:auto}
+/* peringatan tag Transfer di layar Catat — hitam-putih, warna hanya untuk peringatan */
+.peringatan-tag{
+  margin:0 0 8px; padding:8px 10px; border:1px solid currentColor; border-radius:8px;
+  font-size:12.5px; line-height:1.4;
+}
 @media (prefers-color-scheme: dark){
   #gerbang{background:#000; color:#eee}
   .gerbang-kartu{border-color:#333}
@@ -446,6 +451,8 @@ var KAMUS = {
   'Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci.':'The opening balance of the new month comes from the closing balance of the last month, then the old month is locked.',
   'Lakukan ini sekali setiap awal bulan, sebelum mencatat transaksi pertama.':'Do this once at the start of each month, before recording the first transaction.',
   'Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci supaya tidak berubah lagi.':'The opening balance of the new month comes from the closing balance of the last month, then the old month is locked so it cannot change again.',
+  'Tag "Transfer" artinya uang PINDAH TEMPAT — tidak dihitung di Ringkasan bulan ini.':'The "Transfer" tag means money MOVED PLACE — it is not counted in this month\'s Summary.',
+  'Kalau ini belanja biasa, ganti tagnya (mis. Rumah / Pribadi / Pet).':'If this is an ordinary expense, change the tag (e.g. Rumah / Pribadi / Pet).',
   'Bulan ini belum dibuka':'This month is not open yet',
   'buka dulu supaya bisa mencatat':'open it first so you can record',
   'Buka sekarang':'Open now',
@@ -1567,13 +1574,23 @@ function terapkanTes() {
   });
 }
 
+/* Tag bawaan form: tag PERTAMA yang mengunci arah (bukan tag dua arah).
+   Kalau tidak ada, baru pakai 'Transfer'. */
+function tagBawaan(bln) {
+  if (!bln || !bln.tag || !bln.tag.length) return 'Transfer';
+  var tetap = bln.tag.filter(function (g) {
+    return DUA_ARAH_TES.indexOf(g.nama) === -1 && (g.arah === 'D' || g.arah === 'K');
+  });
+  return tetap.length ? tetap[0].nama : 'Transfer';
+}
+
 function gbrInput() {
   var wadah = document.getElementById('inputIsi');
   var bln = B();
   if (!bln) { wadah.innerHTML = ''; return; }
   if (!formTes) formTes = { tgl: hariIniISO(), ket: '', baris: [
-    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: 'Transfer', arah: 'K', jml: '' },
-    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: 'Transfer', arah: 'K', jml: '' } ] };
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' },
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' } ] };
   var pilihFund = function (sel) {
     return bln.fund.map(function (f) { return '<option' + (f.nama === sel ? ' selected' : '') + '>' + esc(f.nama) + '</option>'; }).join('');
   };
@@ -1628,7 +1645,14 @@ function hitungRingTes() {
   });
   var r = document.getElementById('tlRing');
   if (!r) return;
-  r.innerHTML = '<div class="tl-r"><span>Total masuk (dihitung)</span><b class="mono">+' + rp2(masuk) + '</b></div>' +
+  var adaTransfer = formTes.baris.some(function (b) {
+    return b.tag === 'Transfer' && numTes(b.jml) > 0;
+  });
+  r.innerHTML = (adaTransfer
+      ? '<div class="peringatan-tag">⚠️ ' + t('Tag "Transfer" artinya uang PINDAH TEMPAT — tidak dihitung di Ringkasan bulan ini.') +
+        '<br>' + t('Kalau ini belanja biasa, ganti tagnya (mis. Rumah / Pribadi / Pet).') + '</div>'
+      : '') +
+    '<div class="tl-r"><span>Total masuk (dihitung)</span><b class="mono">+' + rp2(masuk) + '</b></div>' +
     '<div class="tl-r"><span>Total keluar (dihitung)</span><b class="mono">' + (keluar ? '−' : '') + rp2(keluar) + '</b></div>' +
     Object.keys(per).map(function (f) {
       return '<div class="tl-r sub"><span>' + esc(f) + '</span><b class="mono">' + (per[f] >= 0 ? '+' : '') + rp2(per[f]) + '</b></div>';
@@ -1705,7 +1729,7 @@ document.getElementById('inputIsi').addEventListener('click', function (e) {
   var b = e.target.closest('button');
   if (!b || b.disabled) return;
   if (b.id === 'tlSimpan') { simpanTesDariForm(); return; }
-  if (b.id === 'tlTambah') { formTes.baris.push({ fund: B().fund[0].nama, tag: 'Transfer', arah: 'K', jml: '' }); gbrInput(); return; }
+  if (b.id === 'tlTambah') { formTes.baris.push({ fund: B().fund[0].nama, tag: tagBawaan(B()), arah: 'K', jml: '' }); gbrInput(); return; }
   if (b.dataset.arah) { formTes.baris[+b.dataset.i].arah = b.dataset.arah; gbrInput(); return; }
   if (b.dataset.del !== undefined && formTes.baris.length > 1) { formTes.baris.splice(+b.dataset.del, 1); gbrInput(); return; }
   if (b.dataset.batal) { if (confirm('Batalkan data tes ini?')) batalkanTes(b.dataset.batal); }

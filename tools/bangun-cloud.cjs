@@ -497,6 +497,62 @@ skrip = skrip.replace(
   else if (subNama === 'Tentang') {`,
 );
 
+/* 2b2b. 🔴 TAG BAWAAN FORM — jangan 'Transfer'.
+   MASALAH NYATA 13 Okt 2026: tag bawaan form adalah 'Transfer' — tag DUA ARAH
+   yang TIDAK mengunci D/K. Bapak mencatat 3 transaksi (service ac, ayam mentah,
+   makan siang) tanpa mengganti tag → semuanya tersimpan sebagai 'Transfer',
+   sehingga:
+     ① tidak muncul di Ringkasan bulan ini (Transfer dikecualikan)
+     ② saldo Superbank di UangKu beda dengan catatan bank
+   Obat: tag bawaan = tag PERTAMA yang mengunci arah (biasanya 'Rumah' → K),
+   supaya arah selalu terkunci dan Bapak sadar harus memilih tag. */
+skrip = skrip.replace(
+  `  if (!formTes) formTes = { tgl: hariIniISO(), ket: '', baris: [
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: 'Transfer', arah: 'K', jml: '' },
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: 'Transfer', arah: 'K', jml: '' } ] };`,
+  `  if (!formTes) formTes = { tgl: hariIniISO(), ket: '', baris: [
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' },
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' } ] };`,
+);
+skrip = skrip.replace(
+  `  if (b.id === 'tlTambah') { formTes.baris.push({ fund: B().fund[0].nama, tag: 'Transfer', arah: 'K', jml: '' }); gbrInput(); return; }`,
+  `  if (b.id === 'tlTambah') { formTes.baris.push({ fund: B().fund[0].nama, tag: tagBawaan(B()), arah: 'K', jml: '' }); gbrInput(); return; }`,
+);
+/* fungsi pemilih tag bawaan — taruh sebelum gbrInput */
+skrip = skrip.replace(
+  `function gbrInput() {`,
+  `/* Tag bawaan form: tag PERTAMA yang mengunci arah (bukan tag dua arah).
+   Kalau tidak ada, baru pakai 'Transfer'. */
+function tagBawaan(bln) {
+  if (!bln || !bln.tag || !bln.tag.length) return 'Transfer';
+  var tetap = bln.tag.filter(function (g) {
+    return DUA_ARAH_TES.indexOf(g.nama) === -1 && (g.arah === 'D' || g.arah === 'K');
+  });
+  return tetap.length ? tetap[0].nama : 'Transfer';
+}
+
+function gbrInput() {`,
+);
+catat.push('tag bawaan form: bukan Transfer lagi');
+
+/* 2b2c. 🔴 PERINGATAN TAG TRANSFER di layar Catat.
+   'Transfer' artinya uang PINDAH TEMPAT — dikecualikan dari Ringkasan bulan ini.
+   Kalau Bapak memakainya untuk belanja biasa, transaksi itu "hilang" dari laporan
+   dan saldo terlihat beda dengan catatan bank (masalah nyata 13 Okt 2026).
+   Peringatan ini muncul di RINGKASAN saat ada baris bertag Transfer. */
+skrip = skrip.replace(
+  `  r.innerHTML = '<div class="tl-r"><span>Total masuk (dihitung)</span><b class="mono">+' + rp2(masuk) + '</b></div>' +`,
+  `  var adaTransfer = formTes.baris.some(function (b) {
+    return b.tag === 'Transfer' && numTes(b.jml) > 0;
+  });
+  r.innerHTML = (adaTransfer
+      ? '<div class="peringatan-tag">⚠️ ' + t('Tag "Transfer" artinya uang PINDAH TEMPAT — tidak dihitung di Ringkasan bulan ini.') +
+        '<br>' + t('Kalau ini belanja biasa, ganti tagnya (mis. Rumah / Pribadi / Pet).') + '</div>'
+      : '') +
+    '<div class="tl-r"><span>Total masuk (dihitung)</span><b class="mono">+' + rp2(masuk) + '</b></div>' +`,
+);
+catat.push('peringatan tag Transfer di layar Catat');
+
 /* 2b3. pita peringatan "bulan ini belum dibuka" di paling atas Dashboard.
    Tanpa ini Bapak baru sadar tidak bisa mencatat setelah mencoba. */
 skrip = skrip.replace(
@@ -529,6 +585,8 @@ skrip = skrip.replace(
   'Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci.':'The opening balance of the new month comes from the closing balance of the last month, then the old month is locked.',
   'Lakukan ini sekali setiap awal bulan, sebelum mencatat transaksi pertama.':'Do this once at the start of each month, before recording the first transaction.',
   'Saldo awal bulan baru diambil dari saldo akhir bulan terakhir, lalu bulan lama dikunci supaya tidak berubah lagi.':'The opening balance of the new month comes from the closing balance of the last month, then the old month is locked so it cannot change again.',
+  'Tag "Transfer" artinya uang PINDAH TEMPAT — tidak dihitung di Ringkasan bulan ini.':'The "Transfer" tag means money MOVED PLACE — it is not counted in this month\\'s Summary.',
+  'Kalau ini belanja biasa, ganti tagnya (mis. Rumah / Pribadi / Pet).':'If this is an ordinary expense, change the tag (e.g. Rumah / Pribadi / Pet).',
   'Bulan ini belum dibuka':'This month is not open yet',
   'buka dulu supaya bisa mencatat':'open it first so you can record',
   'Buka sekarang':'Open now',`,
@@ -634,6 +692,11 @@ const HTML_TAMBAHAN = `
   font-size:13px; line-height:1.35;
 }
 .pita-perlu .btn-kecil{margin-left:auto}
+/* peringatan tag Transfer di layar Catat — hitam-putih, warna hanya untuk peringatan */
+.peringatan-tag{
+  margin:0 0 8px; padding:8px 10px; border:1px solid currentColor; border-radius:8px;
+  font-size:12.5px; line-height:1.4;
+}
 @media (prefers-color-scheme: dark){
   #gerbang{background:#000; color:#eee}
   .gerbang-kartu{border-color:#333}
