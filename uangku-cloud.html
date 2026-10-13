@@ -78,11 +78,12 @@ body{
    (permintaan Bapak 25 Sep 2026 — bagian atas dihapus, Saldo akhir dipindah ke bawah) */
 .saldo .grid.k4{grid-template-columns:repeat(4,1fr)}
 .saldo .grid.k4 .cell{padding:9px 7px}
+.saldo .grid.k4 .cell .v{font-size:11.5px;letter-spacing:-.3px}
 .saldo .cell{padding:9px 10px;border-right:1px solid var(--line)}
 .saldo .cell:last-child{border-right:0}
 /* label boleh TURUN 2 BARIS — lebih baik daripada terpotong "Saldo akh…" */
 .saldo .cell .k{font-size:10px;color:var(--text2);line-height:1.15;overflow-wrap:break-word}
-.saldo .cell .v{font-size:13px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saldo .cell .v{font-size:12px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px}
 .saldo .cell .v.neg{color:var(--danger)}
 
 /* kartu */
@@ -173,7 +174,7 @@ body{
 .chips.ada .kepala{background:var(--ink);color:var(--onink);border-color:var(--ink)}
 .chips .kepala .nm{flex:1 1 auto;min-width:0;text-align:left;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.chips .kepala .pn{flex:0 0 auto;font-size:10.5px;opacity:.75;margin-left:6px}
+.chips .kepala .pn{flex:0 0 auto;font-size:10px;opacity:.75;margin-left:6px;letter-spacing:-.2px}
 .chips .kepala .ar{flex:0 0 auto;font-size:10px;opacity:.8;margin-left:6px}
 .chips .chipgrid{display:none;gap:6px;margin-top:6px;
   grid-template-columns:repeat(var(--kolom,3),minmax(0,1fr))}
@@ -224,10 +225,10 @@ body{
   overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   overflow-wrap:break-word;word-break:normal}
 /* angka — TIDAK dipotong (hanya boleh patah di titik ribuan) */
-.item .val{font-size:11px;font-weight:700;margin-top:auto;line-height:1.3;
+.item .val{font-size:10.5px;font-weight:700;margin-top:auto;line-height:1.3;letter-spacing:-.2px;
   overflow-wrap:break-word;word-break:normal;font-variant-numeric:tabular-nums}
 .item .val.neg{color:var(--danger)}
-.item .sub{font-size:9px;color:var(--text2);line-height:1.35;
+.item .sub{font-size:8.5px;color:var(--text2);line-height:1.35;
   overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   overflow-wrap:break-word;word-break:normal}
 .item.warn{border-color:var(--danger)}
@@ -247,12 +248,24 @@ body{
 .tl-row{padding:8px 0;border-bottom:1px dashed var(--line)}
 .tl-row:first-child{padding-top:0}
 .tl-row:last-child{border-bottom:0;padding-bottom:0}
-.tl-r1{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:6px}
-.tl-r2{display:grid;grid-template-columns:86px minmax(0,1fr) 36px;gap:6px;align-items:center;margin-top:6px}
-.tl-r2 input{text-align:right}
-.tl-r2 .seg button:disabled{cursor:default}
-.tl-r2 .seg.auto button:not(.on){color:#bbb}
-.tl-r2 .seg.auto button.on{color:var(--onink)}
+/* 🔴 SATU BARIS: fund · tag · D/K · harga · ✕ (permintaan Bapak 13 Okt 2026).
+   Lebar kolom diatur lewat --w1..--w4 supaya bisa menyesuaikan lebar layar. */
+.tl-row{display:grid;gap:4px;align-items:center;
+  grid-template-columns:var(--w1,58px) var(--w2,62px) var(--w3,62px) minmax(0,1fr) var(--w5,28px)}
+.tl-row select,.tl-row input{padding:7px 3px;font-size:var(--fs,11px)}
+.tl-sempit .tl-row{gap:3px}
+.tl-sempit .tl-row select,.tl-sempit .tl-row input{padding:7px 1px}
+.tl-fund{font-weight:700;text-align:center;text-align-last:center;letter-spacing:-.3px}
+.tl-tag{text-align:center;text-align-last:center;letter-spacing:-.4px}
+.tl-jml{text-align:right;font-weight:700;letter-spacing:-.4px}
+.tl-dk{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.tl-dk button{padding:7px 0;font-size:12px;border-radius:0}
+.tl-dk button:first-child{border-radius:8px 0 0 8px}
+.tl-dk button:last-child{border-radius:0 8px 8px 0}
+.tl-dk button:disabled{cursor:default}
+.tl-dk.auto button:not(.on){color:#bbb}
+.tl-dk.auto button.on{color:var(--onink)}
+.tl-del{height:30px;padding:0;font-size:13px;line-height:1}
 .tl-del{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:8px;height:36px;cursor:pointer;font:inherit}
 .tl-r{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
 .tl-r:last-child{border-bottom:0}
@@ -1515,6 +1528,58 @@ document.querySelector('.head').addEventListener('touchend', function (e) {
   tampil(layar);
 });
 
+/* Lebar kolom baris jurnal — menyesuaikan lebar layar supaya tetap 1 baris.
+   Dipanggil saat menggambar form & saat layar berubah ukuran. */
+function aturLebarBaris() {
+  var akar = document.getElementById('inputIsi');
+  if (!akar) return;
+  /* ukur lebar baris yang SEBENARNYA (bukan menebak dari lebar jendela) */
+  var kartu = akar.querySelector('.tl-card');
+  var lebar = kartu ? kartu.clientWidth - 20 : akar.clientWidth - 20;
+  if (lebar < 120) lebar = 120;
+
+  var JARAK = 4;
+  var sisa = lebar - JARAK * 4;   /* 5 kolom → 4 jarak */
+
+  /* 🔴 Ukuran tetap: fund 3 huruf, tag emoji+3 huruf, D/K 1 huruf.
+     Sisanya SEMUA untuk harga — angka 26.504.730,59 butuh ruang paling banyak. */
+  var w1 = 24, w2 = 52, w3 = 52, hapus = 24;
+  var w4 = sisa - w1 - w2 - w3 - hapus;
+
+  /* layar sempit → kecilkan tag & D/K dulu, baru fund & tombol hapus */
+  if (w4 < 68) { w2 = 48; w3 = 48; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < 68) { w2 = 44; w3 = 44; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < 68) { w1 = 22; hapus = 22; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < 68) { w2 = 38; w3 = 38; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < 68) { w2 = 34; w3 = 34; w4 = sisa - w1 - w2 - w3 - hapus; }
+
+  /* layar sangat sempit (≤ 340 px) → rapatkan jarak & padding supaya
+     tag "🏠RMH" tetap utuh dan harga tetap dapat ruang cukup */
+  var sempit = lebar < 340;
+  if (sempit) {
+    JARAK = 3;
+    sisa = lebar - JARAK * 4;
+    w4 = sisa - w1 - w2 - w3 - hapus;
+    if (w4 < 64) { w2 = 40; w3 = 40; w4 = sisa - w1 - w2 - w3 - hapus; }
+    if (w4 < 64) { w2 = 38; w3 = 38; w4 = sisa - w1 - w2 - w3 - hapus; }
+  }
+  akar.classList.toggle('tl-sempit', sempit);
+
+  /* tag "🏠RMH" butuh ±42 px — pinjam dari harga selama harga masih lega */
+  var minHarga = sempit ? 58 : 68;
+  if (w2 < 42 && w4 > minHarga) {
+    var kurang = 42 - w2;
+    if (w4 - kurang * 2 >= minHarga) { w2 += kurang; w3 += kurang; w4 -= kurang * 2; }
+  }
+
+  /* layar sangat sempit → huruf dikecilkan supaya tetap 1 baris */
+  akar.style.setProperty('--fs', (lebar < 230 ? 9 : 11) + 'px');
+  akar.style.setProperty('--w5', hapus + 'px');
+  akar.style.setProperty('--w1', w1 + 'px');
+  akar.style.setProperty('--w2', w2 + 'px');
+  akar.style.setProperty('--w3', w3 + 'px');
+}
+
 /* Hitung ulang jumlah kolom saat layar diputar / ukuran berubah,
    supaya nama fund tetap utuh (tidak terpotong). */
 var tundaUbah = null;
@@ -1522,7 +1587,9 @@ window.addEventListener('resize', function () {
   if (tundaUbah) clearTimeout(tundaUbah);
   tundaUbah = setTimeout(function () {
     tundaUbah = null;
-    if (layar === 'tx') {
+    if (layar === 'input') {
+      aturLebarBaris();
+    } else if (layar === 'tx') {
       gbrTx();
     } else if (layar === 'sub' && (subNama === 'Daftar Fund' || subNama === 'Daftar Tag') &&
         document.getElementById('subIsi')) {
@@ -1547,6 +1614,33 @@ var SINGKAT_TAG = { Rumah:'RMH', Pribadi:'PRB', Pet:'PET', Mobil:'MBL', Bunga:'B
   Reimburse:'RMB', Transfer:'TRF', Hutang:'HTG' };
 
 function singkatTag(n) { return SINGKAT_TAG[n] || String(n || '-').slice(0, 3).toUpperCase(); }
+
+/* 🔴 SINGKATAN NAMA FUND (permintaan Bapak 13 Okt 2026):
+   *"apakah bisa sumber fund < di buat seringkas mungkin kalau bisa disingkat 3 digit"*
+   Dipakai di layar Catat supaya SATU BARIS muat: fund · tag · D/K · harga · ✕.
+   Nama LENGKAP tetap terlihat saat daftar dibuka (SPB · Superbank). */
+var SINGKAT_FUND = {
+  'Superbank':'SPB', 'SeaBank':'SEA', 'Celengan':'CEL', 'Dana Sopir':'SOP',
+  'Dana swn':'SWN', 'Tunai':'TUN', 'Sopir pinjam uang':'SPJ', 'BCA tabungan':'BCA',
+  'BCA Saham':'SHM', 'Deposito':'DEP', 'Tabungan A':'TBA', 'Tabungan B':'TBB',
+  'ShopeePay':'SHP', 'OVO':'OVO', 'GoPay':'GOP', 'Tabungan C':'TBC',
+  'Tabungan D':'TBD', 'Tabungan E':'TBE'
+};
+function singkatFund(n) {
+  if (SINGKAT_FUND[n]) return SINGKAT_FUND[n];
+  /* fund baru yang belum terdaftar → 3 huruf pertama */
+  return String(n || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || '?';
+}
+
+/* Tag bawaan form: tag PERTAMA yang mengunci arah (bukan tag dua arah).
+   Kalau tidak ada, baru pakai 'Transfer'. */
+function tagBawaan(bln) {
+  if (!bln || !bln.tag || !bln.tag.length) return 'Transfer';
+  var tetap = bln.tag.filter(function (g) {
+    return DUA_ARAH_TES.indexOf(g.nama) === -1 && (g.arah === 'D' || g.arah === 'K');
+  });
+  return tetap.length ? tetap[0].nama : 'Transfer';
+}
 function numTes(s) { var n = parseFloat(String(s).replace(/\./g, '').replace(',', '.')); return isNaN(n) ? 0 : n; }
 function bacaTes() { try { return JSON.parse(localStorage.getItem(TES_KEY) || '[]'); } catch (e) { return []; } }
 function simpanTesKeMemori(arr) { localStorage.setItem(TES_KEY, JSON.stringify(arr)); }
@@ -1601,25 +1695,32 @@ function gbrInput() {
   if (!formTes) formTes = { tgl: hariIniISO(), ket: '', baris: [
     { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' },
     { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' } ] };
+  /* nilai option = nama LENGKAP (dipakai saat menyimpan), tulisan = singkatan 3 huruf */
   var pilihFund = function (sel) {
-    return bln.fund.map(function (f) { return '<option' + (f.nama === sel ? ' selected' : '') + '>' + esc(f.nama) + '</option>'; }).join('');
+    return bln.fund.map(function (f) {
+      return '<option value="' + esc(f.nama) + '"' + (f.nama === sel ? ' selected' : '') + '>' +
+        esc(singkatFund(f.nama)) + '</option>';
+    }).join('');
   };
   var pilihTag = function (sel) {
     return bln.tag.map(function (g) {
-      return '<option value="' + esc(g.nama) + '"' + (g.nama === sel ? ' selected' : '') + '>' + g.ikon + ' ' + singkatTag(g.nama) + '</option>';
+      return '<option value="' + esc(g.nama) + '"' + (g.nama === sel ? ' selected' : '') + '>' + g.ikon + singkatTag(g.nama) + '</option>';
     }).join('');
   };
   var baris = formTes.baris.map(function (b, i) {
     var tetap = arahTetapTag(b.tag);
     var arah = tetap || b.arah;
+    /* 🔴 SATU BARIS (permintaan Bapak 13 Okt 2026):
+       fund · tag · D/K · harga · ✕ — supaya hemat ruang & enak diisi.
+       Nama fund disingkat 3 huruf; nama LENGKAP ada di daftar & tooltip. */
     return '<div class="tl-row">' +
-      '<div class="tl-r1"><select data-i="' + i + '" data-k="fund">' + pilihFund(b.fund) + '</select>' +
-      '<select data-i="' + i + '" data-k="tag" title="Tag">' + pilihTag(b.tag) + '</select></div>' +
-      '<div class="tl-r2"><div class="seg' + (tetap ? ' auto' : '') + '">' +
+      '<select class="tl-fund" data-i="' + i + '" data-k="fund" title="' + esc(b.fund) + '">' + pilihFund(b.fund) + '</select>' +
+      '<select class="tl-tag" data-i="' + i + '" data-k="tag" title="' + esc(b.tag) + '">' + pilihTag(b.tag) + '</select>' +
+      '<div class="seg tl-dk' + (tetap ? ' auto' : '') + '">' +
       '<button data-arah="D" data-i="' + i + '" class="' + (arah === 'D' ? 'on' : '') + '"' + (tetap ? ' disabled' : '') + '>D</button>' +
       '<button data-arah="K" data-i="' + i + '" class="' + (arah === 'K' ? 'on' : '') + '"' + (tetap ? ' disabled' : '') + '>K</button></div>' +
-      '<input type="text" inputmode="decimal" data-i="' + i + '" data-k="jml" value="' + esc(b.jml) + '" placeholder="0">' +
-      '<button class="tl-del" data-del="' + i + '" title="Hapus baris">✕</button></div></div>';
+      '<input class="tl-jml" type="text" inputmode="decimal" data-i="' + i + '" data-k="jml" value="' + esc(b.jml) + '" placeholder="0">' +
+      '<button class="tl-del" data-del="' + i + '" title="Hapus baris">✕</button></div>';
   }).join('');
   var daftarTes = TX().slice(0, 12).map(function (e) {
     return '<div class="tl-tes"><div><b>' + esc(e.ket) + '</b><small>' + esc(String(e.tanggal).split('-').reverse().join('/')) +
@@ -1638,6 +1739,7 @@ function gbrInput() {
     '<div class="tl-card"><button class="btn-utama" id="tlSimpan" style="width:100%">' + t('Simpan') + '</button></div>' +
     '<div class="sec">' + t('Tersimpan di server') + '</div>' +
     (daftarTes ? '<div class="tl-card">' + daftarTes + '</div>' : '<div class="empty">' + t('Belum ada transaksi') + '</div>');
+  aturLebarBaris();
   hitungRingTes();
 }
 
@@ -1718,11 +1820,31 @@ function _batalLamaJanganDipakai(id) {
   gbrInput();
 }
 
+/* 🔴 Angka harga diformat saat diketik (26.504.730,59) supaya mudah dibaca
+   dan tidak salah hitung nol. Nilai aslinya tetap disimpan apa adanya. */
+function formatJml(teks) {
+  var bersih = String(teks).replace(/[^0-9,]/g, '');
+  var pisah = bersih.split(',');
+  var bulat = pisah[0].replace(/^0+(?=\d)/, '');
+  var sen = pisah.length > 1 ? ',' + pisah.slice(1).join('').slice(0, 2) : '';
+  if (!bulat && !sen) return '';
+  return bulat.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + sen;
+}
+
 document.getElementById('inputIsi').addEventListener('input', function (e) {
   if (!formTes) return;
   if (e.target.id === 'tlTgl') formTes.tgl = e.target.value;
   else if (e.target.id === 'tlKet') formTes.ket = e.target.value;
-  else if (e.target.dataset.k === 'jml') { formTes.baris[+e.target.dataset.i].jml = e.target.value; hitungRingTes(); }
+  else if (e.target.dataset.k === 'jml') {
+    var i = +e.target.dataset.i;
+    var rapi = formatJml(e.target.value);
+    if (rapi !== e.target.value) {
+      e.target.value = rapi;
+      try { e.target.setSelectionRange(rapi.length, rapi.length); } catch (err) { /* diam */ }
+    }
+    formTes.baris[i].jml = rapi;
+    hitungRingTes();
+  }
 });
 document.getElementById('inputIsi').addEventListener('change', function (e) {
   if (!formTes) return;
