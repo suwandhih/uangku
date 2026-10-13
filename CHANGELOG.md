@@ -9,7 +9,7 @@
 ## 13 Oktober 2026 — 🎉 UangKu SIAP DIPAKAI SETIAP HARI
 
 > **Alamat:** https://suwandhih.github.io/uangku/uangku-cloud.html
-> **PIN:** ada di berkas `.env` di komputer (baris `LB_PIN`) — **sengaja tidak ditulis di dokumen ini**,
+> **PIN:** ada di berkas **`PIN-UangKu.txt`** di komputer — **sengaja tidak ditulis di dokumen ini**,
 > karena dokumen ini ikut ke GitHub yang **publik**.
 > Bisa dibuka dari **PC maupun HP**. Yang dicatat di situ **langsung tersimpan di server**.
 

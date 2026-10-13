@@ -4,6 +4,8 @@
 # ============================================================
 
 # --- 🔴 RAHASIA (kunci hidup Layerbase) ---
+# berkas PIN untuk Bapak — JANGAN masuk repo publik
+PIN-UangKu.txt
 .env
 .env.*
 !.env.example

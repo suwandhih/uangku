@@ -2,7 +2,7 @@
 
 > **Untuk siapa:** **AI** yang mengerjakan UangKu. **WAJIB dibaca setiap sesi sebelum kerja.**
 > **Dibuat:** 25 September 2026 · **Diperbarui:** 13 Oktober 2026
-> **Status:** 🎉 **SIAP DIPAKAI SETIAP HARI** — https://suwandhih.github.io/uangku/uangku-cloud.html (PIN ada di `.env` di komputer)
+> **Status:** 🎉 **SIAP DIPAKAI SETIAP HARI** — https://suwandhih.github.io/uangku/uangku-cloud.html (PIN ada di berkas `PIN-UangKu.txt`)
 > Data server **IDENTIK 100%** dengan `c:\data\keuangan` · 99 uji lolos · bisa dibaca **dan dicatat** dari PC maupun HP
 > **Pasangan dokumen ini:** `rencanakerja.md` (papan order + rencana + konsep detail Bapak)
 > **Asal konsep:** sistem lama `c:\data\keuangan` — **hanya konsep & metode yang dibawa**, bukan kodenya
@@ -441,7 +441,7 @@ akar semua bug. Di UangKu: **satu logika = satu berkas**. Yang lama **dihapus**.
 
 | Hal | Keadaan |
 |---|---|
-| **🎉 UangKu SIAP DIPAKAI** | ✅ **13 Okt 2026** — Bapak mencatat setiap hari di **https://suwandhih.github.io/uangku/uangku-cloud.html** (PIN ada di `.env` di komputer), dari **PC maupun HP** |
+| **🎉 UangKu SIAP DIPAKAI** | ✅ **13 Okt 2026** — Bapak mencatat setiap hari di **https://suwandhih.github.io/uangku/uangku-cloud.html** (PIN ada di berkas `PIN-UangKu.txt`), dari **PC maupun HP** |
 | **Kode (PC)** | ✅ `server/core/` 5 berkas (`uang` · `periode` · `saldo` · `bunga` · `aturan`) + `server/db/index.ts` + `server/uji/` 5 berkas uji. **99 uji LOLOS** (`npm run uji`) · `npm run cek` bersih |
 | **`uangku-cloud.html`** | ✅ **BARU 13 Okt** — halaman yang dipakai Bapak. **Seluruh kode tampilan `uangku.html` dipakai APA ADANYA**; yang berganti hanya ① sumber data (server) ② tempat simpan (server). Ditambah gerbang PIN + layar Riwayat + menu Bulan Baru. **Aman masuk repo publik** (tanpa data keuangan) |
 | **`uangku.html`** | ✅ versi HP lama — **mandiri**, data disuntik `tools/siapkan-data.cjs`. **Baca saja**. 🔴 **TIDAK boleh masuk repo publik** (memuat data asli) |

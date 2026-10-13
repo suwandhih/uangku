@@ -12,7 +12,7 @@
 ```
 ① Buka Chrome (di HP atau di komputer)
 ② Ketik / tekan simpanan:   https://suwandhih.github.io/uangku/uangku-cloud.html
-③ Masukkan PIN: lihat `.env` di komputer      →  tekan "Simpan & sambung"
+③ Masukkan PIN: lihat berkas PIN-UangKu.txt   →  tekan "Simpan & sambung"
 ```
 
 > 💡 **PIN hanya perlu dimasukkan sekali.** Sesudah itu HP mengingatnya sendiri.
@@ -26,7 +26,8 @@ di Chrome tekan menu **⋮** → **"Tambahkan ke layar utama"**. Nanti ada ikon 
 
 ### ⚠️ Kalau PIN salah
 
-Muncul tulisan **"PIN salah"**. Coba lagi. Kalau lupa PIN, tanya AI — PIN ada di berkas `.env` di komputer.
+Muncul tulisan **"PIN salah"**. Coba lagi. Kalau lupa PIN, buka berkas **`PIN-UangKu.txt`** di komputer —
+PIN tertulis di situ. **PIN tidak berubah sendiri**, jadi yang tertulis di berkas itu selalu berlaku.
 
 ---
 
@@ -227,7 +228,7 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 | **6 bulan terakhir** | Bisa dipilih di **Pengaturan → Bulan** |
 | **Terang / gelap** | Bisa dipilih di Pengaturan |
 | **Simpan ke layar utama** | Bisa — supaya seperti aplikasi biasa (ada di Pengaturan) |
-| **PIN** | Disimpan di perangkat Bapak saja. Tidak perlu diketik ulang |
+| **PIN** | Disimpan di perangkat Bapak saja — **hanya diketik sekali**. Tidak berubah sendiri. Tertulis di berkas **`PIN-UangKu.txt`** |
 | **Data tidak ada di dalam berkas halaman** | Halaman hanya menampilkan; datanya di server. Jadi aman dibuka dari mana saja |
 
 ---
@@ -238,7 +239,7 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 |---|---|
 | **Tidak bisa mencatat / tanggal ditolak** | Bulan baru belum dibuka → **Pengaturan → 📅 Bulan Baru → Buka bulan baru** |
 | Angka tidak muncul / kosong | Internet mati, atau PIN salah. Coba muat ulang halaman |
-| Muncul "PIN salah" | Ketik ulang PIN yang benar (ada di `.env` di komputer). Kalau lupa, tanya AI |
+| Muncul "PIN salah" | Buka berkas **`PIN-UangKu.txt`** di komputer, ketik ulang angkanya (6 angka, tanpa spasi) |
 | Angka beda dengan komputer | **Laporkan** — itu bug (aturan C18) |
 | Tampilan terpotong | Putar HP / kecilkan huruf di Chrome, lalu laporkan |
 | Salah mencatat | Buka **Transaksi → Riwayat → ↩️ Pulihkan**, atau **Batalkan** di daftar transaksi |
