@@ -2626,14 +2626,19 @@ Sistem lama menghitung WMA **dari tanggal bayar terakhir** setiap kali dibayar �
 
 **Usulan:** tambah kolom `toleransi_hari` (bawaan **3**). Kalau selisih > toleransi → tandai **"perlu hitung ulang"** di Dashboard. Tidak menghapus aturan lama (aturan E2).
 
-### 18.5b ✅ Keputusan Bapak (13 Okt) — dua hal sudah jelas
+### 18.5b ✅ Keputusan Bapak (13 Okt) — tiga hal sudah jelas
 
 | # | Pertanyaan | **Jawaban Bapak** |
 |---|---|---|
 | **1** | Cara sistem tahu ada selisih (poin 3) | ✅ *"Ya, persis begitu — selisih dihitung saat barang benar-benar diorder"*<br/>→ Bapak klik "order" di tanggal yang **berbeda** dari perkiraan → sistem **catat selisihnya**. Selisih **≤ 2 hari diabaikan**; **> 3 hari → hitung ulang** perkiraan berikutnya |
 | **2** | Di mana pengingat muncul (poin 2 & 4) | ✅ *"hanya di rutin.. yg di munculkan pada dashboard adalah item rutin yg di pilih user untuk tampil di dashboard"*<br/>→ **Pengingat H-n & tagihan jatuh tempo → HANYA di halaman Rutin**<br/>→ **Dashboard → HANYA item yang Bapak pilih sendiri** (`monitor=1`), tampil **nama barang + berapa hari lagi** |
+| **3** | Cara kerja klik rutin (poin 1) | ✅ *"klik rutin sistem tampilkan jurnal apa saja.. user tinggal save.. atau jika ada sedikit koreksi user bisa koreksi pada jurnal"*<br/>→ **Klik rutin → sistem tampilkan jurnal yang akan terbentuk**, sudah terisi<br/>→ Bapak **tinggal Save** — **tidak mengetik dari awal**<br/>→ Kalau ada koreksi kecil (mis. harga berubah) → **angka boleh diubah langsung** sebelum Save<br/>→ Setelah Save → transaksi jadi + jadwal berikutnya dihitung ulang |
 
-> 🔑 **Jadi Dashboard tetap bersih** — tidak dipenuhi peringatan. Yang tayang hanya
+> 🔑 **Jadi bukan pilihan "contoh dulu vs langsung simpan" — melainkan keduanya:**
+> jurnalnya **langsung tampil sudah terisi**, dan Bapak **bisa** mengubah kalau perlu.
+> Tanpa koreksi → 1 klik lalu Save. Dengan koreksi → ubah angkanya, lalu Save.
+
+> 🔑 **Dashboard tetap bersih** — tidak dipenuhi peringatan. Yang tayang hanya
 > barang yang memang Bapak mau pantau (mis. Galon Air, Token PLN).
 
 ### 18.6 Yang sudah ada vs belum ada
@@ -2655,7 +2660,7 @@ Sistem lama menghitung WMA **dari tanggal bayar terakhir** setiap kali dibayar �
 | Tahap | Isi | Perkiraan |
 |---|---|---|
 | **R1** | **Halaman Rutin** — daftar rutin + pengingat H-n (siap dibayar). 🔴 Pengingat **HANYA di sini** | 1 sesi |
-| **R2** | Tombol **Bayar** → jurnal otomatis + jadwal berikutnya | 1 sesi |
+| **R2** | Tombol **Bayar** → **tampilkan jurnalnya sudah terisi** → Bapak **Save** (angka boleh dikoreksi dulu) → jurnal jadi + jadwal berikutnya | 1 sesi |
 | **R3** | Pindahkan rumus **WMA** + tampilan "berapa hari lagi" | 1 sesi |
 | **R4** | Aturan selisih (≤ 2 abaikan, > 3 hitung ulang) — dihitung **saat barang benar-benar diorder** | 1 sesi |
 | **R5** | **Pantau di Dashboard** — Bapak **pilih sendiri** item mana yang tayang (nama + sisa hari). 🔴 Dashboard **tidak** menampilkan peringatan lain | 1 sesi |

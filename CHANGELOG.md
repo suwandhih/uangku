@@ -51,12 +51,13 @@ Aturan Bapak *"selisih 1–2 hari diabaikan, > 3 hari hitung ulang"* **belum ada
 Bukti: Service Toren Air → jatuh tempo 22 Jan 2027, perkiraan order 28 Jan 2027 = **selisih 6 hari**.
 Usulan: tambah kolom `toleransi_hari` (bawaan 3).
 
-### ✅ Dua hal sudah diputuskan Bapak
+### ✅ Tiga hal sudah diputuskan Bapak
 
 | # | Pertanyaan | Jawaban |
 |---|---|---|
 | 1 | Cara sistem tahu ada selisih | **Selisih dihitung saat barang benar-benar diorder** — Bapak klik "order" di tanggal berbeda dari perkiraan → sistem catat selisihnya. ≤ 2 hari diabaikan · > 3 hari hitung ulang |
 | 2 | Di mana pengingat muncul | 🔴 **Pengingat HANYA di halaman Rutin.** Dashboard **tidak** menampilkan peringatan — Dashboard hanya menampilkan **item yang Bapak pilih sendiri** (nama + berapa hari lagi) |
+| 3 | Cara kerja klik rutin | **Klik rutin → sistem tampilkan jurnalnya sudah terisi → tinggal Save.** Angka boleh dikoreksi dulu kalau ada perubahan |
 
 > 🔑 Jadi **Dashboard tetap bersih** — tidak dipenuhi peringatan.
 > Yang tayang hanya barang yang memang Bapak mau pantau (mis. **Galon Air**, **Token PLN**).
