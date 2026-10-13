@@ -525,10 +525,18 @@ catat.forEach((c, i) => console.log(`  ${i + 1}. ${c}`));
 console.log(`\nUkuran: ${(h.length / 1024).toFixed(0)} KB (sumber uangku.html: ${(fs.readFileSync(SUMBER, 'utf8').length / 1024).toFixed(0)} KB)`);
 console.log('Hasil: ' + HASIL);
 
-/* periksa tidak ada sisa data keuangan yang ikut */
-const KATA = ['Superbank', 'SeaBank', 'Celengan', 'Deposito', 'Tabungan A', 'ShopeePay',
-  'Galon', '269626', '23717634', '260000000', '293.720.428'];
-const ketemu = KATA.filter((k) => h.includes(k));
-console.log(ketemu.length === 0
-  ? '\n✅ Bersih — tidak ada nama fund / angka saldo di dalam berkas'
-  : '\n⚠️  Masih ada: ' + ketemu.join(', '));
+/* Periksa tidak ada sisa DATA KEUANGAN yang ikut.
+   ⚠️ Jangan menaruh angka saldo asli di sini — berkas ini ikut ke repo publik.
+   Yang diperiksa: blok data JSON bawaan, dan angka panjang (≥ 7 digit) yang
+   hanya muncul kalau ada saldo/jumlah transaksi yang tertinggal. */
+const sisaBlokData = /<script id="data-uangku"/.test(h);
+const angkaPanjang = (h.match(/\b\d{7,}\b/g) || [])
+  .filter((n) => !/^\d{7,}$/.test(n) === false)
+  .filter((n) => Number(n) > 1_000_000);
+const mencurigakan = [...new Set(angkaPanjang)].slice(0, 10);
+console.log(sisaBlokData
+  ? '\n⚠️  Blok data bawaan masih ada — data keuangan bisa ikut terkirim!'
+  : '\n✅ Blok data bawaan sudah dibuang');
+console.log(mencurigakan.length === 0
+  ? '✅ Tidak ada angka panjang (≥ 7 digit) di dalam berkas'
+  : '⚠️  Ada angka panjang — periksa dulu: ' + mencurigakan.join(', '));
