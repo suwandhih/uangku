@@ -40,7 +40,7 @@ section.aktif{display:block}
 .grid{display:grid; gap:5px}
 /* ⚠️ HANYA `min-width` + nilai bawaan — kalau pakai pasangan min+max,
    lebar pecahan (mis. 340,8 px) tidak cocok ke aturan mana pun → 1 kolom (bug nyata).
-   Ambang 480 px dipilih supaya angka panjang seperti 26.797.530,59 TIDAK terpotong. */
+   Ambang 480 px dipilih supaya angka panjang (ratusan juta) TIDAK terpotong. */
 .grid{grid-template-columns:repeat(2,1fr)}
 @media (min-width:341px){ .grid{grid-template-columns:repeat(3,1fr)} }
 @media (min-width:480px){ .grid{grid-template-columns:repeat(4,1fr)} }
