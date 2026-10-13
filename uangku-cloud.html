@@ -1324,17 +1324,17 @@ function gbrSub() {
   else if (subNama === 'Tentang') {
     var meta = (DATA && DATA.meta) || {};
     h += '<div class="dl">' +
-      '<div class="r"><span class="k">Versi</span><span class="v">HP (Android)</span></div>' +
+      '<div class="r"><span class="k">Versi</span><span class="v">Cloud (PC + HP)</span></div>' +
       '<div class="r"><span class="k">' + t('Saldo') + '</span><span class="v">' + t('Versi HP — dibuat') + ' ' +
         esc(meta.dibuat || '—') + '</span></div>' +
       '<div class="r"><span class="k">Sumber</span><span class="v">' + esc(meta.sumber || '—') + '</span></div>' +
       '<div class="r"><span class="k">Bulan</span><span class="v">' + BULAN.length + ' bulan</span></div>' +
       '</div>';
     h += '<div class="sec">' + t('Informasi') + '</div>' +
-      '<div class="hint">Berkas ini <b>berdiri sendiri</b> — tidak butuh server dan tidak butuh internet.<br><br>' +
-      'Data <b>tidak</b> berubah-ubah: angkanya diambil dari ' + t('Saldo') + ' kerja di komputer. ' +
-      'Kalau catatan di komputer berubah, jalankan <code>node tools\\siapkan-data.cjs</code> ' +
-      'lalu kirim ulang berkas ini ke HP.<br><br>' +
+      '<div class="hint">Berkas ini <b>hanya tampilan</b> — angkanya diambil dari server setiap kali dibuka. ' +
+      'Tidak ada data keuangan di dalam berkas ini.<br><br>' +
+      'Yang dicatat di sini <b>langsung tersimpan di server</b>, jadi bisa dibuka dari komputer maupun HP ' +
+      'dan angkanya selalu sama.<br><br>' +
       t('Angka memakai aturan yang sama dengan') + ' <code>core/saldo.ts</code> — ' +
       'batas bulan wajib awal dan akhir, dan 5 tag dikecualikan.<br><br>' +
       '<b>' + t('Simpan ke layar utama') + ':</b> di Chrome tekan menu ⋮ → ' +

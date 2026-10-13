@@ -248,6 +248,33 @@ skrip = skrip.replace(
 );
 catat.push('layar Catat: data dari server');
 
+/* 2e2. layar "Tentang" — versi cloud (bukan lagi berkas mandiri) */
+skrip = skrip.replace(
+  `      '<div class="r"><span class="k">Versi</span><span class="v">HP (Android)</span></div>' +`,
+  `      '<div class="r"><span class="k">Versi</span><span class="v">Cloud (PC + HP)</span></div>' +`,
+);
+const tentangLama = `    h += '<div class="sec">' + t('Informasi') + '</div>' +
+      '<div class="hint">Berkas ini <b>berdiri sendiri</b> — tidak butuh server dan tidak butuh internet.<br><br>' +
+      'Data <b>tidak</b> berubah-ubah: angkanya diambil dari ' + t('Saldo') + ' kerja di komputer. ' +
+      'Kalau catatan di komputer berubah, jalankan <code>node tools\\\\siapkan-data.cjs</code> ' +
+      'lalu kirim ulang berkas ini ke HP.<br><br>' +
+      t('Angka memakai aturan yang sama dengan') + ' <code>core/saldo.ts</code> — ' +
+      'batas bulan wajib awal dan akhir, dan 5 tag dikecualikan.<br><br>' +
+      '<b>' + t('Simpan ke layar utama') + ':</b> di Chrome tekan menu ⋮ → ' +
+      '“Tambahkan ke layar utama”.</div>';`;
+const tentangBaru = `    h += '<div class="sec">' + t('Informasi') + '</div>' +
+      '<div class="hint">Berkas ini <b>hanya tampilan</b> — angkanya diambil dari server setiap kali dibuka. ' +
+      'Tidak ada data keuangan di dalam berkas ini.<br><br>' +
+      'Yang dicatat di sini <b>langsung tersimpan di server</b>, jadi bisa dibuka dari komputer maupun HP ' +
+      'dan angkanya selalu sama.<br><br>' +
+      t('Angka memakai aturan yang sama dengan') + ' <code>core/saldo.ts</code> — ' +
+      'batas bulan wajib awal dan akhir, dan 5 tag dikecualikan.<br><br>' +
+      '<b>' + t('Simpan ke layar utama') + ':</b> di Chrome tekan menu ⋮ → ' +
+      '“Tambahkan ke layar utama”.</div>';`;
+if (!skrip.includes(tentangLama)) throw new Error('blok Tentang tidak ditemukan');
+skrip = skrip.replace(tentangLama, tentangBaru);
+catat.push('layar Tentang: versi cloud');
+
 /* 2f. matikan penggabungan data tes (tidak dipakai lagi) */
 skrip = skrip.replace(
   '/* gabungkan data tes ke salinan data asli — dari awal setiap kali (tidak dobel) */\nfunction terapkanTes() {',
