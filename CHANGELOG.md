@@ -6,6 +6,49 @@
 
 ---
 
+## 13 Oktober 2026 (malam) — 📐 LEBAR KOLOM DIPERBAIKI (usulan Bapak)
+
+> **Usulan Bapak:** *"ruang isi angka itu terlalu besar.. transaksi saya tidak pernah sebesar itu..
+> jadi sumber sampai terlihat pulldown bisa terlihat dan tag juga dapat ruang yg cukup 3 digit
+> terlihat.. untuk isi angka tidak harus sebenar itu.. buat sumber termuat 3 digit dengan baik
+> dan tag > 3 digit terlihat baik tentu D/K .. lalu sisa untuk isi angka.. minimal 100.000.000,00 bisa isi"*
+
+### 🔴 Masalah yang ditemukan
+
+Kolom **fund terlalu sempit** (24 px) sehingga **panah pulldown-nya terpotong** —
+Bapak tidak bisa melihat bahwa kotak itu bisa dibuka. Tag juga mepet.
+
+### ✅ Yang diperbaiki
+
+| Kolom | Sebelum | Sekarang | Kenapa |
+|---|---|---|---|
+| **Fund** | 24 px | **46 px** | `SPB` + **panah pulldown terlihat** |
+| **Tag** | 52 px | **58 px** | `🏠RMH` + panah pulldown lega |
+| **D / K** | 52 px | **38 px** | hanya 1 huruf — tidak perlu lebar |
+| **Harga** | sisa | **min 78 px** | cukup untuk `100.000.000,00` |
+| **✕ hapus** | 24 px | **26 px** | tetap |
+
+**Tambahan:**
+- `padding-right: 14px` pada fund & tag → **panah pulldown tidak terpotong lagi**
+- **7 langkah pengecilan bertahap** untuk layar sangat sempit (D/K → hapus → tag → fund)
+- Kalau harga masih lega → **ruang dikembalikan ke fund & tag** (maks 8 px)
+
+### 📐 Hasil ukur (viewport nyata)
+
+| Lebar | Fund | Tag | D/K | Harga | 1 baris | Angka | Tag | Fund |
+|---|---|---|---|---|---|---|---|---|
+| 256 px | 32 | 42 | 30 | 60 | ✅ | ✅ | ✅ | ✅ |
+| 288 px | 40 | 46 | 30 | 80 | ✅ | ✅ | ✅ | ✅ |
+| 312 px (HP umum) | 46 | 58 | 34 | 80 | ✅ | ✅ | ✅ | ✅ |
+| 344 px | 54 | 66 | 38 | 90 | ✅ | ✅ | ✅ | ✅ |
+| 448 px | 54 | 66 | 38 | 190 | ✅ | ✅ | ✅ | ✅ |
+| 768 px (layar 50%) | 54 | 66 | 38 | 510 | ✅ | ✅ | ✅ | ✅ |
+
+> ✅ Diuji dengan angka **`100.000.000,00`** — **tidak terpotong** di semua lebar.
+> ✅ Diuji juga di halaman **live** GitHub Pages — hasil sama.
+
+---
+
 ## 13 Oktober 2026 (malam) — 🧾 FORM CATAT JADI **1 BARIS**
 
 > **Permintaan Bapak:** *"apakah bisa sumber fund < di buat seringkas mungkin kalau bisa

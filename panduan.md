@@ -77,11 +77,15 @@ Sejak 13 Okt 2026, **satu catatan bank = satu baris**:
 
 | Bagian | Lebar | Catatan |
 |---|---|---|
-| **Fund** | kecil (3 huruf) | Arahkan kursor / tekan lama → muncul **nama lengkap** |
-| **Tag** | kecil | emoji + 3 huruf |
-| **D / K** | kecil | 1 huruf |
-| **Harga** | **paling besar** | mengambil seluruh sisa lebar — angka **tidak pernah terpotong** |
+| **Fund** | sedang (3 huruf) | Panah **▾** terlihat jelas — tekan untuk memilih fund lain. Arahkan kursor / tekan lama → muncul **nama lengkap** |
+| **Tag** | sedang | emoji + 3 huruf, panah **▾** terlihat |
+| **D / K** | kecil | 1 huruf saja |
+| **Harga** | **paling besar** | mengambil seluruh sisa lebar — cukup untuk **100.000.000,00** |
 | **✕** | kecil | hapus baris ini |
+
+> 💡 **Kenapa fund & tag dapat ruang lebih?** Karena Bapak perlu **melihat panah ▾** supaya tahu
+> kotak itu bisa dibuka. Angka transaksi harian tidak pernah sebesar 100 juta, jadi sisanya
+> cukup untuk harga.
 
 > 🔑 **Singkatan fund hanya untuk tampilan.** Yang tersimpan di server **tetap nama lengkap**
 > ("Superbank"), jadi laporan dan saldo tidak terpengaruh sama sekali.
