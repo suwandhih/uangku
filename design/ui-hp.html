@@ -1,0 +1,2804 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UangKu — Rancangan Tampilan HP</title>
+<style>
+/* ============================================================
+   UangKu — Rancangan Tampilan HP (MOCKUP — belum ada sistem)
+   Prinsip: hitam-putih · warna hanya untuk PERHATIAN
+   ============================================================ */
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:#d8d8d8;
+  color:#111;
+  padding:14px 12px 40px;
+}
+
+/* ---------- Kerangka halaman (bukan bagian aplikasi) ---------- */
+.stage{display:flex;flex-direction:column;align-items:center;gap:12px;overflow-x:auto}
+
+/* Pembungkus HP — menyesuaikan lebar jendela supaya tidak terpotong */
+.frame{display:flex;justify-content:center;flex:0 0 auto;transform-origin:top center}
+
+.toolbar{
+  width:min(922px,100%);
+  background:#fff;border:1px solid #bbb;border-radius:10px;
+  padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  font-size:12px;
+}
+.toolbar .grp{display:flex;gap:4px;align-items:center}
+.toolbar .lbl{color:#666;font-size:11px;margin-right:2px}
+.tbtn{
+  border:1px solid #999;background:#fff;color:#111;border-radius:6px;
+  padding:4px 9px;font-size:11.5px;cursor:pointer;font-family:inherit;
+}
+.tbtn.on{background:#111;color:#fff;border-color:#111}
+.toolbar .title{font-weight:700;font-size:13px;margin-right:auto}
+.toolbar .title small{font-weight:400;color:#666;font-size:11px}
+
+/* ---------- Bingkai HP ---------- */
+.phone{
+  --w:390px;
+  width:var(--w);
+  height:min(844px,calc(100vh - 190px));
+  min-height:560px;
+  background:var(--bg);
+  border:9px solid #111;
+  border-radius:42px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  position:relative;
+  font-size:13px;
+}
+
+/* ============================================================
+   MODE TANPA BINGKAI (default) — layar jadi LEBIH LEBAR
+   Dipakai supaya di HP tidak ada ruang terbuang oleh garis kotak
+   ============================================================ */
+.phone.bare{
+  --w:100%;
+  max-width:none;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  height:100%;
+  min-height:0;
+}
+body.bare{padding:0;background:#fff;overflow-x:hidden}
+body.bare.theme-dark{background:#0d0d0d}
+body.bare .statusbar{display:none}
+body.bare .stage{gap:0;height:100dvh;overflow:hidden;align-items:stretch;justify-content:flex-start}
+body.bare .notes{display:none}
+
+/* Alat peraga DISEMBUNYIKAN secara bawaan — supaya tidak tertukar dengan aplikasi.
+   Muncul hanya kalau tombol 🔧 ditekan. */
+body.bare .toolbar{
+  position:static;order:-1;
+  width:100%;max-width:none;margin:0;border-radius:0;
+  border:0;border-bottom:1px solid #ccc;
+  padding:5px 8px;gap:5px;font-size:11px;
+  display:none;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;
+  background:#fff;flex:0 0 auto;scrollbar-width:thin;
+}
+body.bare.showtools .toolbar{display:flex}
+body.bare .toolbar .label{
+  flex:0 0 auto;font-size:10px;font-weight:700;color:#666;
+  align-self:center;padding-right:4px;white-space:nowrap;
+}
+
+/* Tombol 🔧 — buka/tutup alat peraga */
+.toolbtn{
+  position:fixed;right:10px;bottom:10px;z-index:80;display:none;
+  width:36px;height:36px;border-radius:18px;border:1px solid #bbb;
+  background:#fff;color:#333;font-size:15px;cursor:pointer;font-family:inherit;
+  box-shadow:0 3px 12px rgba(0,0,0,.2);padding:0;opacity:.55;
+}
+.toolbtn:hover{opacity:1}
+body.bare .toolbtn{display:block}
+body.tools-dark .toolbtn{background:#171717;color:#f5f5f5;border-color:#3a3a3a}
+body.bare .toolbar::-webkit-scrollbar{height:0}
+body.bare .toolbar .title{display:none}
+body.bare .toolbar .lbl{display:none}
+body.bare .toolbar .grp{gap:4px;flex:0 0 auto}
+body.bare .toolbar .tbtn{padding:5px 8px;font-size:11px;white-space:nowrap}
+
+/* Tinggi HP mengikuti sisa ruang setelah bar alat */
+body.bare .frame{
+  width:100%;max-width:none;flex:1 1 auto;min-height:0;
+  display:flex;justify-content:center;align-items:stretch;
+  transform:none!important;
+}
+body.bare .phone{height:100%;min-height:0}
+
+/* Tab kecil di tepi kiri — tombol alat (tidak dipakai lagi, disimpan kalau perlu) */
+.mini{display:none!important}
+body.bare.theme-dark .tbtn{background:#171717;color:#f5f5f5;border-color:#3a3a3a}
+body.bare.theme-dark .tbtn.on{background:#f5f5f5;color:#0d0d0d;border-color:#f5f5f5}
+
+/* Keterangan maksimal 2 baris (dipotong dengan …) */
+.phone .tx .desc{
+  white-space:normal;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  line-height:1.3;overflow:hidden;font-size:13px;
+}
+
+/* Meta 1 baris: [Tag] · [Fund …] [badge] — WAJIB nowrap */
+.phone .tx .meta{
+  display:flex;align-items:center;gap:4px;flex-wrap:nowrap;
+  overflow:hidden;white-space:nowrap;
+  font-size:11px;margin-top:3px;color:var(--text2);
+}
+.phone .tx .meta .tag{color:var(--text);font-weight:700;flex:0 0 auto}
+.phone .tx .meta .sep{flex:0 0 auto;opacity:.55}
+.phone .tx .meta .fund{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.phone .tx .meta .badge{flex:0 0 auto}
+.phone .tx .amt{font-size:12.5px}
+.phone .tx .amt small{font-size:9.5px}
+
+/* Baris pencarian: tumpuk supaya tidak terpotong di layar sempit */
+.searchrow{flex-wrap:wrap}
+.searchrow .search{flex:1 1 100%}
+.searchrow .seg{flex:1 1 100%}
+.seg button{flex:1}
+
+/* Di mode tanpa bingkai: tombol tambah ke KIRI BAWAH — angka transaksi ada di kanan,
+   jadi angka tidak tertutup */
+body.bare .fab{
+  left:16px;right:auto;bottom:76px;
+  width:56px;height:56px;border-radius:28px;padding:0;
+  justify-content:center;font-size:24px;line-height:1;
+}
+body.bare .fab .lbl{display:none}
+
+/* Di mode tanpa bingkai: sembunyikan kotak cari (buang ruang) */
+body.bare .searchrow{display:none}
+
+/* ---------- Warna ---------- */
+.phone{
+  --bg:#fff;
+  --surface:#f7f7f7;
+  --surface2:#efefef;
+  --text:#0a0a0a;
+  --text2:#6b6b6b;
+  --line:#e4e4e4;
+  --ink:#0a0a0a;
+  --onink:#fff;
+  --warn:#b45309;
+  --warnbg:#fff7e6;
+  --danger:#b91c1c;
+  --dangerbg:#fdecec;
+}
+.phone.dark{
+  --bg:#0d0d0d;
+  --surface:#171717;
+  --surface2:#212121;
+  --text:#f5f5f5;
+  --text2:#a3a3a3;
+  --line:#2c2c2c;
+  --ink:#f5f5f5;
+  --onink:#0d0d0d;
+  --warn:#f0b429;
+  --warnbg:#2a2113;
+  --danger:#ff7b72;
+  --dangerbg:#2c1717;
+}
+.phone *{color:var(--text)}
+
+/* ---------- Status bar ---------- */
+.statusbar{
+  height:26px;flex:0 0 26px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;font-size:11px;color:var(--text2);font-weight:600;
+}
+.statusbar .right{display:flex;gap:4px;align-items:center}
+.statusbar .bat{width:18px;height:9px;border:1px solid var(--text2);border-radius:2px;position:relative}
+.statusbar .bat:after{content:"";position:absolute;inset:1px;right:5px;background:var(--text2);border-radius:1px}
+
+/* ---------- App header ---------- */
+.apphead{
+  flex:0 0 auto;padding:4px 14px 10px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;
+}
+.apphead .h1{font-size:19px;font-weight:800;letter-spacing:-.3px;margin-right:auto}
+.apphead .iconbtn{flex:0 0 auto}
+.iconbtn{
+  border:1px solid var(--line);background:var(--surface);border-radius:9px;
+  min-width:34px;height:34px;padding:0 9px;font-size:12px;font-family:inherit;
+  display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)
+}
+
+/* ---------- Isi yang bisa digeser ---------- */
+.body{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.body::-webkit-scrollbar{width:0}
+
+/* ---------- Pemilih fund (geser samping) ---------- */
+.chips{
+  display:flex;gap:6px;overflow-x:auto;padding:10px 14px 8px;scrollbar-width:none;
+  border-bottom:1px solid var(--line);
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:7px 12px;font-size:12.5px;font-family:inherit;
+  cursor:pointer;white-space:nowrap;color:var(--text);
+}
+.chip.on{background:var(--ink);color:var(--onink);border-color:var(--ink);font-weight:700}
+.chip .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:middle;opacity:.6}
+
+/* ---------- Kartu saldo ---------- */
+.saldo{
+  margin:10px 14px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+}
+.saldo .top{background:var(--surface);padding:11px 13px 12px}
+.saldo .top .k{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.saldo .top .v{font-size:clamp(21px,7vw,27px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-top:2px}
+.saldo .top .v small{font-size:13px;font-weight:600;color:var(--text2);letter-spacing:0}
+.saldo .grid{display:grid;grid-template-columns:1fr 1fr 1fr}
+.saldo .cell{padding:9px 9px;border-top:1px solid var(--line);min-width:0}
+.saldo .cell+.cell{border-left:1px solid var(--line)}
+.saldo .cell .k{font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.2px;line-height:1.15}
+.saldo .cell .v{font-size:clamp(11px,3.9vw,14px);font-weight:800;margin-top:3px;letter-spacing:-.4px;white-space:nowrap}
+.saldo .cell .v small{font-size:11px;font-weight:600;color:var(--text2)}
+
+/* ---------- Tombol besar (dipakai di halaman Pengaturan) ----------
+   Catatan 25 Sep 2026: tombol pintas di Dashboard DIHAPUS — pindah halaman
+   cukup lewat tab bawah (Dashboard · Transaksi · Pengaturan). */
+.phone .goto{
+  display:flex;align-items:center;gap:11px;width:calc(100% - 28px);margin:10px 14px 0;
+  border:1px solid var(--ink);background:var(--ink);border-radius:13px;
+  padding:13px 13px;text-align:left;font-family:inherit;cursor:pointer;
+}
+.phone .goto .gi{font-size:20px}
+.phone .goto .gt{font-weight:800;font-size:14.5px;display:block}
+.phone .goto .gs{font-size:11.5px;opacity:.8;display:block;margin-top:1px}
+.phone .goto .garrow{margin-left:auto;font-size:19px;opacity:.85;flex:0 0 auto}
+.phone .goto,
+.phone .goto *{color:var(--onink)!important}
+.phone .goto.accent{background:transparent;border-color:var(--line)}
+.phone .goto.accent,
+.phone .goto.accent *{color:var(--text)!important}
+
+/* ---------- Kartu ringkas (bisa dilipat) ---------- */
+.card{margin:10px 14px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card .chead{
+  display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--surface);
+  font-size:12.5px;font-weight:800;cursor:pointer;
+}
+.card .chead .ctog{margin-left:auto;font-size:11px;color:var(--text2);font-weight:700}
+.card .cbody{border-top:1px solid var(--line)}
+.card.fold .cbody{display:none}
+.crow{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12.5px;border-top:1px solid var(--line)}
+.crow:first-child{border-top:0}
+.crow .cl{color:var(--text2)}
+.crow b{margin-left:auto;white-space:nowrap;font-size:13px}
+.crow .mini{font-size:10px;font-weight:700;color:var(--text2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+
+/* ---------- Baris perhatian (satu-satunya tempat warna) ---------- */.alert{
+  margin:8px 14px 0;border-radius:10px;padding:9px 11px;font-size:12.5px;
+  display:flex;gap:8px;align-items:center;
+  background:var(--warnbg);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);
+  font-weight:600;
+}
+.alert.danger{background:var(--dangerbg);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,transparent)}
+.alert .go{margin-left:auto;font-size:11px;opacity:.85}
+
+/* ---------- Filter & cari ---------- */
+.filters{padding:12px 14px 8px;display:flex;flex-direction:column;gap:8px}
+.searchrow{display:flex;gap:8px}
+.search{
+  flex:1;display:flex;align-items:center;gap:7px;border:1px solid var(--line);
+  background:var(--surface);border-radius:10px;padding:0 10px;height:38px;
+}
+.search input{border:0;background:transparent;outline:0;font-size:13px;width:100%;font-family:inherit;color:var(--text)}
+.search input::placeholder{color:var(--text2)}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:38px}
+.seg button{
+  border:0;background:var(--surface);padding:0 12px;font-size:12.5px;font-family:inherit;
+  cursor:pointer;color:var(--text);font-weight:600;white-space:nowrap;
+}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:var(--onink)}
+
+/* ---------- Daftar transaksi ---------- */
+.daylabel{
+  padding:14px 14px 6px;font-size:11.5px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px;
+}
+.daylabel:after{content:"";flex:1;height:1px;background:var(--line)}
+
+.tx{
+  display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid var(--line);
+}
+.tx .ic{
+  flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.tx .mid{flex:1 1 auto;min-width:0}
+.tx .desc{font-size:13.5px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx .tag{font-weight:700;color:var(--text)}
+.tx .amt{flex:0 0 auto;text-align:right;font-size:14px;font-weight:800;letter-spacing:-.3px;white-space:nowrap}
+.tx .amt small{font-size:10.5px;font-weight:600;color:var(--text2);display:block;margin-top:1px}
+.tx.dim{opacity:.5}
+.tx.dim .desc{text-decoration:line-through}
+.tx .badge{
+  font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:5px;
+  padding:1px 5px;color:var(--text2);
+}
+
+/* ============================================================
+   DUA BENTUK BARIS TRANSAKSI — untuk dibandingkan Bapak
+   ① .tx         = VERTIKAL (nama di atas, keterangan di bawah)
+   ② .tx.txrow   = HORISONTAL (kolom sejajar: tanggal · ket · tag · fund · jumlah)
+   ============================================================ */
+
+/* ---------- ② HORISONTAL: SATU BARIS = SATU TRANSAKSI ---------- */
+.tx.txrow{
+  display:grid;
+  grid-template-columns:22px minmax(0,1fr) auto;
+  gap:0 6px;align-items:center;
+  padding:6px 10px;
+  font-size:12px;
+}
+.tx.txrow .ic{
+  flex:none;width:22px;height:22px;border-radius:6px;font-size:12px;
+  display:flex;align-items:center;justify-content:center;background:var(--surface2);
+}
+.tx.txrow .cmid{min-width:0;overflow:hidden}
+.tx.txrow .cdesc{
+  font-size:11.5px;font-weight:600;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;line-height:1.3;letter-spacing:-.1px;
+}
+.tx.txrow .cmeta{
+  font-size:9px;color:var(--text2);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;line-height:1.3;margin-top:1px;
+  display:flex;align-items:center;gap:3px;
+}
+.tx.txrow .cmeta .ctag{font-weight:800;color:var(--text);flex:0 0 auto}
+.tx.txrow .cmeta .cdate{color:var(--text2);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.tx.txrow .cmeta .cfund{min-width:0;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.tx.txrow .cmeta .cbadge{
+  flex:0 0 auto;font-size:8.5px;font-weight:700;border:1px solid var(--line);
+  border-radius:4px;padding:0 4px;color:var(--text2);
+}
+.tx.txrow .camt{
+  text-align:right;font-size:12.5px;font-weight:800;white-space:nowrap;
+  letter-spacing:-.3px;font-variant-numeric:tabular-nums;
+}
+.tx.txrow .camt small{font-size:9px;font-weight:600;color:var(--text2);display:block;margin-top:-1px}
+
+/* Kepala kolom horisontal */
+.thead{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:0 6px;
+  padding:5px 10px;border-bottom:1px solid var(--line);background:var(--surface);
+  font-size:9px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;
+}
+.thead span:nth-child(3){text-align:right}
+
+/* Tombol ganti bentuk baris (alat peraga) */
+.viewtoggle{
+  display:flex;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;
+  margin:8px 14px 0;height:34px;
+}
+.viewtoggle button{
+  flex:1;border:0;background:var(--surface);font-family:inherit;font-size:11.5px;
+  font-weight:700;cursor:pointer;color:var(--text);padding:0 6px;
+}
+.viewtoggle button+button{border-left:1px solid var(--line)}
+.viewtoggle button.on{background:var(--ink);color:var(--onink)}
+
+/* Kartu berpasangan (transfer / bunga+pajak) — 2 baris terikat */
+.txpair{
+  margin:8px 14px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+}
+.txpair .ph{
+  display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface);
+  font-size:10.5px;font-weight:800;border-bottom:1px solid var(--line);
+  white-space:nowrap;overflow:hidden;
+}
+.txpair .ph .pt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.txpair .ph .pb{
+  flex:0 0 auto;font-size:9px;font-weight:700;border:1px solid var(--line);
+  border-radius:5px;padding:1px 5px;color:var(--text2);white-space:nowrap;
+}
+.txpair .tx{border-bottom:0;border-top:1px solid var(--line);padding:8px 11px}
+.txpair .tx:first-of-type{border-top:0}
+.txpair .tx.txrow{border-radius:0}
+
+/* Header lebih rapat di mode HP supaya semua tombol muat */
+body.bare .apphead{padding:4px 10px 9px;gap:6px}
+body.bare .apphead .h1{font-size:16px;margin-right:auto}
+body.bare .apphead .iconbtn{min-width:30px;height:32px;padding:0 6px;font-size:14px;line-height:1;justify-content:center}
+body.bare .addtop{height:32px;min-width:32px;padding:0;font-size:0;justify-content:center}
+body.bare .addtop .plus{font-size:19px;font-weight:800;line-height:1}
+
+/* Tombol tambah: di mode HP pindah ke HEADER — tidak menutupi daftar sama sekali */
+.addtop{
+  display:flex;align-items:center;gap:5px;height:34px;padding:0 10px;border-radius:9px;
+  border:1px solid var(--ink);background:var(--ink);color:var(--onink);
+  font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex:0 0 auto;
+}
+.addtop .plus{font-size:15px;font-weight:800;line-height:1}
+body.bare .fab{display:none}
+body.bare .addtop{display:flex}
+
+/* Tombol mengambang (dipakai di mode bingkai saja) */
+.fab{
+  position:absolute;left:14px;right:auto;bottom:76px;height:52px;border-radius:26px;
+  background:var(--ink);border:0;padding:0 18px;font-size:14px;
+  font-weight:800;font-family:inherit;display:flex;align-items:center;gap:7px;
+  box-shadow:0 8px 20px rgba(0,0,0,.28);cursor:pointer;z-index:5;
+}
+.phone .fab,
+.phone .fab *{color:var(--onink)!important}
+
+/* ---------- Navigasi bawah ---------- */
+.tabbar{
+  flex:0 0 auto;border-top:1px solid var(--line);background:var(--bg);
+  display:flex;padding:6px 4px 8px;
+}
+.tab{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;
+  flex:1 1 0;min-width:0;
+  font-size:10px;font-family:inherit;color:var(--text2);cursor:pointer;padding:3px 0;font-weight:600}
+.tab .gi{font-size:17px;line-height:1}
+.tab.on{color:var(--text)}
+.tab.on .gi{transform:translateY(-1px)}
+
+/* ---------- Panel bawah (bottom sheet) ---------- */
+.sheet{
+  position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:20;
+  display:none;align-items:flex-end;
+}
+.sheet.open{display:flex}
+.sheet .panel{
+  background:var(--bg);width:100%;max-height:92%;border-radius:20px 20px 0 0;
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:up .18s ease-out;
+}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.sheet .ph{
+  padding:12px 14px 11px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;
+}
+.sheet .ph .t{font-size:16px;font-weight:800;margin-right:auto}
+.sheet .pb{overflow-y:auto;padding:12px 14px 16px}
+.sheet .pf{padding:10px 14px 16px;border-top:1px solid var(--line);display:flex;gap:8px}
+.btn{
+  height:46px;border-radius:11px;border:1px solid var(--ink);background:var(--ink);
+  color:var(--onink);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;flex:1;
+}
+.btn.ghost{background:transparent;color:var(--text);border-color:var(--line)}
+.btn.danger{border-color:var(--danger);color:var(--danger);background:transparent}
+
+/* ---------- Formulir ---------- */
+.field{margin-bottom:12px}
+.field .lab{font-size:11.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;height:44px;border:1px solid var(--line);border-radius:10px;
+  background:var(--surface);padding:0 11px;font-size:14px;font-family:inherit;color:var(--text);outline:0;
+}
+.field textarea{height:auto;padding:10px 11px;resize:none}
+.field input:focus,.field select:focus{border-color:var(--text)}
+.field .hint{font-size:11px;color:var(--text2);margin-top:4px}
+.field .auto{
+  height:44px;border:1px dashed var(--line);border-radius:10px;background:var(--surface);
+  display:flex;align-items:center;padding:0 11px;font-size:14px;font-weight:600;
+}
+.field .auto small{margin-left:auto;font-size:11px;color:var(--text2);font-weight:600}
+.amount-in{
+  display:flex;align-items:center;height:52px;border:1px solid var(--line);border-radius:10px;
+  background:var(--surface);padding:0 11px;font-size:clamp(17px,5.8vw,22px);font-weight:800;gap:6px;overflow:hidden;
+}
+.amount-in .rp{font-size:14px;color:var(--text2);font-weight:700}
+.tagpick{display:flex;flex-wrap:wrap;gap:6px}
+.tagpick button{
+  border:1px solid var(--line);background:var(--surface);border-radius:999px;
+  padding:7px 11px;font-size:12.5px;font-family:inherit;cursor:pointer;color:var(--text);font-weight:600;
+}
+.tagpick button.on{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.switch{display:flex;align-items:center;gap:9px;padding:10px 0;font-size:13px}
+.switch .box{width:20px;height:20px;border:1.5px solid var(--text);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.switch .box.on{background:var(--ink);color:var(--onink)}
+
+/* ---------- Checkpoint kena pajak (muncul saat tag = Bunga) ---------- */
+.checkpoint{
+  border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  padding:11px 12px 12px;margin:8px 0 0;
+}
+.checkpoint .ckt{font-size:12.5px;font-weight:800;margin-bottom:2px}
+.checkpoint .ckn{font-size:11.5px;color:var(--text2);line-height:1.5;margin:6px 0 0}
+.checkpoint .ckh{
+  margin-top:10px;border:1px solid var(--line);border-radius:10px;
+  background:var(--bg);overflow:hidden;
+}
+.checkpoint .ckr{
+  display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;
+  border-top:1px solid var(--line);
+}
+.checkpoint .ckr:first-child{border-top:0}
+.checkpoint .ckr span{color:var(--text2)}
+.checkpoint .ckr b{margin-left:auto;white-space:nowrap}
+.checkpoint .ckr.big{background:var(--surface);font-weight:800}
+.checkpoint .ckr.big span{color:var(--text);font-weight:800}
+.checkpoint .ckf{
+  margin-top:9px;font-size:11px;color:var(--text2);line-height:1.5;
+  padding-top:8px;border-top:1px dashed var(--line);
+}
+
+/* ---------- Layar lain ---------- */
+.placeholder{padding:48px 24px;text-align:center;color:var(--text2)}
+.placeholder .big{font-size:38px;margin-bottom:10px}
+.placeholder .t{font-weight:800;color:var(--text);font-size:15px;margin-bottom:6px}
+.placeholder .d{font-size:12.5px;line-height:1.55}
+
+.menu{padding:8px 0}
+.menu .m{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.menu .m .mi{font-size:17px;width:22px;text-align:center}
+.menu .m .mt{font-weight:700;font-size:14px}
+.menu .m .ms{font-size:11.5px;color:var(--text2);margin-top:1px}
+.menu .m .arrow{margin-left:auto;color:var(--text2);font-size:14px}
+
+.sec{padding:16px 14px 6px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+
+/* ---------- Baris daftar (fund · tag · saldo awal) ---------- */
+.row{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.row .ric{flex:0 0 30px;width:30px;height:30px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:15px}
+.row .rmid{flex:1 1 auto;min-width:0;overflow:hidden}
+.row .rn{font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;flex-wrap:wrap;line-height:1.3}
+.row .rn .pin{font-size:9.5px;font-weight:800;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--text2);flex:0 0 auto;white-space:nowrap}
+.row .rs{font-size:11px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .rv{flex:0 0 auto;text-align:right;font-size:12.5px;font-weight:800;white-space:nowrap}
+.row .rv small{display:block;font-size:9.5px;color:var(--text2);font-weight:600;margin-top:1px}
+.row.tap{cursor:pointer}
+.row.on{background:var(--surface)}
+
+/* Kode tetap (SUPERBANK, RUMAH, …) TIDAK ditampilkan di daftar —
+   supaya nama tidak tampak dobel. Kode tetap ada di sistem & muncul
+   di formulir ubah + sebagai tooltip barisnya. */
+.row .rn .pin{display:none}
+
+/* ---------- Nomor urut (ganti cara naik/turun) ---------- */
+.ord{
+  flex:0 0 30px;width:30px;height:30px;text-align:center;font-weight:800;font-size:13px;
+  border:1px solid var(--line);border-radius:8px;background:var(--surface);
+  font-family:inherit;color:var(--text);padding:0;
+}
+.ord:focus{outline:2px solid var(--ink);outline-offset:-1px}
+.ord.up{background:var(--warnbg);border-color:var(--warn);color:var(--warn)}
+
+/* Panel tambah (mis. tambah fund / tag) */
+.addpanel{border-bottom:1px solid var(--line);background:var(--surface);padding:12px 14px 14px}
+.addpanel .frow{display:flex;gap:8px;margin-bottom:8px}
+.addpanel input,.addpanel select{
+  flex:1 1 0;min-width:0;height:38px;border:1px solid var(--line);border-radius:9px;
+  background:var(--bg);padding:0 10px;font-family:inherit;font-size:13px;color:var(--text);
+}
+.addpanel .lb{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px}
+.addpanel .acts{display:flex;gap:8px;margin-top:10px}
+.addpanel .acts button{flex:1;height:38px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.addpanel .b1{border:1px solid var(--ink);background:var(--ink);color:var(--onink)}
+.addpanel .b2{border:1px solid var(--line);background:transparent;color:var(--text)}
+.addnotice{font-size:11.5px;font-weight:700;color:var(--warn);padding:9px 14px;background:var(--warnbg);border-bottom:1px solid var(--line)}
+
+/* Kepala kolom kecil di atas daftar */
+.mini-head{
+  display:flex;align-items:center;gap:9px;padding:7px 14px;
+  font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;
+  border-bottom:1px solid var(--line);background:var(--surface);
+}
+.mini-head span:first-child{flex:0 0 30px}
+.mini-head span:nth-child(2){flex:1 1 auto;min-width:0}
+.mini-head span.r{margin-left:auto}
+
+/* Kotak hitungan (bunga & pajak) */
+.calc{margin:10px 14px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.calc .ct{padding:10px 12px;background:var(--surface);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text2)}
+.calc .cl{display:flex;padding:8px 12px;font-size:12.5px;border-top:1px solid var(--line)}
+.calc .cl span{color:var(--text2)}
+.calc .cl b{margin-left:auto;font-weight:800}
+.calc .cl.big b{font-size:15px}
+.calc .note{padding:9px 12px;border-top:1px solid var(--line);font-size:11px;color:var(--text2);line-height:1.5}
+
+/* Pemilih (radio) — versi padat */
+.pick{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.pick label{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--line);border-radius:10px;padding:9px 10px;cursor:pointer;font-size:12.5px;line-height:1.35}
+.pick label.on{border-color:var(--ink);background:var(--surface)}
+.pick .rad{flex:0 0 16px;width:16px;height:16px;border:1.5px solid var(--text);border-radius:50%;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:0}
+.pick label.on .rad{background:var(--ink)}
+.pick label.on .rad:after{content:"✓";color:var(--onink);font-size:10px;font-weight:800;line-height:1}
+.pick .pt{font-weight:700;display:block}
+.pick .ps{display:block;font-size:11px;color:var(--text2);margin-top:1px;line-height:1.4}
+
+/* Peringatan kecil di dalam halaman */
+.warnbox{margin:10px 14px 0;border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);background:var(--warnbg);color:var(--warn);border-radius:10px;padding:9px 11px;font-size:11.5px;line-height:1.5;font-weight:600}
+.warnbox.danger{border-color:color-mix(in srgb,var(--danger) 40%,transparent);background:var(--dangerbg);color:var(--danger)}
+
+/* Kunci / terkunci */
+.lock{margin:10px 14px 0;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:11.5px;color:var(--text2);line-height:1.5}
+
+/* Tombol kecil di baris */
+.tinybtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;height:26px;padding:0 8px;font-size:11px;font-family:inherit;font-weight:700;cursor:pointer;color:var(--text);flex:0 0 auto}
+
+/* ---------- Catatan di bawah HP ---------- */
+.notes{
+  width:min(922px,100%);background:#fff;border:1px solid #bbb;border-radius:10px;
+  padding:12px 14px;font-size:12px;line-height:1.6;color:#333;
+}
+.notes h3{margin:0 0 8px;font-size:13px}
+.notes table{width:100%;border-collapse:collapse;font-size:12px}
+.notes td,.notes th{border:1px solid #ccc;padding:5px 8px;text-align:left;vertical-align:top}
+.notes th{background:#f2f2f2}
+.notes ul{margin:6px 0 0;padding-left:20px}
+.k{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;background:#f0f0f0;padding:1px 4px;border-radius:4px}
+</style>
+</head>
+<body class="bare">
+<div class="stage">
+
+  <!-- ============ ALAT PERAGA (bukan bagian aplikasi) ============ -->
+  <div class="toolbar">
+    <span class="label">🔧 ALAT PERAGA — bukan bagian aplikasi</span>
+
+    <div class="grp">
+      <span class="lbl">Layar</span>
+      <button class="tbtn on" data-screen="s0">Dashboard</button>
+      <button class="tbtn" data-screen="s1">Transaksi</button>
+      <button class="tbtn" data-screen="s2">+Tambah</button>
+      <button class="tbtn" data-screen="s3">Detail &amp; Riwayat</button>
+      <button class="tbtn" data-screen="s4">Pengaturan</button>
+      <button class="tbtn" data-screen="s5">Setting Dasar</button>
+      <button class="tbtn" data-screen="s6">Fund</button>
+      <button class="tbtn" data-screen="s7">Tags</button>
+      <button class="tbtn" data-screen="s8">Saldo Awal</button>
+      <button class="tbtn" data-screen="s9">Pajak</button>
+      <button class="tbtn" data-screen="s10">Bunga</button>
+      <button class="tbtn" data-screen="s11">Bahasa</button>
+      <button class="tbtn" data-screen="s12">Istilah</button>
+    </div>
+
+    <div class="grp">
+      <span class="lbl">Lebar</span>
+      <button class="tbtn" data-w="360">360</button>
+      <button class="tbtn on" data-w="390">390</button>
+      <button class="tbtn" data-w="430">430</button>
+    </div>
+
+    <div class="grp">
+      <button class="tbtn" id="btnFrame">📱 Bingkai HP</button>
+      <button class="tbtn" id="btnDark">🌙 Gelap</button>
+      <button class="tbtn" id="btnLang">🌐 ID / EN</button>
+    </div>
+  </div>
+
+  <!-- Tombol 🔧 untuk buka/tutup alat peraga -->
+  <button class="toolbtn" id="btnTools" title="Alat peraga (bukan bagian aplikasi)">🔧</button>
+
+  <!-- Tombol tepi kiri (tidak dipakai lagi) -->
+  <button class="mini" id="btnMini" title="-" hidden>›</button>
+
+  <!-- ============ BINGKAI HP ============ -->
+  <div class="frame" id="frame">
+  <div class="phone bare" id="phone">
+
+    <div class="statusbar">
+      <span>09:41</span>
+      <span class="right"><span>▮▮▮</span><span>WiFi</span><span class="bat"></span></span>
+    </div>
+
+    <!-- ================= LAYAR 1: DASHBOARD (halaman PERTAMA) ================= -->
+    <div class="apphead" id="headDash">
+      <span class="h1">📊 Dashboard</span>
+      <button class="iconbtn">📄 Doc</button>
+    </div>
+
+    <div class="body" id="bodyDash">
+
+      <!-- Saldo -->
+      <div class="saldo">
+        <div class="top">
+          <div class="k">Total semua fund</div>
+          <div class="v">288.175.713 <small>Rp</small></div>
+        </div>
+        <div class="grid">
+          <div class="cell"><div class="k">Tersedia</div><div class="v">24.387.218</div></div>
+          <div class="cell"><div class="k">Diblokir 🔒</div><div class="v">263.179.767</div></div>
+          <div class="cell"><div class="k">Titipan 👥</div><div class="v">608.728</div></div>
+        </div>
+      </div>
+
+      <!-- Warna = perhatian -->
+      <div class="alert">⚠️ 2 tagihan jatuh tempo <span class="go">lihat ›</span></div>
+
+      <!-- Ringkasan bulan -->
+      <div class="sec">Ringkasan bulan ini</div>
+      <div class="card">
+        <div class="cbody">
+          <div class="crow"><span class="cl">Masuk</span><b>+14.191.861</b></div>
+          <div class="crow"><span class="cl">Keluar</span><b>−7.340.615</b></div>
+          <div class="crow"><span class="cl">Selisih</span><b>+6.851.247</b></div>
+          <div class="crow"><span class="cl">Dikecualikan</span><span class="mini">Transfer · Pinjam · Reimburse · Koreksi · Hutang</span></div>
+        </div>
+      </div>
+
+      <!-- Bunga & pajak bulan ini -->
+      <div class="sec">Bunga &amp; pajak bulan ini</div>
+      <div class="card">
+        <div class="cbody">
+          <div class="crow"><span class="cl">Bunga 🌸</span><b>+1.656.682</b><span class="mini">30 transaksi</span></div>
+          <div class="crow"><span class="cl">Pajak 🧾</span><b>−331.233</b><span class="mini">6 transaksi</span></div>
+          <div class="crow"><span class="cl">Bunga neto</span><b>+1.325.449</b><span class="mini">cocok mutasi bank</span></div>
+        </div>
+      </div>
+
+      <!-- Tagihan & penerimaan -->
+      <div class="sec">Tagihan &amp; penerimaan</div>
+      <div class="card">
+        <div class="chead" data-fold>⚠️ Perlu diproses <span class="ctog">2 item ▾</span></div>
+        <div class="cbody">
+          <div class="crow"><span class="cl">Token PLN</span><b>−202.000</b><span class="mini">H-1</span></div>
+          <div class="crow"><span class="cl">Galon Air</span><b>−18.000</b><span class="mini">hari ini</span></div>
+        </div>
+      </div>
+      <div class="card fold">
+        <div class="chead" data-fold>🔁 Plugin Rutin <span class="ctog">opsional ▾</span></div>
+        <div class="cbody">
+          <div class="crow"><span class="cl">Kalau dipasang</span><b>tidak perlu ketik ulang</b></div>
+          <div class="crow"><span class="cl">Kalau dilepas</span><b>input manual tetap bisa</b></div>
+        </div>
+      </div>
+
+      <!-- Transaksi terbaru -->
+      <div class="sec">Transaksi terbaru</div>
+      <div class="tx">
+        <div class="ic">🌸</div>
+        <div class="mid">
+          <div class="desc">[Rutin] Bunga Deposito 2 100jt</div>
+          <div class="meta"><span class="tag">Bunga</span><span class="sep">·</span><span class="fund">Superbank</span></div>
+        </div>
+        <div class="amt">+636.986,30<small>masuk</small></div>
+      </div>
+      <div class="tx">
+        <div class="ic">🏠</div>
+        <div class="mid">
+          <div class="desc">Galon Air</div>
+          <div class="meta"><span class="tag">Rumah</span><span class="sep">·</span><span class="fund">Superbank</span></div>
+        </div>
+        <div class="amt">−18.000<small>keluar</small></div>
+      </div>
+      <div class="tx">
+        <div class="ic">💵</div>
+        <div class="mid">
+          <div class="desc">Gaji bulanan</div>
+          <div class="meta"><span class="tag">Pendapatan</span><span class="sep">·</span><span class="fund">Superbank</span></div>
+        </div>
+        <div class="amt">+8.500.000<small>masuk</small></div>
+      </div>
+
+      <div style="height:96px"></div>
+    </div>
+
+    <!-- ---------- LAYAR 2: TRANSAKSI ---------- -->
+    <div class="apphead" id="headTx" style="display:none">
+      <button class="iconbtn" data-screen="s0" title="Kembali ke Dashboard">‹</button>
+      <span class="h1" data-i18n="tx">🧾 Transaksi</span>
+      <button class="addtop" id="addTop2" title="Tambah transaksi"><span class="plus">+</span></button>
+      <button class="iconbtn" title="Dokumen">📄</button>
+    </div>
+
+    <div class="body" id="bodyMain" style="display:none">
+
+      <div class="chips">
+        <button class="chip on"><span class="dot"></span>Superbank</button>
+        <button class="chip"><span class="dot"></span>SeaBank</button>
+        <button class="chip"><span class="dot"></span>Deposito</button>
+        <button class="chip"><span class="dot"></span>Tunai</button>
+        <button class="chip">Semua Fund</button>
+      </div>
+
+      <!-- Kotak saldo -->
+      <div class="saldo">
+        <div class="top">
+          <div class="k">Saldo akhir · September 2026</div>
+          <div class="v">22.057.865 <small>Rp</small></div>
+        </div>
+        <div class="grid">
+          <div class="cell"><div class="k">Saldo awal</div><div class="v">16.314.701</div></div>
+          <div class="cell"><div class="k">Masuk</div><div class="v">+16.560.216</div></div>
+          <div class="cell"><div class="k">Keluar</div><div class="v">−10.817.053</div></div>
+        </div>
+      </div>
+
+      <!-- Satu-satunya tempat warna muncul -->
+      <div class="alert">⚠️ 2 tagihan jatuh tempo <span class="go">lihat ›</span></div>
+
+      <div class="filters">
+        <div class="searchrow">
+          <label class="search">🔎 <input placeholder="Cari keterangan…"></label>
+          <div class="seg">
+            <button class="on">Semua</button>
+            <button>Masuk +</button>
+            <button>Keluar −</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           PILIH BENTUK BARIS — Bapak bisa tekan untuk membandingkan
+           ① VERTIKAL (seperti sekarang) · ② HORISONTAL (satu baris = satu tx)
+           ============================================================ -->
+      <div class="viewtoggle" id="viewToggle">
+        <button class="on" data-view="v">① VERTIKAL</button>
+        <button data-view="h">② HORISONTAL</button>
+      </div>
+
+      <div class="thead" style="display:none">
+        <span></span><span>Keterangan · Tag · Fund · Tanggal</span><span>Jumlah</span>
+      </div>
+
+      <!-- Daftar transaksi -->
+      <div class="daylabel">Hari ini · 25 Sep</div>
+
+      <!-- 🔗 BUNGA + PAJAK — satu tindakan, 2 catatan (terikat) -->
+      <div class="txpair">
+        <div class="ph"><span class="pt">🌸 Bunga Deposito 2 100jt</span><span class="pb">2 catatan</span></div>
+        <div class="tx">
+          <div class="ic">🌸</div>
+          <div class="mid">
+            <div class="desc">[Bunga] Deposito 2 100jt</div>
+            <div class="meta"><span class="tag">Bunga</span><span class="sep">·</span><span class="fund">Superbank</span><span class="badge">Auto</span></div>
+          </div>
+          <div class="amt">+636.986,30<small>masuk</small></div>
+        </div>
+        <div class="tx">
+          <div class="ic">🧾</div>
+          <div class="mid">
+            <div class="desc">[Pajak] Deposito 2 100jt (20%)</div>
+            <div class="meta"><span class="tag">Pajak</span><span class="sep">·</span><span class="fund">Superbank</span><span class="badge">Auto</span></div>
+          </div>
+          <div class="amt">−127.397,25<small>keluar</small></div>
+        </div>
+      </div>
+
+      <div class="daylabel">24 Sep</div>
+
+      <!-- 🔗 TRANSFER — 1 tindakan, 2 catatan (terikat) -->
+      <div class="txpair">
+        <div class="ph"><span class="pt">🔄 Transfer Superbank → SeaBank</span><span class="pb">2 catatan</span></div>
+        <div class="tx">
+          <div class="ic">🔄</div>
+          <div class="mid">
+            <div class="desc">Transfer keluar</div>
+            <div class="meta"><span class="tag">Transfer</span><span class="sep">·</span><span class="fund">Superbank</span></div>
+          </div>
+          <div class="amt">−500.000<small>keluar</small></div>
+        </div>
+        <div class="tx">
+          <div class="ic">🔄</div>
+          <div class="mid">
+            <div class="desc">Transfer masuk</div>
+            <div class="meta"><span class="tag">Transfer</span><span class="sep">·</span><span class="fund">SeaBank</span></div>
+          </div>
+          <div class="amt">+500.000<small>masuk</small></div>
+        </div>
+      </div>
+
+      <div class="tx">
+        <div class="ic">🏠</div>
+        <div class="mid">
+          <div class="desc">Galon Air</div>
+          <div class="meta"><span class="tag">Rumah</span><span class="sep">·</span><span class="fund">Superbank</span></div>
+        </div>
+        <div class="amt">−18.000<small>keluar</small></div>
+      </div>
+
+      <div class="daylabel">23 Sep</div>
+
+      <div class="tx">
+        <div class="ic">🏠</div>
+        <div class="mid">
+          <div class="desc">Service AC</div>
+          <div class="meta"><span class="tag">Rumah</span><span class="sep">·</span><span class="fund">Superbank</span></div>
+        </div>
+        <div class="amt">−350.000<small>keluar</small></div>
+      </div>
+
+      <div class="tx">
+        <div class="ic">👤</div>
+        <div class="mid">
+          <div class="desc">Toko Roti</div>
+          <div class="meta"><span class="tag">Pribadi</span><span class="sep">·</span><span class="fund">Tunai</span></div>
+        </div>
+        <div class="amt">−45.500<small>keluar</small></div>
+      </div>
+
+      <div class="daylabel">21 Sep</div>
+
+      <div class="tx">
+        <div class="ic">🐕</div>
+        <div class="mid">
+          <div class="desc">Royal Canin</div>
+          <div class="meta"><span class="tag">Pet</span><span class="sep">·</span><span class="fund">SeaBank</span></div>
+        </div>
+        <div class="amt">−285.000<small>keluar</small></div>
+      </div>
+
+      <div class="daylabel">20 Sep</div>
+
+      <div class="tx">
+        <div class="ic">💵</div>
+        <div class="mid">
+          <div class="desc">Gaji bulanan</div>
+          <div class="meta"><span class="tag">Pendapatan</span><span class="sep">·</span><span class="fund">Superbank</span></div>
+        </div>
+        <div class="amt">+8.500.000<small>masuk</small></div>
+      </div>
+
+      <div class="daylabel">18 Sep</div>
+
+      <div class="tx dim">
+        <div class="ic">🏠</div>
+        <div class="mid">
+          <div class="desc">Iuran keamanan</div>
+          <div class="meta"><span class="tag">Rumah</span><span class="sep">·</span><span class="fund">Superbank</span><span class="badge">terhapus</span></div>
+        </div>
+        <div class="amt">−150.000<small>terhapus</small></div>
+      </div>
+
+      <div class="lock" style="margin:12px 14px 0">
+        💡 Tekan <b>① VERTIKAL / ② HORISONTAL</b> di atas untuk membandingkan bentuk baris.
+        Keduanya memakai <b>data yang sama</b> — hanya cara menatanya berbeda.
+      </div>
+
+      <div style="height:96px"></div>
+    </div>
+
+    <button class="fab">＋<span class="lbl"> Tambah</span></button>
+
+    <!-- ---------- LAYAR 2: TAMBAH ---------- -->
+    <div class="body" id="bodyForm" style="display:none">
+      <div class="filters">
+        <div class="field">
+          <div class="lab">Tanggal</div>
+          <input type="date" value="2026-09-25">
+        </div>
+        <div class="field">
+          <div class="lab">Keterangan</div>
+          <input placeholder="mis. Bayar Listrik">
+        </div>
+        <div class="field">
+          <div class="lab">Sumber dana (fund)</div>
+          <select><option>Superbank</option><option>SeaBank</option><option>Tunai</option></select>
+        </div>
+        <div class="field">
+          <div class="lab">Tag — menentukan artinya</div>
+          <div class="tagpick">
+            <button class="on">🏠 Rumah</button>
+            <button>👤 Pribadi</button>
+            <button>🐕 Pet</button>
+            <button>🚗 Mobil</button>
+            <button>🌸 Bunga</button>
+            <button>💵 Pendapatan</button>
+            <button>🔄 Transfer</button>
+            <button>💸 Hutang</button>
+            <button>💵 Reimburse</button>
+            <button>🎁 Bonus</button>
+            <button>✂️ Hilang</button>
+            <button>✂️ biaya</button>
+          </div>
+          <div class="hint">Pilih tag → pintu jurnal terisi sendiri. Nama tag boleh diganti bahasa.</div>
+        </div>
+        <div class="field">
+          <div class="lab">Jurnal (pintu)</div>
+          <div class="auto">Kredit — uang keluar <small>otomatis dari tag</small></div>
+        </div>
+        <div class="field">
+          <div class="lab">Jumlah</div>
+          <div class="amount-in"><span class="rp">Rp</span>18.000</div>
+        </div>
+        <div class="field">
+          <div class="lab">Transfer ke fund (opsional)</div>
+          <select><option>— tidak transfer —</option><option>SeaBank</option><option>Tabungan A</option></select>
+          <div class="hint">Diisi kalau uang pindah kotak → sistem mencatat 2 baris (keluar + masuk).</div>
+        </div>
+        <div class="switch"><span class="box"></span> Jadikan Rutin setelah simpan</div>
+
+        <!-- 🔴 CHECKPOINT kena pajak — muncul hanya kalau tag = Bunga -->
+        <div class="checkpoint" id="ckp">
+          <div class="ckt">🌸 Checkpoint — bunga ini kena pajak?</div>
+          <div class="switch on"><span class="box">✓</span> 🧾 Kena pajak 20%</div>
+          <div class="ckn">
+            Kalau <b>dicentang</b> → sistem menghitung pajak &amp; mencatat <b>2 baris</b>:
+            Bunga masuk + Pajak keluar.<br/>
+            Kalau <b>tidak</b> → hanya <b>1 baris</b> (bunga tanpa pajak) — mis. bunga harian kecil.
+          </div>
+          <div class="ckh">
+            <div class="ckr"><span>Bunga</span><b>Rp 636.986,30</b></div>
+            <div class="ckr"><span>Pajak 20%</span><b>− Rp 127.397,26</b></div>
+            <div class="ckr big"><span>Neto (cocok mutasi bank)</span><b>Rp 509.589,04</b></div>
+          </div>
+          <div class="ckf">Berlaku untuk <b>semua</b> bunga — dari rutin maupun input manual.
+            Tidak perlu tag kedua, tidak perlu batas minimum.</div>
+        </div>
+
+        <div style="height:70px"></div>
+      </div>
+    </div>
+
+    <!-- ---------- LAYAR 3: DETAIL & RIWAYAT ---------- -->
+    <div class="body" id="bodyDetail" style="display:none">
+      <div class="filters">
+        <div class="saldo">
+          <div class="top">
+            <div class="k">Kredit · keluar · 24 Sep 2026</div>
+            <div class="v">−18.000 <small>Rp</small></div>
+            <div style="font-size:12.5px;color:var(--text2);margin-top:5px">Galon Air · Superbank</div>
+          </div>
+          <div class="grid" style="grid-template-columns:1fr 1fr">
+            <div class="cell"><div class="k">Tag</div><div class="v">🏠 Rumah</div></div>
+            <div class="cell"><div class="k">Sumber</div><div class="v" style="font-size:12.5px">Bapak (manual)</div></div>
+          </div>
+        </div>
+
+        <div class="sec" style="padding-left:0">🔴 Riwayat — tidak bisa dihapus</div>
+
+        <div class="tx" style="padding-left:0;padding-right:0">
+          <div class="ic">✏️</div>
+          <div class="mid">
+            <div class="desc">Diubah: 18.000 → 19.000</div>
+            <div class="meta"><span>25 Sep 14:44</span><span>· admin</span></div>
+          </div>
+          <div class="amt" style="font-size:12px">Nilai lama tersimpan</div>
+        </div>
+        <div class="tx" style="padding-left:0;padding-right:0">
+          <div class="ic">➕</div>
+          <div class="mid">
+            <div class="desc">Dibuat</div>
+            <div class="meta"><span>24 Sep 08:12</span><span>· admin</span></div>
+          </div>
+        </div>
+
+        <div class="alert" style="margin:4px 0 0">↩️ Batalkan perubahan → saldo Superbank kembali 22.057.865 → 22.058.865</div>
+
+        <div style="height:70px"></div>
+      </div>
+    </div>
+
+    <!-- ---------- LAYAR 5: PENGATURAN ---------- -->
+    <div class="apphead" id="headSet" style="display:none">
+      <button class="iconbtn" data-screen="s0" title="Kembali ke Dashboard">‹</button>
+      <span class="h1">⚙️ Pengaturan</span>
+      <button class="iconbtn" title="Dokumen">📄</button>
+    </div>
+
+    <div class="body" id="bodyMore" style="display:none">
+
+      <!-- Menu yang SERING dipakai -->
+      <div class="sec">📊 Sering dipakai</div>
+      <div class="menu">
+        <div class="m"><span class="mi">🔁</span><span><span class="mt">Rutin</span><div class="ms">Plugin · tagihan &amp; penerimaan berulang</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">🛒</span><span><span class="mt">Belanja</span><div class="ms">Plugin · rencana &amp; prioritas</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">📈</span><span><span class="mt">Report</span><div class="ms">Plugin · analisa per tag &amp; fund</div></span><span class="arrow">›</span></div>
+      </div>
+
+      <!-- Menu yang JARANG dipakai -->
+      <div class="sec">🗂️ Jarang dipakai</div>
+      <div class="menu">
+        <div class="m"><span class="mi">⭐</span><span><span class="mt">Wishlist</span><div class="ms">Plugin · menabung untuk keinginan</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">📈</span><span><span class="mt">Investasi</span><div class="ms">Plugin · deposito · saham · emas</div></span><span class="arrow">›</span></div>
+      </div>
+
+      <!-- Pengaturan -->
+      <div class="sec">⚙️ Pengaturan</div>
+      <div class="menu">
+        <div class="m" data-screen="s5"><span class="mi">⚙️</span><span><span class="mt">Setting dasar</span><div class="ms">Fund · Tag · Saldo awal · Pajak · Bunga · Bahasa</div></span><span class="arrow">›</span></div>
+        <div class="m" data-screen="s11"><span class="mi">🌐</span><span><span class="mt">Bahasa</span><div class="ms">Indonesia · English</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">📅</span><span><span class="mt">Proses Akhir Bulan</span><div class="ms">Kunci bulan &amp; pindah saldo</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">↩️</span><span><span class="mt">Riwayat &amp; Batalkan</span><div class="ms">Semua input · edit · hapus</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">📄</span><span><span class="mt">Dokumen [Doc]</span><div class="ms">Rencana · Perubahan · Cetak biru</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">🔄</span><span><span class="mt">Ambil Data Terbaru</span><div class="ms">keuangan → uangku</div></span><span class="arrow">›</span></div>
+        <div class="m"><span class="mi">💾</span><span><span class="mt">Backup</span><div class="ms">Cadangan database</div></span><span class="arrow">›</span></div>
+      </div>
+
+      <!-- Plugin yang dilepas -->
+      <div class="sec">🧩 Plugin yang dilepas</div>
+      <div class="menu">
+        <div class="m"><span class="mi">➕</span><span><span class="mt">Pasang plugin</span><div class="ms">Rutin · Belanja · Wishlist · Investasi · Report</div></span><span class="arrow">›</span></div>
+      </div>
+      <div style="padding:12px 16px 0;font-size:11.5px;color:var(--text2);line-height:1.5">
+        Plugin bersifat <b style="color:var(--text)">opsional</b>. Dilepas semua → transaksi <b style="color:var(--text)">tetap bisa</b> diinput, hanya lebih repot.
+      </div>
+
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= SETTING DASAR ================= -->
+    <div class="apphead" id="headSetDasar" style="display:none">
+      <button class="iconbtn" data-screen="s4" title="Kembali ke Pengaturan">‹</button>
+      <span class="h1">⚙️ Setting Dasar</span>
+    </div>
+    <div class="body" id="bodySetDasar" style="display:none">
+      <div class="sec">Isi setting dasar</div>
+      <div class="menu">
+        <div class="m" data-screen="s6"><span class="mi">🧺</span><span><span class="mt">Source Fund</span><div class="ms">Daftar kotak uang · 18 fund</div></span><span class="arrow">›</span></div>
+        <div class="m" data-screen="s7"><span class="mi">🏷️</span><span><span class="mt">Tags</span><div class="ms">Daftar label kategori · 15 tag</div></span><span class="arrow">›</span></div>
+        <div class="m" data-screen="s8"><span class="mi">💰</span><span><span class="mt">Saldo Awal</span><div class="ms">Saldo tiap fund · per bulan</div></span><span class="arrow">›</span></div>
+      </div>
+      <div class="sec">Hitungan uang</div>
+      <div class="menu">
+        <div class="m" data-screen="s9"><span class="mi">🧾</span><span><span class="mt">Pajak</span><div class="ms">Aturan pemotongan pajak bunga</div></span><span class="arrow">›</span></div>
+        <div class="m" data-screen="s10"><span class="mi">💰</span><span><span class="mt">Bunga Bank</span><div class="ms">Tabungan 5% · Deposito 7,5% p.a</div></span><span class="arrow">›</span></div>
+      </div>
+      <div class="sec">Tampilan</div>
+      <div class="menu">
+        <div class="m" data-screen="s11"><span class="mi">🌐</span><span><span class="mt">Bahasa</span><div class="ms">Indonesia · English</div></span><span class="arrow">›</span></div>
+      </div>
+      <div class="lock"><b>Urutan setting:</b> Source Fund → Tags → Saldo Awal → Pajak → Bunga Bank.
+        Saldo Awal tidak bisa diubah kalau bulan sudah <b>diproses</b>.</div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= 5a. SOURCE FUND ================= -->
+    <div class="apphead" id="headFund" style="display:none">
+      <button class="iconbtn" data-screen="s5" title="Kembali ke Setting Dasar">‹</button>
+      <span class="h1">🧺 Source Fund</span>
+      <button class="iconbtn" id="btnFundAdd" title="Tambah fund">＋</button>
+    </div>
+    <div class="body" id="bodyFund" style="display:none">
+
+      <div class="addpanel" id="fundAddPanel" style="display:none">
+        <div class="frow">
+          <div style="flex:1 1 0;min-width:0">
+            <div class="lb">Nama fund</div>
+            <input id="addNama" placeholder="mis. BCA baru" style="width:100%">
+          </div>
+          <div style="flex:0 0 74px">
+            <div class="lb">Ikon</div>
+            <input id="addIkon" value="💰" style="width:100%;text-align:center">
+          </div>
+        </div>
+        <div class="frow">
+          <div style="flex:1 1 0;min-width:0">
+            <div class="lb">Kode tetap (tidak ikut ganti bahasa)</div>
+            <input id="addKode" placeholder="mis. BCA_BARU" style="width:100%">
+          </div>
+          <div style="flex:0 0 74px">
+            <div class="lb">Urut</div>
+            <input id="addUrut" type="number" value="19" style="width:100%;text-align:center">
+          </div>
+        </div>
+        <div class="frow">
+          <div style="flex:1 1 0;min-width:0">
+            <div class="lb">Saldo awal</div>
+            <input id="addSaldo" placeholder="0" style="width:100%">
+          </div>
+        </div>
+        <div class="acts">
+          <button class="b2" id="btnFundCancel">Batal</button>
+          <button class="b1" id="btnFundSave">Simpan fund</button>
+        </div>
+        <div class="lb" style="margin:10px 0 0;font-weight:600;color:var(--text2)">
+          Ini <b>contoh di rancangan</b> — belum menulis ke database.
+        </div>
+      </div>
+
+      <div class="addnotice" id="fundAddNotice" style="display:none">
+        ✔ Contoh: fund baru ditambahkan. Di sistem sungguhan → tersimpan di <code>source_funds</code>.
+      </div>
+
+      <div class="deck">
+        <div class="mini-head">
+          <span>Urut</span><span>Fund</span><span class="r">Saldo</span>
+        </div>
+      </div>
+
+      <div class="lock" style="margin:0;border-radius:0;border-left:0;border-right:0">
+        🔢 <b>Urutkan dengan ANGKA</b> — tidak perlu tekan naik/turun. Ubah angkanya, sistem
+        menyusun ulang sendiri (1, 2, 3, …). Angka yang lebih kecil tampil lebih dulu.<br/>
+        🎯 <b>Untuk apa urutan ini?</b> Supaya <b>daftar pilihan fund</b> (dropdown saat input
+        transaksi) ikut terurut sesuai <b>kebiasaan Bapak</b> — fund yang paling sering dipakai
+        ditaruh di atas, jadi tidak perlu menggulir mencari tiap kali input.
+      </div>
+
+      <div id="fundList">
+      <div class="row" data-ord="1"><input class="ord" type="number" value="1" title="Ubah angka untuk mengurutkan"><span class="ric">🏛️</span><span class="rmid"><span class="rn">Superbank <span class="pin">SUPERBANK</span></span><span class="rs">min. Rp 5.000.000</span></span><span class="rv">22.057.865<small>saldo</small></span></div>
+      <div class="row" data-ord="2"><input class="ord" type="number" value="2" title="Ubah angka untuk mengurutkan"><span class="ric">💵</span><span class="rmid"><span class="rn">SeaBank <span class="pin">SEABANK</span></span><span class="rs">min. Rp 50</span></span><span class="rv">271.337<small>saldo</small></span></div>
+      <div class="row" data-ord="3"><input class="ord" type="number" value="3" title="Ubah angka untuk mengurutkan"><span class="ric">🐷</span><span class="rmid"><span class="rn">Celengan <span class="pin">CELENGAN</span></span><span class="rs">🔒 diblokir · bunga harian kecil</span></span><span class="rv">2.854.767<small>saldo</small></span></div>
+      <div class="row" data-ord="4"><input class="ord" type="number" value="4" title="Ubah angka untuk mengurutkan"><span class="ric">👥</span><span class="rmid"><span class="rn">Dana Sopir</span><span class="rs">🔒 diblokir · 👥 titipan</span></span><span class="rv">0<small>saldo</small></span></div>
+      <div class="row" data-ord="5"><input class="ord" type="number" value="5" title="Ubah angka untuk mengurutkan"><span class="ric">👥</span><span class="rmid"><span class="rn">Dana swn</span><span class="rs">👥 titipan — uang orang lain</span></span><span class="rv">608.728<small>saldo</small></span></div>
+      <div class="row" data-ord="6"><input class="ord" type="number" value="6" title="Ubah angka untuk mengurutkan"><span class="ric">💵</span><span class="rmid"><span class="rn">Tunai</span><span class="rs">uang fisik</span></span><span class="rv">32.000<small>saldo</small></span></div>
+      <div class="row" data-ord="7"><input class="ord" type="number" value="7" title="Ubah angka untuk mengurutkan"><span class="ric">🚕</span><span class="rmid"><span class="rn">Sopir pinjam uang</span><span class="rs">🔒 diblokir</span></span><span class="rv">325.000<small>saldo</small></span></div>
+      <div class="row" data-ord="8"><input class="ord" type="number" value="8" title="Ubah angka untuk mengurutkan"><span class="ric">🏦</span><span class="rmid"><span class="rn">BCA tabungan <span class="pin">BCA_TABUNGAN</span></span><span class="rs">tabungan biasa · 5% p.a</span></span><span class="rv">108.027<small>saldo</small></span></div>
+      <div class="row" data-ord="9"><input class="ord" type="number" value="9" title="Ubah angka untuk mengurutkan"><span class="ric">📈</span><span class="rmid"><span class="rn">BCA Saham</span><span class="rs">bukan tabungan</span></span><span class="rv">253.493<small>saldo</small></span></div>
+      <div class="row" data-ord="10"><input class="ord" type="number" value="10" title="Ubah angka untuk mengurutkan"><span class="ric">🏦</span><span class="rmid"><span class="rn">Deposito <span class="pin">DEPOSITO</span></span><span class="rs">🔒 diblokir · deposito 7,5% p.a</span></span><span class="rv">260.000.000<small>saldo</small></span></div>
+      <div class="row" data-ord="11"><input class="ord" type="number" value="11" title="Ubah angka untuk mengurutkan"><span class="ric">💰</span><span class="rmid"><span class="rn">Tabungan A <span class="pin">TABUNGAN_A</span></span><span class="rs">slot wishlist</span></span><span class="rv">595.988<small>saldo</small></span></div>
+      <div class="row" data-ord="12"><input class="ord" type="number" value="12" title="Ubah angka untuk mengurutkan"><span class="ric">💰</span><span class="rmid"><span class="rn">Tabungan B <span class="pin">TABUNGAN_B</span></span><span class="rs">slot wishlist</span></span><span class="rv">16.443<small>saldo</small></span></div>
+      <div class="row" data-ord="13"><input class="ord" type="number" value="13" title="Ubah angka untuk mengurutkan"><span class="ric">📱</span><span class="rmid"><span class="rn">ShopeePay</span><span class="rs">dompet digital</span></span><span class="rv">23.926<small>saldo</small></span></div>
+      <div class="row" data-ord="14"><input class="ord" type="number" value="14" title="Ubah angka untuk mengurutkan"><span class="ric">📱</span><span class="rmid"><span class="rn">OVO</span><span class="rs">dompet digital</span></span><span class="rv">680<small>saldo</small></span></div>
+      <div class="row" data-ord="15"><input class="ord" type="number" value="15" title="Ubah angka untuk mengurutkan"><span class="ric">📱</span><span class="rmid"><span class="rn">GoPay</span><span class="rs">dompet digital</span></span><span class="rv">24.827<small>saldo</small></span></div>
+      <div class="row" data-ord="16"><input class="ord" type="number" value="16" title="Ubah angka untuk mengurutkan"><span class="ric">💰</span><span class="rmid"><span class="rn">Tabungan C <span class="pin">TABUNGAN_C</span></span><span class="rs">slot wishlist</span></span><span class="rv">1.002.630<small>saldo</small></span></div>
+      <div class="row" data-ord="17"><input class="ord" type="number" value="17" title="Ubah angka untuk mengurutkan"><span class="ric">💰</span><span class="rmid"><span class="rn">Tabungan D <span class="pin">TABUNGAN_D</span></span><span class="rs">slot wishlist · kosong</span></span><span class="rv">0<small>saldo</small></span></div>
+      <div class="row" data-ord="18"><input class="ord" type="number" value="18" title="Ubah angka untuk mengurutkan"><span class="ric">💰</span><span class="rmid"><span class="rn">Tabungan E <span class="pin">TABUNGAN_E</span></span><span class="rs">slot wishlist · kosong</span></span><span class="rv">0<small>saldo</small></span></div>
+      </div>
+
+      <div class="sec">Kolom tiap fund</div>
+      <div class="lock">
+        <code>code</code> (tetap, tidak ikut ganti bahasa) · <code>name</code> (bisa diganti bahasa) ·
+        <code>icon</code> · <code>sort_order</code> (angka urut) · <code>is_blocked</code> 🔒 ·
+        <code>is_titipan</code> 👥 · <code>minimum_saldo</code>
+      </div>
+
+      <div class="sec">Aturan fund</div>
+      <div class="lock">
+        • <b>Nama</b> boleh diganti bahasa → logika pakai <b>code</b> (mis. <code>SUPERBANK</code>)<br/>
+        • <b>Kode tetap</b> tidak ditampilkan di daftar (biar tidak tampak dobel) —
+        ada di formulir ubah & di tooltip baris<br/>
+        • <b>Hapus fund</b> dicegah kalau masih ada transaksi<br/>
+        • <b>🔒 diblokir</b> → tidak muncul di dropdown Belanja<br/>
+        • <b>👥 titipan</b> → bunga di fund ini <b>bukan</b> penghasilan Bapak<br/>
+        • <b>Min. saldo</b> → peringatan kalau saldo turun di bawah batas
+      </div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= 5b. TAGS ================= -->
+    <div class="apphead" id="headTag" style="display:none">
+      <button class="iconbtn" data-screen="s5" title="Kembali ke Setting Dasar">‹</button>
+      <span class="h1">🏷️ Tags</span>
+      <button class="iconbtn" title="Tambah tag">＋</button>
+    </div>
+    <div class="body" id="bodyTag" style="display:none">
+      <div class="warnbox">⚠️ Tag = <b>penentu makna</b>. Salah tag → <b>seluruh laporan salah</b>.
+        Logika pakai <b>code</b>, bukan nama.</div>
+
+      <div class="sec">Pengeluaran</div>
+      <div class="row"><span class="ric">🏠</span><span class="rmid"><span class="rn">Rumah <span class="pin">RUMAH</span></span><span class="rs">keluar · muncul di Belanja</span></span></div>
+      <div class="row"><span class="ric">👤</span><span class="rmid"><span class="rn">Pribadi <span class="pin">PRIBADI</span></span><span class="rs">keluar · muncul di Belanja</span></span></div>
+      <div class="row"><span class="ric">🐕</span><span class="rmid"><span class="rn">Pet <span class="pin">PET</span></span><span class="rs">keluar · muncul di Belanja</span></span></div>
+      <div class="row"><span class="ric">🚗</span><span class="rmid"><span class="rn">Mobil <span class="pin">MOBIL</span></span><span class="rs">keluar · muncul di Belanja</span></span></div>
+
+      <div class="sec">Pemasukan</div>
+      <div class="row"><span class="ric">🌸</span><span class="rmid"><span class="rn">Bunga <span class="pin">BUNGA</span></span><span class="rs">masuk · <b>kena pajak otomatis</b></span></span></div>
+      <div class="row"><span class="ric">💵</span><span class="rmid"><span class="rn">Pendapatan <span class="pin">PENDAPATAN</span></span><span class="rs">masuk · dihitung di laporan</span></span></div>
+      <div class="row"><span class="ric">💵</span><span class="rmid"><span class="rn">Reimburse <span class="pin">REIMBURSE</span></span><span class="rs">masuk · penggantian uang</span></span></div>
+      <div class="row"><span class="ric">🎁</span><span class="rmid"><span class="rn">Bonus <span class="pin">BONUS</span></span><span class="rs">masuk</span></span></div>
+
+      <div class="sec">Di luar ringkasan bulanan</div>
+      <div class="lock">5 tag ini <b>tidak dihitung</b> di ringkasan (bukan penghasilan/pengeluaran sungguhan):
+        <b>Transfer · Koreksi · Pinjam · Hutang · Reimburse</b></div>
+
+      <div class="sec">Tag lainnya</div>
+      <div class="row"><span class="ric">🧹</span><span class="rmid"><span class="rn">Koreksi <span class="pin">KOREKSI</span></span><span class="rs">keluar · tidak dihitung</span></span></div>
+      <div class="row"><span class="ric">💸</span><span class="rmid"><span class="rn">Pinjam <span class="pin">PINJAM</span></span><span class="rs">bebas · tidak dihitung</span></span></div>
+      <div class="row"><span class="ric">💸</span><span class="rmid"><span class="rn">Hutang <span class="pin">HUTANG</span></span><span class="rs">keluar · di Rutin = pengingat saja</span></span></div>
+      <div class="row"><span class="ric">🔄</span><span class="rmid"><span class="rn">Transfer <span class="pin">TRANSFER</span></span><span class="rs">bebas · tidak dihitung</span></span></div>
+      <div class="row"><span class="ric">🧾</span><span class="rmid"><span class="rn">Pajak <span class="pin">PAJAK</span></span><span class="rs">keluar · pasangan otomatis dari Bunga</span></span></div>
+      <div class="row"><span class="ric">✂️</span><span class="rmid"><span class="rn">Hilang <span class="pin">HILANG</span></span><span class="rs">keluar</span></span></div>
+      <div class="row"><span class="ric">✂️</span><span class="rmid"><span class="rn">biaya <span class="pin">BIAYA</span></span><span class="rs">keluar</span></span></div>
+
+      <div class="sec">Kolom tiap tag</div>
+      <div class="lock">
+        <code>code</code> (tetap) · <code>name</code> (bisa diganti bahasa) · <code>icon</code> ·
+        <code>journal_type</code> (D/K) · <code>has_tax</code> · <code>is_system</code> ·
+        <code>show_in_shopping</code> · <code>sort_order</code>
+      </div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= 5c. SALDO AWAL ================= -->
+    <div class="apphead" id="headSaldo" style="display:none">
+      <button class="iconbtn" data-screen="s5" title="Kembali ke Setting Dasar">‹</button>
+      <span class="h1">💰 Saldo Awal</span>
+    </div>
+    <div class="body" id="bodySaldo" style="display:none">
+      <div class="filters">
+        <div style="display:flex;gap:8px">
+          <select style="flex:1;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 10px;font-family:inherit;font-size:13px;color:var(--text)">
+            <option>September 2026 — sedang berjalan 🔓</option>
+            <option>Agustus 2026 — diproses 🔒</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sec">Isi saldo awal · September 2026</div>
+      <div class="row"><span class="rmid"><span class="rn">� Deposito</span><span class="rs">otomatis dari bulan lalu 🔒</span></span><span class="rv">260.000.000</span></div>
+      <div class="row"><span class="rmid"><span class="rn">🏛️ Superbank</span><span class="rs">otomatis dari Proses Akhir Bulan Agustus</span></span><span class="rv">16.314.701</span></div>
+      <div class="row"><span class="rmid"><span class="rn">🐷 Celengan</span><span class="rs">otomatis 🔒</span></span><span class="rv">1.654.767</span></div>
+      <div class="row"><span class="rmid"><span class="rn">💰 Tabungan C</span><span class="rs">otomatis</span></span><span class="rv">1.002.630</span></div>
+      <div class="row"><span class="rmid"><span class="rn">💰 Tabungan A</span><span class="rs">otomatis</span></span><span class="rv">355.988</span></div>
+      <div class="row warn"><span class="rmid"><span class="rn">💵 SeaBank</span><span class="rs">diisi manual · di bawah min. Rp 50 ⚠️</span></span><span class="rv">343.431</span></div>
+      <div class="row"><span class="rmid"><span class="rn">👥 Dana Sopir 🔒</span><span class="rs">titipan</span></span><span class="rv">303.873</span></div>
+      <div class="row"><span class="rmid"><span class="rn">👥 Dana swn</span><span class="rs">titipan</span></span><span class="rv">308.728</span></div>
+      <div class="row"><span class="rmid"><span class="rn">🚕 Sopir pinjam uang 🔒</span><span class="rs">otomatis</span></span><span class="rv">325.000</span></div>
+      <div class="row"><span class="rmid"><span class="rn">🏦 BCA tabungan</span><span class="rs">otomatis</span></span><span class="rv">42.811</span></div>
+      <div class="row"><span class="rmid"><span class="rn">📈 BCA Saham</span><span class="rs">otomatis</span></span><span class="rv">118.493</span></div>
+      <div class="row"><span class="rmid"><span class="rn">💰 Tabungan B</span><span class="rs">otomatis</span></span><span class="rv">16.443</span></div>
+      <div class="row"><span class="rmid"><span class="rn">📱 ShopeePay</span><span class="rs">otomatis</span></span><span class="rv">44.376</span></div>
+      <div class="row"><span class="rmid"><span class="rn">📱 GoPay</span><span class="rs">otomatis</span></span><span class="rv">24.827</span></div>
+      <div class="row"><span class="rmid"><span class="rn">📱 OVO</span><span class="rs">otomatis</span></span><span class="rv">680</span></div>
+      <div class="row"><span class="rmid"><span class="rn">💵 Tunai</span><span class="rs">diisi manual</span></span><span class="rv">85.000</span></div>
+      <div class="row"><span class="rmid"><span class="rn">💰 Tabungan D · E</span><span class="rs">kosong</span></span><span class="rv">0</span></div>
+
+      <div class="warnbox">⚠️ <b>Ubah saldo awal</b> divalidasi — tidak boleh membuat saldo negatif di tengah bulan.</div>
+      <div class="lock">Bulan yang sudah <b>diproses</b> → saldo awal <b>tidak bisa diubah</b>.
+        Setiap perubahan <b>tercatat</b> dan <b>bisa dikembalikan</b>.</div>
+
+      <div class="sec">Total</div>
+      <div class="row"><span class="rmid"><span class="rn">Jumlah 18 fund</span></span><span class="rv">280.941.750</span></div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= 5d. PAJAK ================= -->
+    <div class="apphead" id="headPajak" style="display:none">
+      <button class="iconbtn" data-screen="s5" title="Kembali ke Setting Dasar">‹</button>
+      <span class="h1">🧾 Pajak</span>
+      <button class="iconbtn" title="Tambah aturan pajak">＋</button>
+    </div>
+    <div class="body" id="bodyPajak" style="display:none">
+      <div class="lock"><b>Cara kerja:</b> pajak <b>hanya</b> dipotong kalau
+      ① tag = <b>Bunga</b> <b>dan</b> ② checkbox <b>“🧾 Kena Pajak”</b> dicentang.
+      Lainnya tidak dipotong — pajaknya sudah termasuk di harga.</div>
+
+      <div class="sec">Aturan aktif — data asli</div>
+      <div class="row on">
+        <span class="ric">🧾</span>
+        <span class="rmid">
+          <span class="rn">Pajak Bunga Bank <span class="pin">id:2</span></span>
+          <span class="rs">Rate <b>20%</b> · berlaku sejak 1 Jan 2025</span>
+          <span class="rs">Dikenakan pada tag: <b>Bunga</b> · batas minimum: <b>0</b></span>
+        </span>
+        <span class="tinybtn">Ubah</span>
+      </div>
+      <div class="lock">Ini <b>satu-satunya</b> aturan pajak di sistem. Rate lama tetap dipakai
+        untuk transaksi lama — tidak dihitung ulang.</div>
+
+      <div class="sec">Kolom aturan pajak (sudah ada di database)</div>
+      <div class="lock">
+        <code>name</code> — “Pajak Bunga Bank”<br/>
+        <code>rate</code> — <b>20</b> (= 20%)<br/>
+        <code>effective_from</code> — <b>2025-01-01</b><br/>
+        <code>journal_names</code> — <b>Bunga</b> (tag yang dikenai)<br/>
+        <code>minimum_amount</code> — <b>0</b> &nbsp;← <b>kolom ini sudah ada</b>, siap dipakai
+        untuk “bank tidak potong pajak kalau bunga kecil”
+      </div>
+
+      <div class="sec">Kalau rate berubah</div>
+      <div class="lock">Tambah <b>baris baru</b> dengan <code>effective_from</code> baru.
+        Transaksi lama <b>tetap pakai rate lama</b> — tidak dihitung ulang.</div>
+
+      <div class="warnbox">💡 <b>Pajak punya batas minimum</b> — lihat aturan di halaman Bunga Bank.</div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= 5e. BUNGA BANK (tabungan vs deposito) ================= -->
+    <div class="apphead" id="headBunga" style="display:none">
+      <button class="iconbtn" data-screen="s5" title="Kembali ke Setting Dasar">‹</button>
+      <span class="h1">💰 Bunga Bank</span>
+    </div>
+    <div class="body" id="bodyBunga" style="display:none">
+
+      <div class="warnbox">⚙️ <b>Tabungan</b> dan <b>deposito</b> <u>berbeda</u>.
+        Jangan sampai salah pakai rate — dulu pernah terjadi (bunga tabungan jadi 1,5× lebih besar).</div>
+
+      <!-- Berdasarkan jenis -->
+      <div class="sec">Rate per jenis simpanan</div>
+      <div class="row on">
+        <span class="ric">🏦</span>
+        <span class="rmid"><span class="rn">Deposito</span><span class="rs">berjangka · rate lebih tinggi</span></span>
+        <span class="rv">7,5%<small>p.a</small></span>
+      </div>
+      <div class="row on">
+        <span class="ric">🐷</span>
+        <span class="rmid"><span class="rn">Tabungan biasa</span><span class="rs">rate lebih rendah</span></span>
+        <span class="rv">5,0%<small>p.a</small></span>
+      </div>
+      <div class="lock"><b>p.a</b> = per tahun (<i>per annum</i>). Rate diisi per rutin — jangan biarkan kosong
+        (kalau kosong, sistem bisa memakai angka yang salah).</div>
+
+      <!-- Metode hitung -->
+      <div class="sec">Metode hitung — bisa dipilih per bank</div>
+      <div class="pick">
+        <label class="on"><span class="rad"></span><span><span class="pt">① Bulatkan di akhir</span>
+          <span class="ps">Paling umum. Hitung sekali di akhir periode, lalu bulatkan.</span></span></label>
+        <label><span class="rad"></span><span><span class="pt">② Bulatkan per hari</span>
+          <span class="ps">Beberapa bank menghitung bunga tiap hari, baru dijumlahkan.</span></span></label>
+        <label><span class="rad"></span><span><span class="pt">③ Basis 360 hari</span>
+          <span class="ps">Ada bank memakai 360 hari (bukan 365).</span></span></label>
+        <label><span class="rad"></span><span><span class="pt">④ Bebas / Manual</span>
+          <span class="ps">Bapak isi angka bank → sistem simpan selisihnya.</span></span></label>
+      </div>
+
+      <!-- Batas pajak -->
+      <div class="sec">Batas pajak — bank tidak potong pajak kalau bunga kecil</div>
+      <div class="pick">
+        <label class="on"><span class="rad"></span><span><span class="pt">Potong pajak selalu</span>
+          <span class="ps">Setiap bunga yang kena pajak langsung dipotong 20%.</span></span></label>
+        <label><span class="rad"></span><span><span class="pt">Bunga di bawah batas → tidak dipotong</span>
+          <span class="ps">Contoh nyata: bunga harian kecil (mis. di Celengan) tidak dipotong pajak.</span></span></label>
+        <label><span class="rad"></span><span><span class="pt">Bunga di bawah batas → semua bulan</span>
+          <span class="ps">Kalau total setahun masih di bawah batas → tidak dipotong sepanjang tahun.</span></span></label>
+      </div>
+      <div class="filters" style="padding-top:10px">
+        <div class="field" style="margin:0">
+          <div class="lab">Batas minimum bunga (Rp)</div>
+          <input value="— belum diisi —" placeholder="mis. 100.000">
+          <div class="hint">Isi kalau bank Bapak tidak memotong pajak untuk bunga kecil. Kosongkan kalau tidak perlu.</div>
+        </div>
+      </div>
+
+      <!-- Contoh hitungan -->
+      <div class="sec">Contoh hitungan — lihat angka Bapak sendiri</div>
+
+      <div class="calc">
+        <div class="ct">🏦 Deposito · 7,5% p.a · kena pajak</div>
+        <div class="cl"><span>Pokok</span><b>100.000.000</b></div>
+        <div class="cl"><span>Rate</span><b>7,5%</b></div>
+        <div class="cl"><span>Jumlah hari</span><b>31 hari</b></div>
+        <div class="cl"><span>Rumus</span><b style="font-size:11px">pokok × rate × hari ÷ 365</b></div>
+        <div class="cl big"><span>Debet (bunga masuk)</span><b>+636.986,30</b></div>
+        <div class="cl big"><span>Pajak 20% (keluar)</span><b>−127.397,26</b></div>
+        <div class="cl big"><span><b>Neto (cocok mutasi)</b></span><b>509.589,04</b></div>
+      </div>
+
+      <div class="calc">
+        <div class="ct">🐷 Tabungan biasa · 5,0% p.a · kena pajak</div>
+        <div class="cl"><span>Pokok</span><b>10.000.000</b></div>
+        <div class="cl"><span>Rate</span><b>5,0%</b></div>
+        <div class="cl"><span>Jumlah hari</span><b>31 hari</b></div>
+        <div class="cl big"><span>Debet (bunga masuk)</span><b>+42.465,75</b></div>
+        <div class="cl big"><span>Pajak 20% (keluar)</span><b>−8.493,15</b></div>
+        <div class="cl big"><span><b>Neto</b></span><b>33.972,60</b></div>
+      </div>
+
+      <div class="calc">
+        <div class="ct">🐷 Bunga harian kecil · tidak dipotong pajak</div>
+        <div class="cl"><span>Bunga 1 hari (mis. saldo kecil)</span><b>+68,49</b></div>
+        <div class="cl big"><span>Pajak</span><b>0 (di bawah batas)</b></div>
+        <div class="cl big"><span><b>Neto</b></span><b>68,49</b></div>
+        <div class="note">Bank tidak memotong pajak karena bunganya <b>terlalu kecil</b>.
+          Sistem harus bisa menandai transaksi seperti ini <b>tanpa</b> pajak.</div>
+      </div>
+
+      <!-- Jejak hitungan -->
+      <div class="sec">Jejak hitungan — disimpan, bukan cuma hasil</div>
+      <div class="lock">
+        Pokok · Rate · Jumlah hari · <b>Hasil hitungan sistem</b> ·
+        <b>Angka akhir (setelah koreksi bank)</b> · <b>Selisih</b> · Alasan koreksi
+      </div>
+      <div class="warnbox danger">🔴 Rumus <b>hanya satu tempat</b> (<code>core/bunga.ts</code>).
+        Plugin <b>dilarang</b> menulis rumus sendiri — dulu ada <b>3 tempat</b> → selisih 1 sen berulang.</div>
+
+      <div style="padding:14px 14px 0"><button class="btn ghost" style="width:100%;height:40px">🔄 Samakan dengan Bank (koreksi tercatat)</button></div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= 5f. BAHASA ================= -->
+    <div class="apphead" id="headBahasa" style="display:none">
+      <button class="iconbtn" data-screen="s5" title="Kembali ke Setting Dasar">‹</button>
+      <span class="h1">🌐 Bahasa</span>
+    </div>
+    <div class="body" id="bodyBahasa" style="display:none">
+      <div class="sec">Pilih bahasa tampilan</div>
+      <div class="pick" id="langPick">
+        <label class="on" data-lang="id"><span class="rad"></span><span><span class="pt">🇮🇩 Indonesia</span>
+          <span class="ps">Bawaan — semua istilah &amp; kalimat bahasa Indonesia.</span></span></label>
+        <label data-lang="en"><span class="rad"></span><span><span class="pt">🇬🇧 English</span>
+          <span class="ps">Semua istilah &amp; kalimat berubah bahasa Inggris.</span></span></label>
+      </div>
+
+      <div class="lock" id="langNow"><b>Bahasa sekarang:</b> Indonesia</div>
+
+      <div class="sec">Yang ikut berubah</div>
+      <div class="lock">
+        Judul halaman · judul kolom · label formulir · tombol · pesan · judul panel ·
+        <b>nama tag</b> · <b>nama fund</b>
+      </div>
+
+      <div class="sec">Daftar istilah</div>
+      <div class="menu">
+        <div class="m" data-screen="s12"><span class="mi">📖</span><span><span class="mt">Istilah</span><div class="ms">Daftar istilah keuangan — Indonesia ↔ English</div></span><span class="arrow">›</span></div>
+      </div>
+
+      <div class="sec">Uji coba bahasa</div>
+      <div class="lock">Tekan tombol di bawah — <b>seluruh tulisan</b> halaman langsung berganti bahasa.
+        Bisa juga lewat <b>🌐</b> di alat peraga (🔧).</div>
+      <div style="padding:12px 14px 0">
+        <button class="btn" style="width:100%;height:40px" id="btnLang2">🌐 Ganti ke English</button>
+      </div>
+
+      <div class="warnbox">🔴 Nama tag/fund boleh berubah bahasa — tapi <b>code</b> di dalam sistem
+        <b>tidak ikut berubah</b> (mis. <code>TRANSFER</code> tetap). Itu yang menjaga laporan tetap benar.</div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ================= 5g. ISTILAH ================= -->
+    <div class="apphead" id="headIstilah" style="display:none">
+      <button class="iconbtn" data-screen="s11" title="Kembali ke Bahasa">‹</button>
+      <span class="h1">📖 Istilah</span>
+    </div>
+    <div class="body" id="bodyIstilah" style="display:none">
+      <div class="lock">Ini <b>daftar istilah keuangan</b> yang dipakai UangKu — <b>bukan contoh</b>.
+        Kolom kiri = istilah Indonesia, kolom kanan = padanan English.
+        Yang bernama <b>code</b> <b>tidak ikut</b> berganti bahasa (dipakai logika sistem).</div>
+
+      <div class="sec">Transaksi &amp; Jurnal</div>
+      <div class="mini-head"><span style="flex:1 1 auto">Indonesia</span><span class="r">English</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Debit</span><span class="rs">uang MASUK ke fund</span></span><span class="rv">Debit</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Kredit</span><span class="rs">uang KELUAR dari fund</span></span><span class="rv">Credit</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Transaksi</span><span class="rs">satu catatan uang</span></span><span class="rv">Transaction</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Jurnal</span><span class="rs">arah masuk / keluar</span></span><span class="rv">Journal</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Tanggal</span></span><span class="rv">Date</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Keterangan</span></span><span class="rv">Description</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Jumlah</span></span><span class="rv">Amount</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Qty</span><span class="rs">banyak barang (belanja)</span></span><span class="rv">Qty</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Transfer</span><span class="rs">pindah fund — bukan pemasukan</span></span><span class="rv">Transfer</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Pasangan transfer</span></span><span class="rv">Transfer pair</span></div>
+
+      <div class="sec">Fund &amp; Saldo</div>
+      <div class="mini-head"><span style="flex:1 1 auto">Indonesia</span><span class="r">English</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Sumber Dana</span><span class="rs">kotak uang / tempat</span></span><span class="rv">Source Fund</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Saldo</span></span><span class="rv">Balance</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Saldo Awal</span><span class="rs">posisi awal bulan</span></span><span class="rv">Opening Balance</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Saldo Akhir</span><span class="rs">posisi akhir bulan</span></span><span class="rv">Closing Balance</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Diblokir</span><span class="rs">tidak boleh dipakai belanja</span></span><span class="rv">Blocked</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Titipan</span><span class="rs">uang orang lain</span></span><span class="rv">Held</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Saldo minimum</span></span><span class="rv">Minimum balance</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Urutan</span><span class="rs">nomor urut tampilan</span></span><span class="rv">Sort order</span></div>
+
+      <div class="sec">Tag</div>
+      <div class="mini-head"><span style="flex:1 1 auto">Indonesia</span><span class="r">English</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Tag</span><span class="rs">penanda makna transaksi</span></span><span class="rv">Tag</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Kode</span><span class="rs">tetap — tidak ikut ganti bahasa</span></span><span class="rv">Code</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Tag sistem</span><span class="rs">dipakai perhitungan otomatis</span></span><span class="rv">System tag</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Muncul di Belanja</span></span><span class="rv">Shown in Shopping</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Dikecualikan</span><span class="rs">tidak dihitung di ringkasan bulanan</span></span><span class="rv">Excluded</span></div>
+
+      <div class="sec">Bunga &amp; Pajak</div>
+      <div class="mini-head"><span style="flex:1 1 auto">Indonesia</span><span class="r">English</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Bunga</span></span><span class="rv">Interest</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Pokok</span><span class="rs">nilai simpanan mula-mula</span></span><span class="rv">Principal</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Rate</span><span class="rs">tarif bunga per tahun</span></span><span class="rv">Rate</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Jumlah hari</span></span><span class="rv">Number of days</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Pajak</span></span><span class="rv">Tax</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Kena Pajak</span></span><span class="rv">Taxable</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Neto</span><span class="rs">bunga setelah dipotong pajak</span></span><span class="rv">Net</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Deposito</span></span><span class="rv">Time deposit</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Tabungan</span></span><span class="rv">Savings</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Batas minimum bunga</span></span><span class="rv">Minimum interest threshold</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Selisih</span><span class="rs">beda hitungan sistem vs bank</span></span><span class="rv">Difference</span></div>
+
+      <div class="sec">Modul</div>
+      <div class="mini-head"><span style="flex:1 1 auto">Indonesia</span><span class="r">English</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Rutin</span><span class="rs">tagihan / penerimaan berulang</span></span><span class="rv">Recurring</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Belanja</span><span class="rs">daftar rencana belanja</span></span><span class="rv">Shopping</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Wishlist</span><span class="rs">daftar keinginan</span></span><span class="rv">Wishlist</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Investasi</span></span><span class="rv">Investment</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Laporan</span></span><span class="rv">Report</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Pinjam</span></span><span class="rv">Borrow</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Hutang</span></span><span class="rv">Debt</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Reimburse</span><span class="rs">uang kembali dari hutang</span></span><span class="rv">Reimburse</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Proses Akhir Bulan</span></span><span class="rv">Month-End Close</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Riwayat</span></span><span class="rv">History</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Batalkan</span><span class="rs">kembalikan ke nilai sebelumnya</span></span><span class="rv">Undo</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Plugin</span><span class="rs">tambahan pemudah — opsional</span></span><span class="rv">Plugin</span></div>
+
+      <div class="sec">Status &amp; Pesan</div>
+      <div class="mini-head"><span style="flex:1 1 auto">Indonesia</span><span class="r">English</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Masuk</span></span><span class="rv">In</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Keluar</span></span><span class="rv">Out</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Tersedia</span></span><span class="rv">Available</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Belum ada transaksi</span></span><span class="rv">No transactions yet</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Belum ada data</span></span><span class="rv">No data yet</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Perlu diproses</span></span><span class="rv">Needs processing</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Jatuh tempo</span></span><span class="rv">Due</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Bulan terkunci</span></span><span class="rv">Month locked</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Saldo di bawah minimum</span></span><span class="rv">Balance below minimum</span></div>
+      <div class="row"><span class="rmid"><span class="rn">Tidak bisa dibatalkan</span></span><span class="rv">Cannot be undone</span></div>
+
+      <div class="sec">Aturan istilah</div>
+      <div class="lock">
+        • Istilah <b>Indonesia</b> adalah bawaan — semua kalimat bisa jadi English<br/>
+        • <b>Nama tag</b> &amp; <b>nama fund</b> boleh diganti bahasa<br/>
+        • <b>code</b> (mis. <code>TRANSFER</code>, <code>BUNGA</code>, <code>SUPERBANK</code>)
+        <b>tidak pernah</b> ikut berubah — itu yang menjaga laporan tetap benar<br/>
+        • Angka &amp; tanggal tetap format Indonesia (1.000.000 · 25 Sep 2026)
+      </div>
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ---------- Navigasi bawah: 3 pintu utama ---------- -->
+    <nav class="tabbar" id="tabbar">
+      <button class="tab on" data-screen="s0"><span class="gi">📊</span>Dashboard</button>
+      <button class="tab" data-screen="s1"><span class="gi">🧾</span>Transaksi</button>
+      <button class="tab" data-screen="s4"><span class="gi">⚙️</span>Pengaturan</button>
+    </nav>
+
+    <!-- ---------- Panel bawah: Tambah ---------- -->
+    <div class="sheet" id="sheetAdd">
+      <div class="panel">
+        <div class="ph"><span class="t">＋ Tambah Transaksi</span><button class="iconbtn" data-close>✕</button></div>
+        <div class="pb">
+          <div class="field"><div class="lab">Tanggal</div><input type="date" value="2026-09-25"></div>
+          <div class="field"><div class="lab">Keterangan</div><input placeholder="mis. Bayar Listrik"></div>
+          <div class="field"><div class="lab">Sumber dana</div><select><option>Superbank</option><option>SeaBank</option></select></div>
+          <div class="field">
+            <div class="lab">Tag</div>
+            <div class="tagpick">
+              <button class="on">🏠 Rumah</button><button>👤 Pribadi</button><button>🐕 Pet</button>
+              <button>🚗 Mobil</button><button>🌸 Bunga</button><button>🔄 Transfer</button>
+            </div>
+          </div>
+          <div class="field"><div class="lab">Jumlah</div><div class="amount-in"><span class="rp">Rp</span>18.000</div></div>
+        </div>
+        <div class="pf"><button class="btn ghost" data-close>Batal</button><button class="btn">Simpan</button></div>
+      </div>
+    </div>
+
+  </div><!-- /phone -->
+  </div><!-- /frame -->
+
+  <!-- ============ CATATAN DESAIN ============ -->
+  <div class="notes">
+    <h3>📐 Catatan rancangan — kenapa dibuat begini</h3>
+    <table>
+      <tr><th style="width:150px">Masalah di HP</th><th>Cara menyelesaikannya</th></tr>
+      <tr><td>Banyak hal mau ditampilkan</td><td>Urutan <b>“penting dulu”</b>: <b>daftar sumber fund + saldo akhir</b> → peringatan → total saldo → ringkasan → tagihan → terbaru<br/><i>(catatan 25 Sep 2026: tombol pintas dihapus — pindah halaman lewat <b>tab bawah</b>)</i></td></tr>
+      <tr><td>Tabel 7 kolom tidak muat</td><td>Tabel diganti <b>baris-kartu</b>: ikon tag · keterangan · fund+tag di bawahnya · jumlah di kanan</td></tr>
+      <tr><td>Mata harus geser bolak-balik</td><td><b>Info penting di atas</b>; kartu saldo fund disusun <b>4 kolom sejajar</b> (Saldo awal · Masuk · Keluar · Saldo akhir)</td></tr>
+      <tr><td>Jari salah tekan</td><td>Semua tombol ≥ <b>44px</b> · baris transaksi ≥ <b>54px</b> tinggi</td></tr>
+      <tr><td>Pemilih fund panjang</td><td>Di <b>aplikasi</b> jadi <b>grid hemat ruang</b> (tertutup 1 baris 32 px, klik → terbuka). Mockup ini masih bentuk lama — <b>ikuti aplikasi</b></td></tr>
+      <tr><td>Form panjang menutupi data</td><td>Pakai <b>panel dari bawah</b> (bukan halaman baru) — data di belakang masih terlihat</td></tr>
+      <tr><td>Berdesakan</td><td>Jarak <b>14px</b> kiri-kanan konsisten · tidak ada teks &lt; 10,5px</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">🔑 Urutan halaman (sesuai koreksi 25 Sep)</h3>
+    <p style="margin:0 0 6px"><b>📊 Dashboard</b> ( pertama) &nbsp;→&nbsp; <b>🧾 Transaksi</b> (INTI) &nbsp;→&nbsp; <b>🧩 Plugin</b> (opsional)</p>
+    <ul>
+      <li><b>Dashboard</b> = halaman <b>pertama</b> — daftar sumber fund + saldo akhir, total, ringkasan</li>
+      <li><b>Transaksi</b> = <b>INTI</b> — tempat mencatat. Pindah ke sini lewat <b>tab bawah</b> “🧾 Transaksi”</li>
+      <li><b>Plugin</b> (Rutin, Belanja, Wishlist, Investasi, Report) = <b>opsional</b>.</li>
+          Dilepas semua → transaksi <b>tetap bisa</b> diinput, hanya <b>lebih repot</b></li>
+      <li>🎯 Yang <b>wajib selesai lebih dulu = Transaksi</b></li>
+    </ul>
+
+    <h3 style="margin-top:14px">⬛⬜ Warna — hanya 3 tempat ini yang berwarna</h3>
+    <ul>
+      <li>⚠️ <b>Peringatan</b> (kuning) — mis. "2 tagihan jatuh tempo"</li>
+      <li>🔻 <b>Saldo di bawah minimum</b> (merah)</li>
+      <li>🔴 <b>Bahaya</b> (merah) — mis. "sisa setelah rutin negatif", tombol Batalkan</li>
+    </ul>
+    <p style="margin:8px 0 0">Selain itu <b>hitam-putih</b>. Debit dan Kredit dibedakan oleh <b>tanda + / −</b>, bukan warna.</p>
+
+    <h3 style="margin-top:14px">🎛️ Yang bisa dicoba</h3>
+    <ul>
+      <li><b>�</b> (kanan bawah) — buka/tutup <b>alat peraga</b>. Bawaan <b>tersembunyi</b> karena bukan bagian aplikasi</li>
+      <li><b>📱 Bingkai HP</b> — tampilkan / hilangkan bingkai HP. Tanpa bingkai = aplikasi penuh satu layar</li>
+      <li><b>Layar 1–5</b> — Dashboard · Transaksi · Tambah · Detail &amp; Riwayat · <b>Pengaturan</b></li>
+      <li><b>360 / 390 / 430</b> — lebar HP berbeda (HP kecil sampai HP besar)</li>
+      <li><b>🌙 Gelap</b> — tema gelap (hitam pekat)</li>
+      <li><b>🌐 ID / EN</b> — contoh konsep multi-bahasa</li>
+      <li><b>+</b> (kanan atas halaman Transaksi) — contoh panel tambah transaksi</li>
+      <li><b>Navigasi bawah</b> — 📊 Dashboard · 🧾 Transaksi · ⚙️ Pengaturan</li>
+    </ul>
+
+    <h3 style="margin-top:14px">🗂️ Menu dipindah ke Pengaturan</h3>
+    <p style="margin:0 0 6px">Supaya tampilan <b>lebih rapi</b> dan <b>mudah diingat</b>, menu dipisah sesuai <b>sering / jarang dipakai</b>:</p>
+    <table>
+      <tr><th style="width:150px">Kelompok</th><th>Isi</th></tr>
+      <tr><td>📊 <b>Sering dipakai</b></td><td>Rutin · Belanja · Report</td></tr>
+      <tr><td>🗂️ <b>Jarang dipakai</b></td><td>Wishlist · Investasi</td></tr>
+      <tr><td>⚙️ <b>Pengaturan</b></td><td>Setting dasar · Bahasa · Proses Akhir Bulan · Riwayat &amp; Batalkan · Dokumen [Doc] · Ambil Data Terbaru · Backup</td></tr>
+      <tr><td>🧩 <b>Plugin yang dilepas</b></td><td>Tombol “Pasang plugin” — plugin <b>opsional</b></td></tr>
+    </table>
+
+    <p style="margin:10px 0 0;color:#666">⚠️ Ini <b>hanya tampilan</b> — belum ada sistem, belum menyentuh data. Angka yang dipakai contoh dari catatan nyata.</p>
+  </div>
+
+</div>
+
+<script>
+/* ==== Hanya untuk mengganti tampilan (mockup). Tidak ada logika keuangan. ==== */
+const phone = document.getElementById('phone');
+const frame = document.getElementById('frame');
+
+/* Kalau jendela lebih sempit dari HP → perkecil tampilan HP supaya muat utuh.
+   Mode tanpa bingkai: tidak perlu diperkecil — lebarnya ikut jendela. */
+function fitPhone(){
+  if (phone.classList.contains('bare')) {
+    frame.style.transform = '';
+    frame.style.height = '';
+    return;
+  }
+  const w = phone.offsetWidth || 390;
+  const avail = Math.min(document.documentElement.clientWidth - 34, 980);
+  const s = avail < w ? Math.max(avail / w, .55) : 1;
+  frame.style.transform = 'scale(' + s + ')';
+  frame.style.height = (phone.offsetHeight * s) + 'px';
+}
+window.addEventListener('resize', fitPhone);
+
+const bodies = { s0:'bodyDash', s1:'bodyMain', s2:'bodyForm', s3:'bodyDetail', s4:'bodyMore',
+                s5:'bodySetDasar', s6:'bodyFund', s7:'bodyTag', s8:'bodySaldo',
+                s9:'bodyPajak', s10:'bodyBunga', s11:'bodyBahasa', s12:'bodyIstilah' };
+const heads = { s0:'headDash', s1:'headTx', s2:'headTx', s3:'headTx', s4:'headSet',
+                s5:'headSetDasar', s6:'headFund', s7:'headTag', s8:'headSaldo',
+                s9:'headPajak', s10:'headBunga', s11:'headBahasa', s12:'headIstilah' };
+const fab = document.querySelector('.fab');
+const tabbar = document.getElementById('tabbar');
+function show(s){
+  Object.entries(bodies).forEach(([k,id]) => {
+    document.getElementById(id).style.display = (k===s) ? '' : 'none';
+  });
+
+  /* Judul halaman menyesuaikan */
+  Object.values(heads).forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  const h = document.getElementById(heads[s]);
+  if (h) h.style.display = '';
+
+  /* Tombol ＋ hanya di halaman Transaksi */
+  fab.style.display = (s==='s1') ? '' : 'none';
+
+  /* Sorot tombol layar di panel alat */
+  document.querySelectorAll('[data-screen]').forEach(b =>
+    b.classList.toggle('on', b.dataset.screen===s && b.classList.contains('tbtn')));
+
+  /* Sorot navigasi bawah (anak halaman tetap menyala induknya) */
+  const parentTab = { s0:'s0', s1:'s1', s2:'s1', s3:'s1', s4:'s4',
+                      s5:'s4', s6:'s4', s7:'s4', s8:'s4', s9:'s4', s10:'s4', s11:'s4', s12:'s4' };
+  document.querySelectorAll('#tabbar .tab').forEach(t =>
+    t.classList.toggle('on', t.dataset.screen === (parentTab[s] || s)));
+
+  document.querySelectorAll('.body').forEach(b=>b.scrollTop=0);
+}
+
+document.querySelectorAll('[data-screen]').forEach(b =>
+  b.addEventListener('click', () => show(b.dataset.screen)));
+
+document.querySelectorAll('[data-w]').forEach(b =>
+  b.addEventListener('click', () => {
+    phone.style.setProperty('--w', b.dataset.w + 'px');
+    document.querySelectorAll('[data-w]').forEach(x=>x.classList.toggle('on', x===b));
+  }));
+
+document.getElementById('btnDark').addEventListener('click', e => {
+  phone.classList.toggle('dark');
+  const dark = phone.classList.contains('dark');
+  document.body.classList.toggle('theme-dark', dark);
+  document.body.classList.toggle('tools-dark', dark);
+  e.currentTarget.textContent = dark ? '☀️ Terang' : '🌙 Gelap';
+});
+
+/* --- Tombol 🔧: buka / tutup alat peraga --- */
+const btnTools = document.getElementById('btnTools');
+btnTools.addEventListener('click', () => {
+  const shown = document.body.classList.toggle('showtools');
+  btnTools.textContent = shown ? '✕' : '🔧';
+  btnTools.title = shown ? 'Tutup alat peraga' : 'Alat peraga (bukan bagian aplikasi)';
+  fitPhone();
+  setTimeout(fitPhone, 40);
+});
+
+/* --- Mode bingkai / tanpa bingkai --- */
+function setBare(on){
+  phone.classList.toggle('bare', on);
+  document.body.classList.toggle('bare', on);
+  document.getElementById('btnFrame').textContent = on ? '📱 Bingkai HP' : '⛶ Tanpa bingkai';
+  document.body.classList.toggle('theme-dark', phone.classList.contains('dark'));
+  document.body.classList.toggle('tools-dark', phone.classList.contains('dark'));
+  fitPhone();
+  setTimeout(fitPhone, 40);
+}
+document.getElementById('btnFrame').addEventListener('click', () => {
+  setBare(!phone.classList.contains('bare'));
+});
+
+/* Sembunyikan/tampilkan alat — tombol lama, tidak dipakai lagi */
+const btnMini = document.getElementById('btnMini');
+if (btnMini) btnMini.addEventListener('click', () => {});
+
+/* ============================================================
+   KAMUS BAHASA (ID ↔ EN)
+   Cara kerja: setiap potongan tulisan yang punya padanan
+   diterjemahkan langsung (tata letak TIDAK berubah).
+   ⚠️ Yang TIDAK diterjemahkan: code tag/fund (TRANSFER, BUNGA,
+      SUPERBANK, …), angka, tanggal, dan nama bank.
+   ============================================================ */
+const KAMUS = {
+  // Judul halaman
+  '📊 Dashboard':'📊 Dashboard',
+  '🧾 Transaksi':'🧾 Transactions',
+  '⚙️ Pengaturan':'⚙️ Settings',
+  '⚙️ Setting Dasar':'⚙️ Basic Settings',
+  '🧺 Source Fund':'🧺 Source Funds',
+  '🏷️ Tags':'🏷️ Tags',
+  '💰 Saldo Awal':'💰 Opening Balances',
+  '🧾 Pajak':'🧾 Tax',
+  '💰 Bunga Bank':'💰 Bank Interest',
+  '🌐 Bahasa':'🌐 Language',
+  '📖 Istilah':'📖 Glossary',
+
+  // Navigasi
+  'Dashboard':'Dashboard',
+  'Transaksi':'Transactions',
+  'Pengaturan':'Settings',
+  'Tambah':'Add',
+  '＋ Tambah Transaksi':'＋ Add Transaction',
+  'Batal':'Cancel',
+  'Simpan':'Save',
+  'Simpan fund':'Save fund',
+  'Ubah':'Edit',
+
+  // Dashboard
+  'Total semua fund':'Total all funds',
+  'Total':'Total',
+  'Tersedia':'Available',
+  'Diblokir':'Blocked',
+  'Diblokir 🔒':'Blocked 🔒',
+  'Titipan':'Held',
+  'Titipan 👥':'Held 👥',
+  'Ringkasan bulan ini':'This month summary',
+  'Masuk':'In',
+  'Keluar':'Out',
+  'Selisih':'Difference',
+  'Dikecualikan':'Excluded',
+  'Bunga & pajak bulan ini':'Interest & tax this month',
+  'Bunga neto':'Net interest',
+  'cocok mutasi bank':'matches bank statement',
+  'Tagihan & penerimaan':'Bills & income',
+  'Perlu diproses':'Needs processing',
+  'item':'item',
+  'Transaksi terbaru':'Recent transactions',
+  'tagihan jatuh tempo':'bills due',
+  'hari ini':'today',
+  'Kalau dipasang':'If installed',
+  'Kalau dilepas':'If removed',
+  'tidak perlu ketik ulang':'no need to retype',
+  'input manual tetap bisa':'manual input still works',
+  'opsional':'optional',
+  'Plugin Rutin':'Routine Plugin',
+
+  // Transaksi
+  'Saldo akhir · September 2026':'Closing balance · September 2026',
+  'Saldo awal':'Opening balance',
+  'Semua':'All',
+  'Masuk +':'In +',
+  'Keluar −':'Out −',
+  'Cari keterangan…':'Search description…',
+  'Hari ini · 25 Sep':'Today · 25 Sep',
+  '24 Sep':'24 Sep','23 Sep':'23 Sep','21 Sep':'21 Sep','20 Sep':'20 Sep','18 Sep':'18 Sep',
+  'masuk':'in',
+  'keluar':'out',
+  'terhapus':'deleted',
+  'Auto':'Auto',
+
+  // Tambah
+  'Tanggal':'Date',
+  'Keterangan':'Description',
+  'Sumber dana (fund)':'Source fund',
+  'Sumber dana':'Source fund',
+  'lihat ›':'view ›',
+  'saldo':'balance',
+  'baru · belum ada transaksi':'new · no transactions yet',
+  'Total':'Total',
+  'Bunga 🌸':'Interest 🌸',
+  'Pajak 🧾':'Tax 🧾',
+  '[Rutin] ':'[Recurring] ',
+
+  // Kalimat panjang (frasa) — dicocokkan lebih dulu
+  'Bawaan — semua istilah & kalimat bahasa Indonesia.':
+    'Default — all terms & sentences in Indonesian.',
+  'Semua istilah & kalimat berubah bahasa Inggris.':'All terms & sentences switch to English.',
+  'halaman langsung berganti bahasa. Bisa juga lewat':
+    'switches language immediately. You can also use',
+  'aturan pajak di sistem. Rate lama tetap dipakai untuk transaksi lama — tidak dihitung ulang.':
+    'tax rule in the system. Old rates still apply to old transactions — never recalculated.',
+  'dicentang. Lainnya tidak dipotong — pajaknya sudah termasuk di harga.':
+    'is ticked. Others are not withheld — their tax is already in the price.',
+  'dipotong kalau ① tag =':'is withheld only if ① tag =',
+  'dan ② the checkbox':'and ② the checkbox',
+  'siap dipakai untuk “bank tidak potong pajak kalau bunga kecil”':
+    'ready for “bank does not withhold tax on small interest”',
+  'Ini contoh di rancangan — belum menulis ke database.':
+    'This is a sample in the mockup — it does not write to the database.',
+  'Contoh: fund baru ditambahkan. Di sistem sungguhan → tersimpan di':
+    'Sample: a new fund was added. In the real system → stored in',
+  '— belum menulis ke database.':'— does not write to the database yet.',
+  'tetap, tidak ikut ganti bahasa':'fixed, never translated',
+  '(bisa diganti bahasa)':'(can be translated)',
+  '(angka urut)':'(order number)',
+  '(tag yang dikenai)':'(the tag it applies to)',
+  'uang orang lain':"someone else's money",
+  'tidak boleh dipakai belanja':'cannot be used for shopping',
+  'kolom ini sudah ada':'this column already exists',
+  'baris baru':'a new row',
+  'satu-satunya':'the only',
+  'Apakah':'Is',
+  'Ubah':'Edit',
+  'Ini':'This is',
+  'contoh di rancangan':'a sample in the mockup',
+  'Saldo Awal':'Opening Balance',
+  'Saldo Akhir':'Closing Balance',
+  'Saldo akhir':'Closing balance',
+  'Saldo awal':'Opening balance',
+  'Saldo':'Balance',
+  'transaksi':'transactions',
+  'dilarang':'is forbidden',
+  'logika pakai':'the logic uses',
+  'boleh diganti bahasa':'can be translated',
+  'Nama tag':'Tag names',
+  'nama fund':'fund names',
+  'Min. saldo':'Min. balance',
+  'titipan':'held for others',
+  'hanya':'only',
+  'pajak':'tax',
+  'Transaksi lama':'Old transactions',
+  'hari':'days',
+  'dengan':'and',
+  'Nama':'Name',
+  'Salah tag':'Wrong tag',
+  'Logika pakai':'The logic uses',
+  'Bukan':'Not',
+  '(tetap)':'(fixed)',
+  'Aturan':'Rules',
+  'Kolom':'Columns',
+  'Urut':'No.',
+  'Saldo':'Balance',
+  'saldo':'Balance',
+  'Jumlah 18 fund':'Total of 18 funds',
+  'Kunci bulan & pindah saldo':'Lock month & move balance',
+  'Semua input · edit · hapus':'All inputs · edits · deletes',
+  'Cadangan database':'Database backup',
+  'Pasang plugin':'Install plugin',
+  'Plugin · tagihan & penerimaan berulang':'Plugin · recurring bills & income',
+  'Plugin · rencana & prioritas':'Plugin · plan & priority',
+  'Plugin · analisa per tag & fund':'Plugin · analysis by tag & fund',
+  'Plugin · menabung untuk keinginan':'Plugin · saving for wants',
+  'Plugin · deposito · saham · emas':'Plugin · time deposit · stocks · gold',
+  'Dilepas semua → transaksi':'Remove all → transactions',
+  'diinput, hanya lebih repot.':'can still be entered, just more work.',
+  'tetap bisa':'still work',
+  'Plugin bersifat':'Plugins are',
+  'Rencana · Perubahan · Cetak biru':'Plan · Changes · Blueprint',
+  'keuangan → uangku':'keuangan → uangku',
+  'Ambil Data Terbaru':'Fetch Latest Data',
+  'Fund · Tag · Saldo awal · Pajak · Bunga · Bahasa':'Funds · Tags · Opening balances · Tax · Interest · Language',
+  'September 2026 — sedang berjalan 🔓':'September 2026 — in progress 🔓',
+  'Agustus 2026 — diproses 🔒':'August 2026 — closed 🔒',
+  'Isi saldo awal · September 2026':'Opening balances · September 2026',
+  'Isi setting dasar':'Basic settings content',
+  'Isi':'Fill in',
+
+  '🧾 Kena pajak 20%':'🧾 Taxable 20%',
+  '🌸 Checkpoint — bunga ini kena pajak?':'🌸 Checkpoint — is this interest taxable?',
+  'Kalau':'If',
+  'dicentang':'ticked',
+  '→ sistem menghitung pajak & mencatat':'→ the system calculates tax & records',
+  '2 baris':'2 rows',
+  ':':' :',
+  'Bunga masuk + Pajak keluar.':'Interest in + Tax out.',
+  'tidak':'not',
+  '→ hanya':'→ only',
+  '1 baris':'1 row',
+  '(bunga tanpa pajak) — mis. bunga harian kecil.':'(interest without tax) — e.g. small daily interest.',
+  'Berlaku untuk':'Applies to',
+  'semua':'all',
+  'bunga — dari rutin maupun input manual. Tidak perlu tag kedua, tidak perlu batas minimum.':
+    'interest — from recurring or manual input. No second tag needed, no minimum threshold needed.',
+  'Neto (cocok mutasi bank)':'Net (matches bank statement)',
+  '1 tindakan → 2 catatan':'2 records',
+  '2 catatan':'2 records',
+  'Transfer keluar':'Transfer out',
+  'Transfer masuk':'Transfer in',
+  '① VERTIKAL':'① VERTICAL',
+  '② HORISONTAL':'② HORIZONTAL',
+  'Tanggal':'Date',
+  'Keterangan · Tag · Fund · Tanggal':'Description · Tag · Fund · Date',
+  'Keterangan · Tag · Fund':'Description · Tag · Fund',
+  'Tekan':'Press',
+  'di atas untuk membandingkan bentuk baris. Keduanya memakai':'above to compare row layouts. Both use the',
+  'data yang sama':'same data',
+  '— hanya cara menatanya berbeda.':'— only the layout differs.',
+  'Bunga ':'Interest ',
+  'Pajak ':'Tax ',
+
+  // Nama tag (boleh diterjemahkan — code-nya tetap)
+  'Rumah':'Home',
+  'Pribadi':'Personal',
+  'Pet':'Pet',
+  'Mobil':'Car',
+  'Bunga':'Interest',
+  'Pajak':'Tax',
+  'Koreksi':'Correction',
+  'Bonus':'Bonus',
+  'Hilang':'Lost',
+  'biaya':'fees',
+  'Pinjam':'Borrow',
+  'Pendapatan':'Income',
+  'Reimburse':'Reimburse',
+  'Hutang':'Debt',
+  'Tag — menentukan artinya':'Tag — determines the meaning',
+  'Jurnal (pintu)':'Journal (gate)',
+  'Jurnal':'Journal',
+  'Jumlah':'Amount',
+  'Transfer ke fund (opsional)':'Transfer to fund (optional)',
+  'Jadikan Rutin setelah simpan':'Make Recurring after saving',
+  '🧾 Kena pajak (khusus tag Bunga)':'🧾 Taxable (Interest tag only)',
+  '─' : '─',
+  'Semua Fund':'All Funds',
+  '— tidak transfer —':'— no transfer —',
+  'Pilih tag → pintu jurnal terisi sendiri. Nama tag boleh diganti bahasa.':
+    'Pick a tag → the journal gate fills itself. Tag names can be translated.',
+  'Diisi kalau uang pindah kotak → sistem mencatat 2 baris (keluar + masuk).':
+    'Fill when money moves boxes → the system records 2 rows (out + in).',
+  'otomatis dari tag':'auto from tag',
+  'Kredit — uang keluar':'Credit — money out',
+  'Debit — uang masuk':'Debit — money in',
+
+  // Detail & riwayat
+  'Kredit · keluar · 24 Sep 2026':'Credit · out · 24 Sep 2026',
+  'Tag':'Tag',
+  'Sumber':'Source',
+  'Bapak (manual)':'You (manual)',
+  'Riwayat — tidak bisa dihapus':'History — cannot be deleted',
+  'Diubah: 18.000 → 19.000':'Changed: 18,000 → 19,000',
+  'Nilai lama tersimpan':'Old value kept',
+  'Dibuat':'Created',
+  'Batalkan':'Undo',
+  'Batalkan perubahan':'Undo the change',
+
+  // Pengaturan
+  '📊 Sering dipakai':'📊 Frequently used',
+  '🗂️ Jarang dipakai':'🗂️ Rarely used',
+  '⚙️ Pengaturan':'⚙️ Settings',
+  '🧩 Plugin yang dilepas':'🧩 Removed plugins',
+  'Rutin':'Recurring',
+  'Belanja':'Shopping',
+  'Report':'Report',
+  'Wishlist':'Wishlist',
+  'Investasi':'Investments',
+  'Setting dasar':'Basic settings',
+  'Proses Akhir Bulan':'Month-End Close',
+  'Riwayat & Batalkan':'History & Undo',
+  'Dokumen [Doc]':'Documents [Doc]',
+  'Ambil Data Terbaru':'Fetch Latest Data',
+  'Backup':'Backup',
+  'Pasang plugin':'Install plugin',
+  'Plugin · tagihan & penerimaan berulang':'Plugin · recurring bills & income',
+  'Plugin · rencana & prioritas':'Plugin · plan & priority',
+  'Plugin · analisa per tag & fund':'Plugin · analysis by tag & fund',
+  'Plugin · menabung untuk keinginan':'Plugin · saving for wants',
+  'Plugin · deposito · saham · emas':'Plugin · time deposit · stocks · gold',
+  'Kunci bulan & pindah saldo':'Lock month & move balance',
+  'Semua input · edit · hapus':'All inputs · edits · deletes',
+  'Rencana · Perubahan · Cetak biru':'Plan · Changes · Blueprint',
+  'Cadangan database':'Database backup',
+  'keuangan → uangku':'keuangan → uangku',
+  'Plugin bersifat':'Plugins are',
+  'Dilepas semua → transaksi':'Remove all → transactions',
+  'diinput, hanya lebih repot.':'can still be entered, just more work.',
+  'tetap bisa':'still work',
+
+  // Setting dasar
+  'Isi setting dasar':'Basic settings content',
+  'Daftar kotak uang · 18 fund':'List of money boxes · 18 funds',
+  'Daftar label kategori · 15 tag':'List of category labels · 15 tags',
+  'Saldo tiap fund · per bulan':'Balance per fund · per month',
+  'Hitungan uang':'Money calculations',
+  'Aturan pemotongan pajak bunga':'Interest tax withholding rules',
+  'Tabungan 5% · Deposito 7,5% p.a':'Savings 5% · Deposit 7.5% p.a',
+  'Tampilan':'Display',
+  'Indonesia · English':'Indonesian · English',
+  'Urutan setting:':'Setting order:',
+  'Source Fund → Tags → Saldo Awal → Pajak → Bunga Bank. Saldo Awal tidak bisa diubah kalau bulan sudah':
+    'Source Funds → Tags → Opening Balances → Tax → Bank Interest. Opening Balances cannot be changed once the month is',
+
+  // Fund
+  'Urut':'No.',
+  'Fund':'Fund',
+  'Saldo':'Balance',
+  'Nama fund':'Fund name',
+  'Ikon':'Icon',
+  'Urut':'No.',
+  'Kode tetap (tidak ikut ganti bahasa)':'Fixed code (never translated)',
+  'Saldo awal':'Opening balance',
+  'Kolom tiap fund':'Columns of each fund',
+  'Aturan fund':'Fund rules',
+  'Urutkan dengan ANGKA':'Sort with NUMBERS',
+  '— tidak perlu tekan naik/turun. Ubah angkanya, sistem menyusun ulang sendiri (1, 2, 3, …). Angka yang lebih kecil tampil lebih dulu.':
+    '— no need to press up/down. Change the number and the system re-sorts itself (1, 2, 3, …). A smaller number shows first.',
+  '• Nama boleh diganti bahasa → logika pakai code (mis. SUPERBANK)':
+    '• Name can be translated → logic uses code (e.g. SUPERBANK)',
+  'Hapus fund':'Delete fund',
+  'dicegah kalau masih ada transaksi':'blocked while transactions exist',
+  'min. Rp 5.000.000':'min. Rp 5,000,000',
+  'min. Rp 50':'min. Rp 50',
+  'slot wishlist':'wishlist slot',
+  'slot wishlist · kosong':'wishlist slot · empty',
+  'uang fisik':'cash',
+  'dompet digital':'digital wallet',
+  'bukan tabungan':'not savings',
+  'tabungan biasa · 5% p.a':'regular savings · 5% p.a',
+  '🔒 diblokir':'🔒 blocked',
+  '🔒 diblokir · bunga harian kecil':'🔒 blocked · small daily interest',
+  '🔒 diblokir · deposito 7,5% p.a':'🔒 blocked · deposit 7.5% p.a',
+  '🔒 diblokir · 👥 titipan':'🔒 blocked · 👥 held for others',
+  '👥 titipan — uang orang lain':'👥 held — someone else\'s money',
+  'Hapus fund':'Delete fund',
+  '→ tidak muncul di dropdown Belanja':'→ does not appear in Shopping dropdown',
+  '→ bunga di fund ini':'→ interest on this fund',
+  'bukan':'is not',
+  'penghasilan Bapak':'your income',
+  '→ peringatan kalau saldo turun di bawah batas':'→ warning when balance falls below the limit',
+
+  // Tag
+  'penentu makna':'the meaning determiner',
+  'seluruh laporan salah':'every report is wrong',
+  ', bukan nama.':' , not the name.',
+  'Pengeluaran':'Expenses',
+  'Pemasukan':'Income',
+  'Di luar ringkasan bulanan':'Outside the monthly summary',
+  'Tag lainnya':'Other tags',
+  'Kolom tiap tag':'Columns of each tag',
+  '⚠️ Tag =':'⚠️ Tag =',
+  '5 tag ini':'These 5 tags',
+  'tidak dihitung':'are not counted',
+  'di ringkasan (bukan penghasilan/pengeluaran sungguhan):':'in the summary (not real income/expense):',
+  'keluar · muncul di Belanja':'out · appears in Shopping',
+  'masuk · dihitung di laporan':'in · counted in reports',
+  'masuk · penggantian uang':'in · money reimbursement',
+  'masuk':'in',
+  'keluar · tidak dihitung':'out · not counted',
+  'bebas · tidak dihitung':'free · not counted',
+  'keluar · di Rutin = pengingat saja':'out · in Recurring = reminder only',
+  'keluar · pasangan otomatis dari Bunga':'out · automatic pair of Interest',
+  'kena pajak otomatis':'taxed automatically',
+  'masuk ·':'in ·',
+  'Tag sistem':'System tag',
+  'dipakai perhitungan otomatis':'used by automatic calculations',
+  'Tag sistem ini':'System tag',
+
+  // Saldo awal
+  'Isi saldo awal · September 2026':'Opening balances · September 2026',
+  'September 2026 — sedang berjalan 🔓':'September 2026 — in progress 🔓',
+  'Agustus 2026 — diproses 🔒':'August 2026 — closed 🔒',
+  'otomatis dari bulan lalu 🔒':'auto from last month 🔒',
+  'otomatis dari Proses Akhir Bulan Agustus':'auto from August Month-End Close',
+  'otomatis':'automatic',
+  'otomatis 🔒':'automatic 🔒',
+  'diisi manual':'entered manually',
+  'diisi manual · di bawah min. Rp 50 ⚠️':'entered manually · below min. Rp 50 ⚠️',
+  'kosong':'empty',
+  'Ubah saldo awal':'Change opening balance',
+  'divalidasi — tidak boleh membuat saldo negatif di tengah bulan.':
+    'is validated — cannot make a balance negative mid-month.',
+  'Jumlah 18 fund':'Total of 18 funds',
+  'Bulan yang sudah':'A month that is already',
+  'diproses':'closed',
+  '→ saldo awal':'→ its opening balance',
+  'tidak bisa diubah':'cannot be changed',
+  '. Setiap perubahan':'. Every change',
+  'tercatat':'is recorded',
+  'dan':'and',
+  'bisa dikembalikan':'can be restored',
+
+  // Pajak
+  'Cara kerja:':'How it works:',
+  'Salah tag':'Wrong tag',
+  'Logika pakai':'The logic uses',
+  'Bukan':'Not',
+  'Undo the change':'Undo the change',
+  '↩️ Batalkan perubahan → saldo Superbank kembali':'↩️ Undo the change → Superbank balance returns',
+  'dipotong kalau ① tag =':'is withheld only if ① tag =',
+  'dan ② checkbox':'and ② the checkbox',
+  '“🧾 Kena Pajak”':'“🧾 Taxable”',
+  'dicentang. Lainnya tidak dipotong — pajaknya sudah termasuk di harga.':
+    'is ticked. Others are not withheld — their tax is already in the price.',
+  'Aturan aktif — data asli':'Active rules — real data',
+  'Rate':'Rate',
+  'berlaku sejak 1 Jan 2025':'effective from 1 Jan 2025',
+  'Dikenakan pada tag:':'Applied to tag:',
+  'batas minimum:':'minimum threshold:',
+  'Kolom aturan pajak (sudah ada di database)':'Tax rule columns (already in the database)',
+  'Pajak Bunga Bank':'Bank Interest Tax',
+  'adalah satu-satunya':'is the only',
+  'aturan pajak di sistem. Rate lama tetap dipakai untuk transaksi lama — tidak dihitung ulang.':
+    'tax rule in the system. Old rates still apply to old transactions — never recalculated.',
+  'Kalau rate berubah':'When the rate changes',
+  'baris baru':'a new row',
+  'dengan':'with a new',
+  'baru. Transaksi lama':'Old transactions',
+  'tetap pakai rate lama':'keep using the old rate',
+  '— tidak dihitung ulang.':'— never recalculated.',
+  'Pajak punya batas minimum':'Tax has a minimum threshold',
+  '— lihat aturan di halaman Bunga Bank.':'— see the rules on the Bank Interest page.',
+
+  // Bunga
+  '⚙️ Tabungan':'⚙️ Savings',
+  'dan':'and',
+  'deposito':'deposit',
+  'berbeda':'differ',
+  '. Jangan sampai salah pakai rate — dulu pernah terjadi (bunga tabungan jadi 1,5× lebih besar).':
+    '. Do not mix up the rate — this happened before (savings interest became 1.5× too large).',
+  'Rate per jenis simpanan':'Rate per saving type',
+  'Deposito':'Time deposit',
+  'berjangka · rate lebih tinggi':'term deposit · higher rate',
+  'Tabungan biasa':'Regular savings',
+  'rate lebih rendah':'lower rate',
+  '= per tahun (':'= per year (',
+  '). Rate diisi per rutin — jangan biarkan kosong (kalau kosong, sistem bisa memakai angka yang salah).':
+    '). The rate is set per routine — never leave it empty (if empty, the system may use the wrong number).',
+  'Metode hitung — bisa dipilih per bank':'Calculation method — selectable per bank',
+  '① Bulatkan di akhir':'① Round at the end',
+  'Paling umum. Hitung sekali di akhir periode, lalu bulatkan.':
+    'Most common. Calculate once at the end of the period, then round.',
+  '② Bulatkan per hari':'② Round daily',
+  'Beberapa bank menghitung bunga tiap hari, baru dijumlahkan.':
+    'Some banks calculate interest daily, then sum it up.',
+  '③ Basis 360 hari':'③ 360-day basis',
+  'Ada bank memakai 360 hari (bukan 365).':'Some banks use 360 days (not 365).',
+  '④ Bebas / Manual':'④ Free / Manual',
+  'Bapak isi angka bank → sistem simpan selisihnya.':'You enter the bank number → the system stores the difference.',
+  'Batas pajak — bank tidak potong pajak kalau bunga kecil':
+    'Tax threshold — banks do not withhold when interest is small',
+  'Potong pajak selalu':'Always withhold tax',
+  'Setiap bunga yang kena pajak langsung dipotong 20%.':'Every taxable interest is withheld 20% immediately.',
+  'Bunga di bawah batas → tidak dipotong':'Interest below threshold → no withholding',
+  'Contoh nyata: bunga harian kecil (mis. di Celengan) tidak dipotong pajak.':
+    'Real example: small daily interest (e.g. in Celengan) is not taxed.',
+  'Bunga di bawah batas → semua bulan':'Interest below threshold → all months',
+  'Kalau total setahun masih di bawah batas → tidak dipotong sepanjang tahun.':
+    'If the yearly total stays below the threshold → no withholding all year.',
+  'Batas minimum bunga (Rp)':'Minimum interest threshold (Rp)',
+  'Isi kalau bank Bapak tidak memotong pajak untuk bunga kecil. Kosongkan kalau tidak perlu.':
+    'Fill in if your bank does not withhold tax on small interest. Leave empty if not needed.',
+  'Contoh hitungan — lihat angka Bapak sendiri':'Calculation example — using your own numbers',
+  '🏦 Deposito · 7,5% p.a · kena pajak':'🏦 Time deposit · 7.5% p.a · taxable',
+  'Pokok':'Principal',
+  'Jumlah hari':'Number of days',
+  '31 hari':'31 days',
+  'Rumus':'Formula',
+  'pokok × rate × hari ÷ 365':'principal × rate × days ÷ 365',
+  'Debet (bunga masuk)':'Debit (interest in)',
+  'Pajak 20% (keluar)':'Tax 20% (out)',
+  'Neto (cocok mutasi)':'Net (matches statement)',
+  '🐷 Tabungan biasa · 5,0% p.a · kena pajak':'🐷 Regular savings · 5.0% p.a · taxable',
+  '🐷 Bunga harian kecil · tidak dipotong pajak':'🐷 Small daily interest · no withholding',
+  'Bunga 1 hari (mis. saldo kecil)':'1 day interest (e.g. small balance)',
+  '0 (di bawah batas)':'0 (below threshold)',
+  'Bank tidak memotong pajak karena bunganya':'The bank does not withhold because the interest is',
+  'terlalu kecil':'too small',
+  '. Sistem harus bisa menandai transaksi seperti ini':' The system must be able to flag such transactions',
+  'tanpa':'without',
+  'pajak.':'tax.',
+  'Jejak hitungan — disimpan, bukan cuma hasil':'Calculation trail — stored, not just the result',
+  'Hasil hitungan sistem':'System calculation result',
+  'Angka akhir (setelah koreksi bank)':'Final number (after bank correction)',
+  '· Alasan koreksi':'· Correction reason',  '🔴 Rumus':'🔴 The formula',
+  'hanya satu tempat':'lives in one place only',
+  'menulis rumus sendiri — dulu ada':'writing its own formula — there used to be',
+  '3 tempat':'3 places',
+  '→ selisih 1 sen berulang.':'→ a recurring 1-cent difference.',
+  '🔄 Samakan dengan Bank (koreksi tercatat)':'🔄 Match with the Bank (correction recorded)',
+
+  // Bahasa
+  'Pilih bahasa tampilan':'Choose display language',
+  '🇮🇩 Indonesia':'🇮🇩 Indonesian',
+  'Bawaan — semua istilah & kalimat bahasa Indonesia.':
+    'Default — all terms & sentences in Indonesian.',
+  '🇬🇧 English':'🇬🇧 English',
+  'Semua istilah & kalimat berubah bahasa Inggris.':'All terms & sentences switch to English.',
+  'Bahasa sekarang:':'Current language:',
+  'Yang ikut berubah':'What changes too',
+  'Judul halaman · judul kolom · label formulir · tombol · pesan · judul panel ·':
+    'Page titles · column headers · form labels · buttons · messages · panel titles ·',
+  'nama tag':'tag names',
+  'nama fund':'fund names',
+  'Daftar istilah':'Glossary',
+  'Daftar istilah keuangan — Indonesia ↔ English':'Financial glossary — Indonesian ↔ English',
+  'Uji coba bahasa':'Language test',
+  '🌐 Ganti ke English':'🌐 Switch to English',
+  'Tekan tombol di bawah —':'Press the button below —',
+  'seluruh tulisan':'the entire page text',
+  'halaman langsung berganti bahasa. Bisa juga lewat':'switches language immediately. You can also use',
+  'di alat peraga (🔧).':'in the tool panel (🔧).',
+  '🌐 ID / EN':'🌐 ID / EN',
+  '🌐 ID → EN':'🌐 ID → EN',
+  '🌐 EN → ID':'🌐 EN → ID',
+  '🔴 Nama tag/fund boleh berubah bahasa — tapi':'🔴 Tag/fund names can be translated — but the',
+  'di dalam sistem':'inside the system',
+  'tidak ikut berubah':'never changes',
+  '(mis.':' (e.g.',
+  'tetap). Itu yang menjaga laporan tetap benar.':'). That is what keeps reports correct.',
+
+  // Istilah
+  'Ini':'This is',
+  'daftar istilah keuangan':'the financial glossary',
+  'yang dipakai UangKu —':'used by UangKu —',
+  'bukan contoh':'not examples',
+  '. Kolom kiri = istilah Indonesia, kolom kanan = padanan English. Yang bernama':
+    '. Left column = Indonesian term, right column = English equivalent. Items named',
+  'berganti bahasa (dipakai logika sistem).':'change language (they are used by system logic).',
+  'Indonesia':'Indonesian',
+  'English':'English',
+  'uang MASUK ke fund':'money IN to a fund',
+  'uang KELUAR dari fund':'money OUT of a fund',
+  'satu catatan uang':'one money record',
+  'arah masuk / keluar':'in / out direction',
+  'Qty':'Qty',
+  'banyak barang (belanja)':'number of items (shopping)',
+  'Transfer':'Transfer',
+  'pindah fund — bukan pemasukan':'moves fund — not income',
+  'Pasangan transfer':'Transfer pair',
+  'Fund & Saldo':'Funds & Balances',
+  'Sumber Dana':'Source Fund',
+  'kotak uang / tempat':'money box / place',
+  'Saldo Akhir':'Closing Balance',
+  'posisi akhir bulan':'position at month end',
+  'posisi awal bulan':'position at month start',
+  'Saldo minimum':'Minimum balance',
+  'Urutan':'Sort order',
+  'nomor urut tampilan':'display order number',
+  'Kode':'Code',
+  'tetap — tidak ikut ganti bahasa':'fixed — never translated',
+  'Muncul di Belanja':'Shown in Shopping',
+  'penanda makna transaksi':'marks the meaning of a transaction',
+  'tidak dihitung di ringkasan bulanan':'not counted in the monthly summary',
+  'Bunga & Pajak':'Interest & Tax',
+  'nilai simpanan mula-mula':'initial deposit value',
+  'tarif bunga per tahun':'yearly interest rate',
+  'Number of days':'Number of days',
+  'Kena Pajak':'Taxable',
+  'Neto':'Net',
+  'bunga setelah dipotong pajak':'interest after tax withholding',
+  'Tabungan':'Savings',
+  'Batas minimum bunga':'Minimum interest threshold',
+  'beda hitungan sistem vs bank':'difference between system and bank',
+  'Modul':'Modules',
+  'tagihan / penerimaan berulang':'recurring bills / income',
+  'daftar rencana belanja':'planned shopping list',
+  'daftar keinginan':'wish list',
+  'Laporan':'Report',
+  'Pinjam':'Borrow',
+  'Hutang':'Debt',
+  'Reimburse':'Reimburse',
+  'uang kembali dari hutang':'money back from a debt',
+  'Proses Akhir Bulan':'Month-End Close',
+  'Riwayat':'History',
+  'kembalikan ke nilai sebelumnya':'restore to the previous value',
+  'Plugin':'Plugin',
+  'tambahan pemudah — opsional':'an optional helper',
+  'Status & Pesan':'Status & Messages',
+  'Belum ada transaksi':'No transactions yet',
+  'Belum ada data':'No data yet',
+  'Jatuh tempo':'Due',
+  'Bulan terkunci':'Month locked',
+  'Saldo di bawah minimum':'Balance below minimum',
+  'Tidak bisa dibatalkan':'Cannot be undone',
+  'Aturan istilah':'Glossary rules',
+  'Istilah':'Glossary',
+  'adalah bawaan — semua kalimat bisa jadi English':'is the default — all sentences can become English',
+  'boleh diganti bahasa':'can be translated',
+  '(mis.':' (e.g.',
+  'tidak pernah':'never',
+  'ikut berubah — itu yang menjaga laporan tetap benar':'changes — that is what keeps reports correct',
+  '• Angka & tanggal tetap format Indonesia (1.000.000 · 25 Sep 2026)':
+    '• Numbers & dates keep the Indonesian format (1,000,000 · 25 Sep 2026)',
+  'code':'code',
+  'sort_order':'sort_order',
+  'name':'name',
+  'icon':'icon',
+  'journal_type':'journal_type',
+  'has_tax':'has_tax',
+  'is_system':'is_system',
+  'show_in_shopping':'show_in_shopping',
+  'is_blocked':'is_blocked',
+  'is_titipan':'is_titipan',
+  'minimum_saldo':'minimum_saldo',
+  'effective_from':'effective_from',
+  'journal_names':'journal_names',
+  'minimum_amount':'minimum_amount',
+  'source_funds':'source_funds',
+  'core/bunga.ts':'core/bunga.ts',
+
+  // Fund: panel tambah
+  'Ini contoh di rancangan — belum menulis ke database.':
+    'This is a sample in the mockup — it does not write to the database.',
+};
+
+let lang = 'id';
+
+/* Kata yang TIDAK PERNAH diterjemahkan (code / nama bank / nama orang) */
+const JANGAN = new Set([
+  'SUPERBANK','SEABANK','CELENGAN','DEPOSITO','TABUNGAN_A','TABUNGAN_B','TABUNGAN_C',
+  'TABUNGAN_D','TABUNGAN_E','BCA_TABUNGAN','RUMAH','PRIBADI','PET','MOBIL','BUNGA',
+  'PAJAK','KOREKSI','BONUS','HILANG','BIAYA','PINJAM','PENDAPATAN','REIMBURSE',
+  'TRANSFER','HUTANG','Superbank','SeaBank','Celengan','ShopeePay','OVO','GoPay',
+  'Tunai','Deposito','Dana Sopir','Dana swn','Tabungan A','Tabungan B','Tabungan C',
+  'Tabungan D','Tabungan E','Sopir pinjam uang','BCA tabungan','BCA Saham',
+  'Galon Air','Service AC','Toko Roti','Royal Canin','Gaji bulanan','Iuran keamanan',
+  'Token PLN','Transfer ke SeaBank','Auto','WiFi',
+  'Bapak','admin','Rp','H-1','2×',
+  'Pajak Bunga Bank','Tabungan D · E',
+  'Tabungan A','Tabungan B','Tabungan C','Tabungan D','Tabungan E',
+  'Rp 5.000.000','Rp 50','September 2026','Agustus 2026'
+]);
+
+/* Frasa terjaga — dipakai oleh pencocokan terpanjang supaya nama bank
+   & code tag tidak pernah ikut diterjemahkan walau ada di tengah kalimat */
+const FJAGA = [...JANGAN].map(k => [k, k]);
+
+/* Teks Indonesia disimpan sekali supaya bisa dikembalikan */
+const ASLI = new WeakMap();
+function simpanAsli() {
+  const daftar = ambilBlok();
+  daftar.forEach(el => { if (!ASLI.has(el)) ASLI.set(el, el.innerHTML); });
+  phone.querySelectorAll('[placeholder]').forEach(e => {
+    if (!e.dataset.ph) e.dataset.ph = e.placeholder;
+  });
+}
+let asliSiap = false;
+
+/* Blok tulisan yang diterjemahkan.
+   Dipilih hanya elemen TERLUAR yang isinya cuma teks + tag inline
+   (b, i, code, span, small, br, …) — supaya tidak ada blok yang tumpang tindih.
+   ⚠️ <br> WAJIB dianggap inline — kalau tidak, kalimat berbaris banyak
+   tidak akan pernah cocok di kamus. */
+const INLINE = new Set(['B','I','EM','STRONG','CODE','SPAN','SMALL','U','S','BR','WBR','MARK','SUB','SUP']);
+function ambilBlok() {
+  const kandidat = [...phone.querySelectorAll('*')].filter(el => {
+    if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return false;
+    for (const c of el.children) if (!INLINE.has(c.tagName)) return false;
+    return true;
+  });
+  const set = new Set(kandidat);
+  return kandidat.filter(el => {
+    let p = el.parentElement;
+    while (p) { if (set.has(p)) return false; p = p.parentElement; }
+    return true;
+  });
+}
+
+/* Peta: teks terlihat ↔ posisi di HTML (tag dianggap tembus pandang).
+   Semua spasi/baris baru dinormalkan jadi 1 spasi — supaya kalimat yang
+   terpotong indentasi HTML tetap bisa dicocokkan utuh.
+   Bagian di dalam <code> / <span class="pin"> ditandai TERJAGA. */
+function petakan(html) {
+  const vis = [], awal = [], akhir = [], blok = [];
+  const batas = new Set();          /* posisi yang merupakan batas elemen */
+  let i = 0, kunci = 0;
+  const push = (ch, a, b, jaga) => { vis.push(ch); awal.push(a); akhir.push(b); blok.push(jaga); };
+  while (i < html.length) {
+    if (html[i] === '<') {
+      const j = html.indexOf('>', i);
+      if (j === -1) break;
+      const tag = html.slice(i, j + 1);
+      if (/^<(code|span)\b/i.test(tag) && /(code|class="pin")/i.test(tag)) kunci++;
+      else if (/^<\/(code|span)>/i.test(tag) && kunci > 0) kunci--;
+      batas.add(vis.length);       /* batas kata walau tanpa spasi */
+      i = j + 1;
+      continue;
+    }
+    /* Entitas HTML (&amp; &lt; …) dihitung sebagai 1 huruf */
+    if (html[i] === '&') {
+      const k = html.indexOf(';', i);
+      if (k !== -1 && k - i <= 6) {
+        const potong = html.slice(i, k + 1);
+        const huruf = {'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&nbsp;':' '}[potong];
+        if (huruf !== undefined) { push(huruf, i, k, kunci > 0); i = k + 1; continue; }
+      }
+    }
+    if (/\s/.test(html[i])) {
+      const a = i;
+      while (i < html.length && /\s/.test(html[i])) i++;
+      push(' ', a, i - 1, kunci > 0);
+      continue;
+    }
+    push(html[i], i, i, kunci > 0);
+    i++;
+  }
+  return { vis: vis.join(''), awal, akhir, blok, batas };
+}
+
+/* Ganti frasa terpanjang dulu. Frasa yang menyentuh code terjaga dilewati
+   supaya code tag & nama bank tidak pernah rusak. */
+function gantiHtml(html) {
+  const { vis, awal, akhir, blok, batas } = petakan(html);
+  const frasa = [...Object.entries(KAMUS).filter(e => e[0].length > 2), ...FJAGA]
+    .sort((a, b) => b[0].length - a[0].length);
+
+  const kiriOk = x => x <= 0 || batas.has(x) || !/[A-Za-z]/.test(vis[x - 1]);
+  const kananOk = x => x >= vis.length || batas.has(x) || !/[A-Za-z]/.test(vis[x]);
+
+  const pakai = [];
+  const terpakai = new Array(vis.length).fill(false);
+
+  for (const [k, v] of frasa) {
+    let dari = vis.indexOf(k);
+    while (dari !== -1) {
+      const sampai = dari + k.length;
+      let boleh = true;
+      for (let x = dari; x < sampai; x++) if (terpakai[x] || blok[x]) { boleh = false; break; }
+      if (boleh && /[A-Za-z]/.test(k[0]) && !kiriOk(dari)) boleh = false;
+      if (boleh && /[A-Za-z]/.test(k[k.length - 1]) && !kananOk(sampai)) boleh = false;
+      if (boleh) {
+        /* Frasa terjaga (nama bank / code) hanya DIKUNCI, tidak diganti —
+           supaya bagian di dalamnya tidak dipotong frasa yang lebih pendek */
+        if (v !== k) pakai.push({ dari, sampai, teks: v });
+        for (let x = dari; x < sampai; x++) terpakai[x] = true;
+      }
+      dari = vis.indexOf(k, dari + 1);
+    }
+  }
+
+  if (!pakai.length) return html;
+  pakai.sort((a, b) => a.dari - b.dari);
+  let hasil = '', pos = 0;
+  for (const p of pakai) {
+    hasil += html.slice(pos, awal[p.dari]) + aman(p.teks);
+    pos = akhir[p.sampai - 1] + 1;
+  }
+  return hasil + html.slice(pos);
+}
+
+/* Tulisan hasil terjemahan dimasukkan ke HTML → & dan < harus di-escape */
+function aman(t) {
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function setLang(l) {
+  lang = l;
+  if (!asliSiap) { simpanAsli(); asliSiap = true; }
+
+  ambilBlok().forEach(el => {
+    /* Layar “Istilah” sengaja DIBIARKAN 2 bahasa berdampingan (ID ↔ EN) */
+    if (el.closest('#bodyIstilah')) return;
+    const asli = ASLI.get(el);
+    if (asli === undefined) return;
+    el.innerHTML = (l === 'id') ? asli : gantiHtml(asli);
+  });
+
+  phone.querySelectorAll('[placeholder]').forEach(e => {
+    const asli = e.dataset.ph || '';
+    if (e.closest('#bodyIstilah')) return;
+    e.placeholder = (l === 'id') ? asli : gantiHtml(asli);
+  });
+
+  const now = document.getElementById('langNow');
+  if (now) now.innerHTML = '<b>Bahasa sekarang:</b> ' + (l === 'id' ? 'Indonesia' : 'English');
+
+  document.querySelectorAll('#langPick label').forEach(b =>
+    b.classList.toggle('on', b.dataset.lang === l));
+
+  const b2 = document.getElementById('btnLang2');
+  if (b2) b2.textContent = (l === 'id') ? '🌐 Ganti ke English' : '🌐 Switch to Indonesian';
+  const btnLang = document.getElementById('btnLang');
+  if (btnLang) btnLang.textContent = (l === 'id') ? '🌐 ID → EN' : '🌐 EN → ID';
+  const bAdd = document.getElementById('btnFundAdd');
+  if (bAdd) bAdd.title = (l === 'id') ? 'Tambah fund' : 'Add fund';
+}
+
+document.getElementById('btnLang').addEventListener('click', () => setLang(lang === 'id' ? 'en' : 'id'));
+const bl2 = document.getElementById('btnLang2');
+if (bl2) bl2.addEventListener('click', () => { setLang(lang === 'id' ? 'en' : 'id'); show('s11'); });
+
+/* Pilih bahasa dari daftar */
+document.querySelectorAll('#langPick label').forEach(b =>
+  b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+/* Tombol ＋ Tambah fund */
+const btnFundAdd = document.getElementById('btnFundAdd');
+if (btnFundAdd) btnFundAdd.addEventListener('click', () => {
+  const p = document.getElementById('fundAddPanel');
+  if (p) p.style.display = (p.style.display === 'none' || !p.style.display) ? 'block' : 'none';
+});
+const btnFundCancel = document.getElementById('btnFundCancel');
+if (btnFundCancel) btnFundCancel.addEventListener('click', () => {
+  document.getElementById('fundAddPanel').style.display = 'none';
+});
+const btnFundSave = document.getElementById('btnFundSave');
+if (btnFundSave) btnFundSave.addEventListener('click', () => {
+  const nama = (document.getElementById('addNama').value || '').trim();
+  const kode = (document.getElementById('addKode').value || '').trim().toUpperCase();
+  const ikon = (document.getElementById('addIkon').value || '💰').trim();
+  const urut = parseInt(document.getElementById('addUrut').value || '19', 10);
+  const saldo = (document.getElementById('addSaldo').value || '0').trim();
+  if (!nama || !kode) { alert('Nama & Kode wajib diisi.'); return; }
+
+  const list = document.getElementById('fundList');
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.dataset.ord = String(urut);
+  row.innerHTML = '<input class="ord" type="number" value="' + urut + '" title="Urut">' +
+    '<span class="ric">' + ikon + '</span>' +
+    '<span class="rmid"><span class="rn">' + nama + ' <span class="pin">' + kode + '</span></span>' +
+    '<span class="rs">baru · belum ada transaksi</span></span>' +
+    '<span class="rv">' + saldo + '<small>saldo</small></span>';
+  list.appendChild(row);
+  urutkanFund();
+  nomoriUlang();
+
+  document.getElementById('fundAddPanel').style.display = 'none';
+  const nt = document.getElementById('fundAddNotice');
+  if (nt) nt.style.display = 'block';
+  rapikanKode();
+  if (lang === 'en') setLang('en');
+});
+
+/* Urutkan daftar fund menurut angka yang diisi (bukan naik/turun) */
+function urutkanFund() {
+  const list = document.getElementById('fundList');
+  if (!list) return;
+  const rows = [...list.querySelectorAll('.row')];
+  rows.sort((a, b) => (parseInt(a.dataset.ord || '0', 10)) - (parseInt(b.dataset.ord || '0', 10)));
+  rows.forEach(r => list.appendChild(r));
+}
+
+/* Rapikan nomor jadi 1, 2, 3, … — supaya selalu berurutan rapi.
+   Dijalankan saat Bapak selesai mengubah angka (keluar kotak / tekan Enter),
+   bukan saat masih mengetik. */
+function nomoriUlang() {
+  const list = document.getElementById('fundList');
+  if (!list) return;
+  const rows = [...list.querySelectorAll('.row')];
+  rows.forEach((r, i) => {
+    r.dataset.ord = String(i + 1);
+    const inp = r.querySelector('.ord');
+    if (inp) inp.value = i + 1;
+  });
+}
+
+document.querySelectorAll('#fundList .ord').forEach(inp => {
+  inp.addEventListener('input', () => {
+    const row = inp.closest('.row');
+    row.dataset.ord = inp.value || '0';
+    row.classList.add('up');
+    setTimeout(() => row.classList.remove('up'), 900);
+    urutkanFund();
+  });
+  /* Setelah selesai mengubah → rapikan jadi 1,2,3,4 */
+  inp.addEventListener('change', () => { urutkanFund(); nomoriUlang(); });
+  inp.addEventListener('blur', () => { urutkanFund(); nomoriUlang(); });
+});
+
+/* Panel bawah */
+const sheetAdd = document.getElementById('sheetAdd');
+fab.addEventListener('click', () => sheetAdd.classList.add('open'));
+document.getElementById('addTop2').addEventListener('click', () => sheetAdd.classList.add('open'));
+sheetAdd.addEventListener('click', e => {
+  if (e.target === sheetAdd || e.target.hasAttribute('data-close')) sheetAdd.classList.remove('open');
+});
+
+/* Navigasi bawah — setiap tombol punya layarnya sendiri */
+document.querySelectorAll('#tabbar .tab').forEach(t => {
+  t.addEventListener('click', () => show(t.dataset.screen));
+});
+
+/* Chip fund */
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on');
+}));
+
+/* Tag pick */
+document.querySelectorAll('.tagpick button').forEach(b => b.addEventListener('click', () => {
+  b.closest('.tagpick').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+}));
+
+/* Segmen Semua/Masuk/Keluar */
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  b.closest('.seg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+}));
+
+/* Kotak centang */
+document.querySelectorAll('.switch').forEach(s => s.addEventListener('click', () => {
+  s.querySelector('.box').classList.toggle('on');
+  const b = s.querySelector('.box');
+  b.textContent = b.classList.contains('on') ? '✓' : '';
+}));
+
+/* Kode fund/tag dipindah ke tooltip baris — supaya daftar tampak bersih */
+function rapikanKode() {
+  phone.querySelectorAll('.pin').forEach(p => {
+    const baris = p.closest('.row');
+    const kode = p.textContent.trim();
+    if (baris && kode) baris.title = 'kode: ' + kode;
+  });
+}
+
+/* ============================================================
+   GANTI BENTUK BARIS TRANSAKSI — VERTIKAL ⇄ HORISONTAL
+   Tidak ada logika keuangan — hanya menyusun ulang tampilan.
+   ============================================================ */
+function keHorisontal(tx) {
+  if (tx.dataset.bentuk === 'h') return;
+  const ic   = tx.querySelector('.ic');
+  const desc = tx.querySelector('.desc');
+  const tag  = tx.querySelector('.tag');
+  const fund = tx.querySelector('.fund');
+  const amt  = tx.querySelector('.amt');
+  const badge = tx.querySelector('.badge');
+  if (!ic || !desc || !amt) return;
+
+  /* Tanggal: cari label hari terdekat di atas baris ini.
+     Naik sampai ke pembungkusnya (mis. kartu pasangan transfer). */
+  let tgl = '';
+  let node = tx;
+  while (node) {
+    let s = node.previousElementSibling;
+    while (s) {
+      if (s.classList.contains('daylabel')) { tgl = s.textContent; break; }
+      s = s.previousElementSibling;
+    }
+    if (tgl) break;
+    node = node.parentElement;
+    if (!node || node.id === 'bodyMain' || node.id === 'bodyDash') break;
+  }
+  tgl = tgl.trim().replace(/^[^·]*·\s*/, '');
+
+  tx.dataset.asli = tx.innerHTML;
+  tx.dataset.bentuk = 'h';
+  tx.classList.add('txrow');
+
+  const naik = /^\s*\+/.test(amt.textContent);
+  const angka = amt.textContent.replace(/\s*(masuk|keluar|terhapus)\s*$/, '').trim();
+
+  tx.innerHTML =
+    '<div class="ic">' + ic.textContent + '</div>' +
+    '<div class="cmid">' +
+      '<div class="cdesc">' + desc.textContent + '</div>' +
+      '<div class="cmeta">' +
+        (tag ? '<span class="ctag">' + tag.textContent + '</span>' : '') +
+        (fund ? '<span class="cfund">· ' + fund.textContent + '</span>' : '') +
+        (tgl ? '<span class="cdate">· ' + tgl + '</span>' : '') +
+        (badge ? '<span class="cbadge">' + badge.textContent + '</span>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="camt">' + angka + '<small>' + (naik ? 'masuk' : 'keluar') + '</small></div>';
+}
+
+function keVertikal(tx) {
+  if (tx.dataset.bentuk !== 'h') return;
+  tx.innerHTML = tx.dataset.asli;
+  tx.classList.remove('txrow');
+  tx.dataset.bentuk = 'v';
+}
+
+function setBentuk(v) {
+  /* HANYA daftar di halaman Transaksi — Dashboard dibiarkan apa adanya */
+  document.querySelectorAll('#bodyMain .tx').forEach(tx => {
+    if (v === 'h') keHorisontal(tx); else keVertikal(tx);
+  });
+  /* Kepala kolom hanya di bentuk horisontal */
+  document.querySelectorAll('#bodyMain .thead').forEach(e => e.style.display = (v === 'h') ? '' : 'none');
+  document.querySelectorAll('#viewToggle button').forEach(b =>
+    b.classList.toggle('on', b.dataset.view === v));
+}
+
+const viewToggle = document.getElementById('viewToggle');
+if (viewToggle) {
+  viewToggle.querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => setBentuk(b.dataset.view)));
+}
+
+/* Jalankan setelah semua siap */
+rapikanKode();
+show('s0');
+fitPhone();
+setTimeout(fitPhone, 60);
+window.addEventListener('load', fitPhone);
+
+/* Kartu bisa dilipat */
+document.querySelectorAll('[data-fold]').forEach(h => h.addEventListener('click', () => {
+  const card = h.closest('.card');
+  card.classList.toggle('fold');
+  const tog = h.querySelector('.ctog');
+  if (tog) tog.textContent = tog.textContent.replace(card.classList.contains('fold') ? '▾' : '▸', card.classList.contains('fold') ? '▸' : '▾');
+}));
+</script>
+</body>
+</html>

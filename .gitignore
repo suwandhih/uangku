@@ -1,0 +1,42 @@
+# ============================================================
+#  UangKu — berkas yang TIDAK boleh masuk GitHub
+#  Repo ini PUBLIC. Kunci & data keuangan asli wajib dikecualikan.
+# ============================================================
+
+# --- 🔴 RAHASIA (kunci hidup Layerbase) ---
+.env
+.env.*
+!.env.example
+uangku-credentials.env
+*.credentials.env
+
+# --- 🔴 DATA KEUANGAN ASLI ---
+# database salinan kerja + cadangan
+data/
+!data/.gitkeep
+
+# berkas HTML yang memuat data asli (dibuat oleh tools/siapkan-data.cjs)
+uangku.html
+lab-uang2.html
+
+# --- perkakas ---
+node_modules/
+*.log
+npm-debug.log*
+
+# --- hasil bangun ---
+dist/
+build/
+*.tsbuildinfo
+
+# --- sistem operasi / editor ---
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# --- catatan sementara AI (aturan G/H2 agents.md) ---
+catatanAI.md

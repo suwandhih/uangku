@@ -1,0 +1,28 @@
+{
+  "name": "uangku",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UangKu — aplikasi keuangan pribadi. Inti = Transaksi, sisanya plugin (opsional).",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "cek": "tsc --noEmit",
+    "uji-saldo": "tsx server/uji/uji-saldo.ts",
+    "uji-periode": "tsx server/uji/uji-periode.ts",
+    "uji-uang": "tsx server/uji/uji-uang.ts",
+    "uji-bunga": "tsx server/uji/uji-bunga.ts",
+    "uji": "npm run uji-uang && npm run uji-periode && npm run uji-bunga && npm run uji-saldo"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "pg": "^8.23.1"
+  }
+}
