@@ -468,9 +468,10 @@ akar semua bug. Di UangKu: **satu logika = satu berkas**. Yang lama **dihapus**.
 | **3** | **Setelah data keuangan berubah** → `salinan-kerja.cjs` → `siapkan-cloud.cjs --ulang` → `cek-sama-cloud.cjs` (harus **IDENTIK 100%**) |
 | **4** | **Jangan menaruh angka saldo asli / nama fund asli** di berkas yang masuk repo publik (termasuk alat pemeriksa) |
 | **5** | **`uangku.html` · `lab-uang2.html` · `data/` · `.env`** → 🔴 **DILARANG** masuk repo (sudah dijaga `.gitignore`) |
-| **6** | **PIN ada di DUA tempat** — `.env` (`LB_PIN`) dan secret Cloudflare (`PIN`). Ganti harus **keduanya** |
+| **6** | 🔴 **PIN = 745702. DILARANG MENGUBAH PIN TANPA PERINTAH BAPAK.** Lihat aturan **10** di bawah |
 | **7** | 🔴 **TAG BAWAAN FORM = tag pertama yang mengunci arah** (mis. `Rumah`), **BUKAN** `Transfer`. `Transfer` adalah tag **dua arah** yang tidak mengunci D/K → kalau Bapak lupa mengganti tag, catatan tersimpan sebagai Transfer dan **hilang dari Ringkasan** (bug nyata 13 Okt 2026) |
 | **8** | 🔴 **Kalau Bapak mengeluh "saldo beda dengan bank"** → **periksa TAG dulu**, bukan rumusnya. Tag `Transfer` pada belanja biasa = penyebab paling sering |
+| **10** | 🔴🔴 **PIN DILARANG DIUBAH TANPA PERINTAH BAPAK.**<br/>**Kalimat Bapak (13 Okt 2026):** *"jangan ubah2 pin .. kan tidak ada rumusan bagaimana saya tau km ubah pin.. pakai pin yg sudah jelas tidak ada orang yg tau dan ingat 745702 sudah ya jangan di ubah2"*<br/>**PIN yang berlaku: `745702`** — tertulis di `PIN-UangKu.txt`.<br/>**Aturan:**<br/>① **JANGAN PERNAH** mengganti PIN atas inisiatif sendiri — sekalipun alasannya keamanan<br/>② Kalau AI menilai PIN perlu diganti → **TANYA BAPAK DULU**, jangan langsung ganti<br/>③ Kalau Bapak sendiri yang minta ganti → baru ganti, lalu **perbarui `PIN-UangKu.txt`** dan **beri tahu PIN barunya di chat**<br/>④ PIN ada di **DUA tempat** — `.env` (`LB_PIN`) dan secret Cloudflare (`PIN`). Ganti harus **keduanya**, kalau tidak → Bapak tidak bisa masuk |
 | **9** | 🔴 **ANGKA SALDO JANGAN DISINGKAT.** Bapak: *"jangan 25,5jt ini tidak memberi informasi yg tepat.. seharusnya ditulis 26.504.730,59"*. `rpRingkas()` sekarang = `rp2()` (angka penuh sampai sen). Angka panjang boleh **patah di titik ribuan**, **jangan** dipotong `…` |
 
 ### ⚠️ Dokumen sumber yang sudah dihapus — di mana isinya sekarang

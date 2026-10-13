@@ -253,7 +253,7 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 | **6 bulan terakhir** | Bisa dipilih di **Pengaturan → Bulan** |
 | **Terang / gelap** | Bisa dipilih di Pengaturan |
 | **Simpan ke layar utama** | Bisa — supaya seperti aplikasi biasa (ada di Pengaturan) |
-| **PIN** | Disimpan di perangkat Bapak saja — **hanya diketik sekali**. Tidak berubah sendiri. Tertulis di berkas **`PIN-UangKu.txt`** |
+| **PIN** | **745702** — tertulis di berkas **`PIN-UangKu.txt`**. Disimpan di perangkat Bapak saja, **hanya diketik sekali**. 🔴 **Tidak akan berubah** — AI dilarang menggantinya tanpa perintah Bapak |
 | **Data tidak ada di dalam berkas halaman** | Halaman hanya menampilkan; datanya di server. Jadi aman dibuka dari mana saja |
 
 ---
