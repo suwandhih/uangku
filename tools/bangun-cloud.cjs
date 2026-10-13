@@ -459,8 +459,7 @@ var jadikanRiwayat = [];
 skrip = skrip.replace(
   `document.getElementById('btnBack').addEventListener('click', kembali);`,
   `document.getElementById('btnBack').addEventListener('click', kembali);
-document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });
-document.getElementById('btnBukaBulan').addEventListener('click', bukaBulanBaru);`,
+document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });`,
 );
 
 /* 2b2. tombol "Buka Bulan Baru" di layar Pengaturan.
@@ -503,7 +502,9 @@ skrip = skrip.replace(
   `  document.getElementById('tbSet').textContent = t('Pengaturan');`,
   `  document.getElementById('tbSet').textContent = t('Pengaturan');
   var pb = document.getElementById('pitaBuka');
-  if (pb) pb.addEventListener('click', bukaBulanBaru);`,
+  if (pb) pb.addEventListener('click', bukaBulanBaru);
+  var bb = document.getElementById('btnBukaBulan');
+  if (bb) bb.addEventListener('click', bukaBulanBaru);`,
 );
 
 /* tambahkan baris menu "Bulan Baru" di daftar Pengaturan */

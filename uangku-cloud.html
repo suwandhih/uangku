@@ -1414,6 +1414,8 @@ function gambarUlang() {
   document.getElementById('tbSet').textContent = t('Pengaturan');
   var pb = document.getElementById('pitaBuka');
   if (pb) pb.addEventListener('click', bukaBulanBaru);
+  var bb = document.getElementById('btnBukaBulan');
+  if (bb) bb.addEventListener('click', bukaBulanBaru);
   document.getElementById('btnRiwayat').textContent = t('Riwayat');
   document.getElementById('cari').placeholder = t('Cari keterangan…');
   gambarSegUrut();
@@ -1459,7 +1461,6 @@ document.querySelectorAll('.tabs button').forEach(function (b) {
 });
 document.getElementById('btnBack').addEventListener('click', kembali);
 document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });
-document.getElementById('btnBukaBulan').addEventListener('click', bukaBulanBaru);
 document.getElementById('btnAdd').addEventListener('click', function () {
   ke('input');
 });
