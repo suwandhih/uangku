@@ -251,12 +251,17 @@ body{
 /* 🔴 SATU BARIS: fund · tag · D/K · harga · ✕ (permintaan Bapak 13 Okt 2026).
    Lebar kolom diatur lewat --w1..--w4 supaya bisa menyesuaikan lebar layar. */
 .tl-row{display:grid;gap:4px;align-items:center;
-  grid-template-columns:var(--w1,58px) var(--w2,62px) var(--w3,62px) minmax(0,1fr) var(--w5,28px)}
+  grid-template-columns:var(--w1,46px) var(--w2,58px) var(--w3,38px) minmax(0,1fr) var(--w5,26px)}
 .tl-row select,.tl-row input{padding:7px 3px;font-size:var(--fs,11px)}
 .tl-sempit .tl-row{gap:3px}
 .tl-sempit .tl-row select,.tl-sempit .tl-row input{padding:7px 1px}
-.tl-fund{font-weight:700;text-align:center;text-align-last:center;letter-spacing:-.3px}
-.tl-tag{text-align:center;text-align-last:center;letter-spacing:-.4px}
+.tl-sempit .tl-fund,.tl-sempit .tl-tag{padding-right:10px !important}
+/* fund & tag: teks di tengah, tapi sisakan ruang untuk panah pulldown di kanan
+   supaya panahnya TIDAK terpotong (keluhan Bapak 13 Okt 2026) */
+.tl-fund{font-weight:700;text-align:center;text-align-last:center;letter-spacing:-.3px;
+  padding-right:14px !important}
+.tl-tag{text-align:center;text-align-last:center;letter-spacing:-.4px;
+  padding-right:14px !important}
 .tl-jml{text-align:right;font-weight:700;letter-spacing:-.4px}
 .tl-dk{display:grid;grid-template-columns:1fr 1fr;gap:0}
 .tl-dk button{padding:7px 0;font-size:12px;border-radius:0}
@@ -1538,38 +1543,47 @@ function aturLebarBaris() {
   var lebar = kartu ? kartu.clientWidth - 20 : akar.clientWidth - 20;
   if (lebar < 120) lebar = 120;
 
+  /* 🔴 USULAN BAPAK 13 Okt 2026: *"ruang isi angka itu terlalu besar.. transaksi saya
+     tidak pernah sebesar itu.. jadi sumber sampai terlihat pulldown bisa terlihat dan
+     tag juga dapat ruang yg cukup 3 digit terlihat.. untuk isi angka tidak harus
+     sebenar itu.. minimal 100.000.000,00 bisa isi"*
+     → fund & tag dapat ruang CUKUP (panah pulldown terlihat, tag 3 huruf utuh),
+       harga cukup untuk 100.000.000,00, sisanya baru untuk harga. */
+
+  /* lebar minimum tiap kolom (px) — diukur dari isi sebenarnya */
+  var MIN_FUND = 46;   /* "SPB" + panah pulldown */
+  var MIN_TAG  = 58;   /* "🏠RMH" + panah pulldown */
+  var MIN_DK   = 38;   /* "D" "K" */
+  var MIN_HAPUS = 26;
+  var MIN_HARGA = 78;  /* "100.000.000,00" pada font 11px */
+
   var JARAK = 4;
   var sisa = lebar - JARAK * 4;   /* 5 kolom → 4 jarak */
 
-  /* 🔴 Ukuran tetap: fund 3 huruf, tag emoji+3 huruf, D/K 1 huruf.
-     Sisanya SEMUA untuk harga — angka 26.504.730,59 butuh ruang paling banyak. */
-  var w1 = 24, w2 = 52, w3 = 52, hapus = 24;
+  var w1 = MIN_FUND, w2 = MIN_TAG, w3 = MIN_DK, hapus = MIN_HAPUS;
   var w4 = sisa - w1 - w2 - w3 - hapus;
 
-  /* layar sempit → kecilkan tag & D/K dulu, baru fund & tombol hapus */
-  if (w4 < 68) { w2 = 48; w3 = 48; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < 68) { w2 = 44; w3 = 44; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < 68) { w1 = 22; hapus = 22; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < 68) { w2 = 38; w3 = 38; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < 68) { w2 = 34; w3 = 34; w4 = sisa - w1 - w2 - w3 - hapus; }
-
-  /* layar sangat sempit (≤ 340 px) → rapatkan jarak & padding supaya
-     tag "🏠RMH" tetap utuh dan harga tetap dapat ruang cukup */
+  /* layar sempit → rapatkan jarak dulu, baru kecilkan D/K & tombol hapus */
   var sempit = lebar < 340;
   if (sempit) {
     JARAK = 3;
     sisa = lebar - JARAK * 4;
     w4 = sisa - w1 - w2 - w3 - hapus;
-    if (w4 < 64) { w2 = 40; w3 = 40; w4 = sisa - w1 - w2 - w3 - hapus; }
-    if (w4 < 64) { w2 = 38; w3 = 38; w4 = sisa - w1 - w2 - w3 - hapus; }
   }
+  if (w4 < MIN_HARGA) { w3 = 34; hapus = 24; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < MIN_HARGA) { w3 = 30; hapus = 22; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < MIN_HARGA) { w2 = 52; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < MIN_HARGA) { w1 = 40; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < MIN_HARGA) { w2 = 46; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < MIN_HARGA) { w1 = 36; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < MIN_HARGA) { w2 = 42; w4 = sisa - w1 - w2 - w3 - hapus; }
+  if (w4 < MIN_HARGA) { w1 = 32; w4 = sisa - w1 - w2 - w3 - hapus; }
   akar.classList.toggle('tl-sempit', sempit);
 
-  /* tag "🏠RMH" butuh ±42 px — pinjam dari harga selama harga masih lega */
-  var minHarga = sempit ? 58 : 68;
-  if (w2 < 42 && w4 > minHarga) {
-    var kurang = 42 - w2;
-    if (w4 - kurang * 2 >= minHarga) { w2 += kurang; w3 += kurang; w4 -= kurang * 2; }
+  /* harga masih lega → kembalikan ruang ke fund & tag supaya panah pulldown lega */
+  if (w4 > MIN_HARGA + 24) {
+    var tambah = Math.min(8, Math.floor((w4 - MIN_HARGA) / 3));
+    w1 += tambah; w2 += tambah; w4 -= tambah * 2;
   }
 
   /* layar sangat sempit → huruf dikecilkan supaya tetap 1 baris */
