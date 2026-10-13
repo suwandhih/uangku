@@ -1115,7 +1115,7 @@ flowchart LR
 | 2 | **`rencanakerja.md`** | Papan order + konsep lengkap (tag, bunga, tampilan) — **mana sudah, mana belum** |
 | 3 | **`prompt.md`** (dokumen ini) | Cetak biru teknis — skema, `code`, aturan, uji |
 | 4 | **`uangku.html`** | 📱 **Aplikasi versi HP yang SUDAH JADI** — sumber kebenaran **tampilan** paling baru (kalau berbeda dengan mockup, **ikuti berkas ini**). 🔴 **TIDAK boleh masuk repo publik** (memuat data asli) |
-| 5 | **`uangku-cloud.html`** | 🎉 **Halaman yang DIPAKAI Bapak setiap hari** (13 Okt 2026) — https://suwandhih.github.io/uangku/uangku-cloud.html · PIN **616098**. Disusun oleh `tools/bangun-cloud.cjs` dari `uangku.html` |
+| 5 | **`uangku-cloud.html`** | 🎉 **Halaman yang DIPAKAI Bapak setiap hari** (13 Okt 2026) — https://suwandhih.github.io/uangku/uangku-cloud.html · PIN ada di `.env` di komputer. Disusun oleh `tools/bangun-cloud.cjs` dari `uangku.html` |
 | 6 | **`cloudflare/worker.js`** | 🚪 Perantara aman ke Layerbase — satu-satunya jalan masuk data. Baca + tulis |
 | 7 | `design/ui-hp.html` | Rancangan tampilan HP — 🔒 **BEKU** (2 layar sudah tertinggal, lihat Bagian 12) |
 

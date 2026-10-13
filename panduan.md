@@ -12,7 +12,7 @@
 ```
 ① Buka Chrome (di HP atau di komputer)
 ② Ketik / tekan simpanan:   https://suwandhih.github.io/uangku/uangku-cloud.html
-③ Masukkan PIN:  616098      →  tekan "Simpan & sambung"
+③ Masukkan PIN: lihat `.env` di komputer      →  tekan "Simpan & sambung"
 ```
 
 > 💡 **PIN hanya perlu dimasukkan sekali.** Sesudah itu HP mengingatnya sendiri.
@@ -238,7 +238,7 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 |---|---|
 | **Tidak bisa mencatat / tanggal ditolak** | Bulan baru belum dibuka → **Pengaturan → 📅 Bulan Baru → Buka bulan baru** |
 | Angka tidak muncul / kosong | Internet mati, atau PIN salah. Coba muat ulang halaman |
-| Muncul "PIN salah" | Ketik ulang **616098**. Kalau lupa, tanya AI |
+| Muncul "PIN salah" | Ketik ulang PIN yang benar (ada di `.env` di komputer). Kalau lupa, tanya AI |
 | Angka beda dengan komputer | **Laporkan** — itu bug (aturan C18) |
 | Tampilan terpotong | Putar HP / kecilkan huruf di Chrome, lalu laporkan |
 | Salah mencatat | Buka **Transaksi → Riwayat → ↩️ Pulihkan**, atau **Batalkan** di daftar transaksi |

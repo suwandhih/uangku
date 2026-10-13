@@ -1,7 +1,7 @@
 # 📋 RENCANA KERJA — Aplikasi **UangKu**
 
 > **Status:** 🎉 **DIPERBARUI 13 Oktober 2026** — **UangKu SIAP DIPAKAI SETIAP HARI**.
-> Bapak mencatat di **https://suwandhih.github.io/uangku/uangku-cloud.html** (PIN **616098**) dari **PC maupun HP**.
+> Bapak mencatat di **https://suwandhih.github.io/uangku/uangku-cloud.html** (PIN ada di `.env` di komputer) dari **PC maupun HP**.
 > Data server **IDENTIK 100%** dengan `c:\data\keuangan` · 99 uji lolos · bisa **dibaca dan dicatat** dari HP.
 > **Dokumen ini = peta induk.** Semua arahan & konsep Bapak ada di sini. Kalau lupa, baca ini.
 > **Pasangannya:** `agents.md` (otak AI + aturan kerja) · **Cetak biru:** `prompt.md` ✅ sudah dibuat
