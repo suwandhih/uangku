@@ -61,7 +61,11 @@ Transaksi  →  tekan tombol ＋ (kanan atas)  →  isi  →  Simpan
 | **Fund** | Kotak uangnya — ditulis **3 huruf** (`SPB` = Superbank, `SEA` = SeaBank, …) |
 | **Tag** | Untuk apa — ini yang menentukan artinya. 🔴 **WAJIB diganti** — jangan dibiarkan |
 | **D / K** | Masuk (D) atau keluar (K). **Untuk sebagian besar tag, ini terisi sendiri** |
-| **Jumlah** | Angkanya saja, mis. `30000` — titik ribuan muncul sendiri saat mengetik |
+| **Jumlah** | Angkanya saja, mis. `30000` — titik ribuan muncul sendiri saat mengetik, dan `,00` ditambahkan otomatis saat pindah kotak |
+
+> 💰 **Angka selalu 2 desimal.** `30000` → **`30.000,00`** · `30000,5` → **`30.000,50`** ·
+> `0,05` → `0,05`. Berlaku di semua tempat (kartu fund, ringkasan, daftar transaksi, riwayat).
+> Saat **masih mengetik** tidak dipaksa `,00` supaya tidak mengganggu.
 
 > 💡 **Satu tindakan boleh berisi beberapa baris.** Contoh: transfer Superbank → SeaBank
 > = 2 baris (Superbank keluar, SeaBank masuk). Tekan **"＋ Tambah baris jurnal"**.
@@ -288,6 +292,7 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 | **Bisa melihat DAN mencatat** | Yang dicatat langsung tersimpan di server — dari HP maupun komputer |
 | **Angka pasti sama di mana saja** | Angka memakai aturan yang sama dengan `core/saldo.ts`. Kalau berbeda → itu **bug**, bukan beda tampilan |
 | **Angka selalu penuh** | Saldo ditulis lengkap sampai sen — mis. **26.504.730,59**, bukan "26,50 jt". Supaya Bapak bisa mencocokkan dengan catatan bank |
+| **Angka selalu 2 desimal** | `10.000` ditulis **`10.000,00`** — supaya semua angka seragam dan tidak salah baca |
 | **6 bulan terakhir** | Bisa dipilih di **Pengaturan → Bulan** |
 | **Terang / gelap** | Bisa dipilih di Pengaturan |
 | **Simpan ke layar utama** | Bisa — supaya seperti aplikasi biasa (ada di Pengaturan) |

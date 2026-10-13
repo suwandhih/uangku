@@ -6,6 +6,58 @@
 
 ---
 
+## 13 Oktober 2026 (malam) — 💰 ANGKA SELALU 2 DESIMAL
+
+> **Pertanyaan Bapak:** *"apakah angka di sediakan desimal 2 digit minimal"*
+> → **Ya.** Sekarang **selalu** 2 desimal di semua tempat.
+
+### 🆕 Apa yang berubah
+
+| Sebelum | Sekarang |
+|---|---|
+| `10.000` | **`10.000,00`** |
+| `231.913` | **`231.913,00`** |
+| `0` | **`0,00`** |
+| `26.504.730,59` | `26.504.730,59` (tetap) |
+
+Berlaku di **semua tempat**: kartu fund · total semua fund · ringkasan bulan ·
+daftar transaksi · riwayat · bunga & pajak · saldo awal.
+
+### ⌨️ Kotak angka (saat mencatat)
+
+| Bapak ketik | Saat mengetik | Setelah selesai |
+|---|---|---|
+| `30000` | `30.000` | **`30.000,00`** |
+| `30000,5` | `30.000,5` | **`30.000,50`** |
+| `0,05` | `0,05` | `0,05` |
+| `100000000` | `100.000.000` | **`100.000.000,00`** |
+
+> 💡 Saat **masih mengetik** tidak dipaksa `,00` — supaya tidak mengganggu.
+> Begitu pindah ke kotak lain, angkanya dilengkapi sendiri.
+
+### 🔴 Bug nyata yang ikut ditemukan & diperbaiki
+
+**Dashboard tidak digambar ulang saat ukuran layar berubah.** Akibatnya jumlah kolom
+kartu fund tetap memakai lebar layar **sebelumnya** — pernah jadi **5 kolom @ 50 px**
+sehingga angka saldo **patah 2 baris** (`26.504.730,` / `59`).
+
+Sekarang Dashboard ikut digambar ulang, jadi jumlah kolom selalu benar.
+
+### 📐 Hasil ukur (viewport nyata)
+
+| Lebar | Kolom | Baris angka | Terpotong | Meluber | Angka tanpa desimal |
+|---|---|---|---|---|---|
+| 256 px | 2 | 1 | 0 | 0 | 0 |
+| 288 px | 2 | 1 | 0 | 0 | 0 |
+| 312 px (HP umum) | 2 | 1 | 0 | 0 | 0 |
+| 344 px | 3 | 1 | 0 | 0 | 0 |
+| 448 px | 4 | 1 | 0 | 0 | 0 |
+| 768 px (layar 50%) | 5 | 1 | 0 | 0 | 0 |
+
+> ✅ Diuji juga di halaman **live** GitHub Pages — hasil sama.
+
+---
+
 ## 13 Oktober 2026 (malam) — 📐 LEBAR KOLOM DIPERBAIKI (usulan Bapak)
 
 > **Usulan Bapak:** *"ruang isi angka itu terlalu besar.. transaksi saya tidak pernah sebesar itu..
