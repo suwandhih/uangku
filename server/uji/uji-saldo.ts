@@ -11,30 +11,32 @@ import { saldoSemuaFund, saldoTotal, ringkasanBulan, TAG_DIKECUALIKAN, hitungSal
 
 /* ----------------------------------------------------------------
    ANGKA PEMBANDING — dari keuangan.db (September 2026)
-   Dihitung 25 Sep 2026 lewat tools/hitung-saldo.cjs
+   Dihitung 13 Okt 2026 dari keuangan.db — keuangan bertambah sejak 25 Sep
+   (September: 234 -> 307 transaksi), jadi angka ikut berubah. Angka ini WAJIB
+   disamakan lagi setiap kali keuangan berubah.
    ---------------------------------------------------------------- */
 const HARUS_SALDO: Record<string, number> = {
-  Superbank: 22_057_865,
-  SeaBank: 271_337,
-  Celengan: 2_854_767,
-  'Dana Sopir': 0,
-  'Dana swn': 608_728,
-  Tunai: 32_000,
+  Superbank: 23_717_635,
+  SeaBank: 269_626,
+  Celengan: 3_170_087,
+  'Dana Sopir': 2_379,
+  'Dana swn': 610_894,
+  Tunai: 0,
   'Sopir pinjam uang': 325_000,
   'BCA tabungan': 108_027,
   'BCA Saham': 253_493,
   Deposito: 260_000_000,
-  'Tabungan A': 595_988,
-  'Tabungan B': 16_443,
-  ShopeePay: 23_926,
+  'Tabungan A': 657_928,
+  'Tabungan B': 16_510,
+  ShopeePay: 23_976,
   OVO: 680,
   GoPay: 24_827,
-  'Tabungan C': 1_002_630,
+  'Tabungan C': 1_006_630,
   'Tabungan D': 0,
   'Tabungan E': 0,
 };
 
-const HARUS_TOTAL = 288_175_713;
+const HARUS_TOTAL = 290_187_693;
 const HARUS_AWAL = 280_941_750;
 
 bagian('Periksa skema database');
@@ -106,9 +108,9 @@ console.log(`  selisih ${ring.selisih.toLocaleString('id-ID')}`);
       - Pajak  = pengeluaran nyata → keluar
    Yang dikecualikan HANYA 5 tag: Transfer · Koreksi · Pinjam · Hutang · Reimburse.
    (Cocok dengan sistem lama: server/routes/dashboard.ts baris 241) */
-dekat('masuk September', ring.masuk, 14_191_861.37, 1);
-dekat('keluar September', ring.keluar, 7_340_614.86, 1);
-dekat('selisih', ring.selisih, 6_851_246.51, 1);
+dekat('masuk September', ring.masuk, 14_328_990.13, 1);
+dekat('keluar September', ring.keluar, 8_433_813.62, 1);
+dekat('selisih', ring.selisih, 5_895_176.51, 1);
 
 sama('5 tag dikecualikan', [...TAG_DIKECUALIKAN], ['Transfer', 'Koreksi', 'Pinjam', 'Hutang', 'Reimburse']);
 
