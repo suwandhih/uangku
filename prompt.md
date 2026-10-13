@@ -994,61 +994,92 @@ flowchart TD
 | # | Tahap | Bukti |
 |---|---|---|
 | **T1** | 🧱 **FONDASI** — `core/` 5 berkas (uang · periode · saldo · bunga · aturan) + `db/index.ts` + `uji/` 5 berkas + salinan kerja `data/uangku.db` | **99 uji LOLOS** (`npm run uji`) · `npm run cek` bersih · **18/18 saldo fund cocok** |
-| **HP** | 📱 **`uangku.html`** — versi HP (Android), **mandiri** (tanpa server/internet/`node_modules`), **baca saja**, isi 3 bulan (Sep/Agu/Jul 2026) | 234/323/345 tx · 58 pasangan transfer utuh · angka cocok persis · ID↔EN bersih |
-| **⏳ Lanjut** | **T2 — Transaksi SEDERHANA**: 1 catatan · 1 fund · 1 arah D/K · tag · keterangan · jumlah | belum dimulai |
+| **HP** | 📱 **`uangku.html`** — versi HP (Android), **mandiri**, **baca saja** | 58 pasangan transfer utuh · angka cocok persis · ID↔EN bersih |
+| **☁️ CLOUD** | 🎉 **`uangku-cloud.html` + Worker + Layerbase** — **13 Okt 2026**. Seluruh kode tampilan `uangku.html` dipakai **apa adanya**; hanya **sumber data** & **tempat simpan** yang berganti. Ditambah **gerbang PIN**, **Riwayat**, **Catat multi-jurnal**, **Buka Bulan Baru** | **IDENTIK 100%** dengan `keuangan.db` (15 tabel, 18 fund) · bisa **dibaca & dicatat** dari PC/HP · 99 uji lolos · tampilan identik di 360–960 px |
+| **⏳ Lanjut** | **T2 — Transaksi SEDERHANA di aplikasi PC lokal** (opsional — halaman cloud sudah bisa mencatat) | belum dimulai |
+
+### ☁️ Cara kerja versi cloud (13 Okt 2026) — untuk AI berikutnya
+
+```mermaid
+flowchart LR
+    A["🖥️ PC<br/>uangku.db"] -->|siapkan-cloud.cjs| B["☁️ Layerbase<br/>PostgreSQL · skema uangku"]
+    B --> C["🚪 Cloudflare Worker<br/>uangku-api"]
+    C --> D["📱 HP / PC<br/>uangku-cloud.html"]
+    D -->|catat · batalkan · pulihkan| C
+```
+
+| # | Aturan yang WAJIB dipatuhi |
+|---|---|
+| 1 | **JANGAN mengubah kode tampilan.** `uangku-cloud.html` disusun oleh `tools/bangun-cloud.cjs` dari `uangku.html` — ubah di sana, bukan di hasilnya |
+| 2 | **Kunci Layerbase tidak pernah sampai ke browser** — browser hanya bicara ke Worker |
+| 3 | **Tidak ada SQL dari luar** — Worker hanya menerima nama perintah + nilai |
+| 4 | **Setiap tulis wajib masuk `audit_log`** (aturan C6 rollback) |
+| 5 | **Nilai wajib di-escape** — Layerbase **tidak mendukung** `$1` parameter binding |
+| 6 | **Angka dibulatkan 2 desimal** sebelum dikirim (SQLite & PostgreSQL menjumlah dengan urutan berbeda) |
+| 7 | **Daftar bulan dari `monthly_snapshots`** — bukan dari tanggal transaksi (ada 2 tx bertanggal salah) |
+| 8 | **Bulan baru harus dibuka dulu** (`bukaBulan`) sebelum bisa dicatat |
+| 9 | **`bulat()` pakai `Math.trunc`** — PostgreSQL mengembalikan BIGINT sebagai teks |
+| 10 | **Jangan taruh angka saldo / nama fund asli** di berkas yang masuk repo publik |
 
 ---
 
 ## 16. 📏 ANGKA ASLI (untuk membandingkan hasil)
 
-> Dipakai untuk **membuktikan** UangKu benar. Semua dari `keuangan.db` (September 2026).
+> Dipakai untuk **membuktikan** UangKu benar.
+>
+> 🔴 **Diperbarui 13 Okt 2026.** Angka di bawah = **keadaan terbaru** dari `keuangan.db`.
+> Angka September 2026 yang lama (25 Sep) **sudah tidak berlaku** — keuangan bertambah
+> (September 234 → 307 transaksi), jadi angka pembanding ikut berubah.
+> **Angka ini WAJIB disamakan lagi setiap kali keuangan berubah.**
 
-| Hal | Angka |
+| Hal | Angka (13 Okt 2026) |
 |---|---|
 | Jumlah fund aktif | **18** |
 | Jumlah tag aktif | **15** |
-| Transaksi aktif | **1.596** (total 1.679 · historical 423) |
-| Rutin aktif | **44** |
-| **Total saldo** | **288.175.713** |
-| Tersedia | 24.387.218 |
-| Diblokir 🔒 | 263.179.767 |
-| Titipan 👥 | 608.728 |
-| Saldo awal bulan | 280.941.750 |
-| Masuk bulan ini | 14.191.861,37 |
-| Keluar bulan ini | 7.340.614,86 |
-| Selisih | +6.851.246,51 |
-| Bunga bulan ini | 1.656.682,37 (30 transaksi) |
-| Pajak bulan ini | 331.232,86 (6 transaksi) |
-| Bunga neto | 1.325.449,51 |
+| Transaksi | **1.889** (aktif 1.379 · terhapus lunak 87) |
+| Rutin | **63** |
+| Snapshot bulanan | **225** (13 bulan: Okt 2025 – Okt 2026) |
+| Riwayat (audit_log) | **1.817** |
+| **Total saldo (Okt 2026)** | **293.720.428,64** |
+| Saldo awal Okt 2026 | 290.187.692,58 |
+| Masuk September 2026 | 14.328.990,13 |
+| Keluar September 2026 | 8.433.813,62 |
+| Selisih September 2026 | +5.895.176,51 |
+| Bunga September 2026 | 1.793.281,13 |
+| Pajak September 2026 | 358.535,62 |
+
+> ✅ **Cara membuktikan ulang:** `node tools\cek-sama-cloud.cjs` → harus **IDENTIK 100%**
+> (15 tabel, 18 fund). Alat ini membandingkan **setiap baris & setiap kolom** antara
+> `keuangan.db` ↔ `uangku.db` ↔ server.
 
 > 🔴 **KOREKSI 25 Sep 2026 (jangan pakai angka lama).** Angka keluar **7.009.382** & selisih **+7.182.479** yang dulu tertulis di sini **SALAH** — angka itu menganggap **Pajak dikecualikan**.
 > Kenyataan: **Pajak & Bunga TIDAK dikecualikan** — hanya **5 tag** (Transfer · Koreksi · Pinjam · Hutang · Reimburse), persis sistem lama `server/routes/dashboard.ts:241`.
 > Jadi: keluar **7.340.614,86** (termasuk Pajak **331.232,86**) · masuk **14.191.861,37** (termasuk Bunga **1.656.682,37**) · selisih **+6.851.246,51**.
 > Sudah dibuktikan uji T1 (`npm run uji`, 99 uji lolos) dan angka di `uangku.html` + `design/ui-hp.html` **sudah benar**.
 
-### Saldo 18 fund (September 2026)
+### Saldo 18 fund (Oktober 2026 — keadaan 13 Okt 2026)
 
 | Fund | Saldo awal | Saldo akhir |
 |---|---|---|
-| Superbank | 16.314.701 | 22.057.865 |
-| SeaBank | 343.431 | 271.337 |
-| Celengan | 1.654.767 | 2.854.767 |
-| Dana Sopir | 303.873 | 0 |
-| Dana swn | 308.728 | 608.728 |
-| Tunai | 85.000 | 32.000 |
+| Superbank | 23.717.634,53 | 26.815.530,59 |
+| SeaBank | 269.626 | 231.913 |
+| Celengan | 3.170.087,19 | 3.820.087,19 |
+| Dana Sopir | 2.378,61 | 2.378,61 |
+| Dana swn | 610.894,16 | 610.894,16 |
+| Tunai | 0 | 0 |
 | Sopir pinjam uang | 325.000 | 325.000 |
-| BCA tabungan | 42.811 | 108.027 |
-| BCA Saham | 118.493 | 253.493 |
+| BCA tabungan | 108.027 | 30.165,40 |
+| BCA Saham | 253.493 | 13.493,22 |
 | Deposito | 260.000.000 | 260.000.000 |
-| Tabungan A | 355.988 | 595.988 |
-| Tabungan B | 16.443 | 16.443 |
-| ShopeePay | 44.376 | 23.926 |
+| Tabungan A | 657.928,43 | 787.928,43 |
+| Tabungan B | 16.510,37 | 16.510,37 |
+| ShopeePay | 23.976 | 34.391 |
 | OVO | 680 | 680 |
 | GoPay | 24.827 | 24.827 |
-| Tabungan C | 1.002.630 | 1.002.630 |
+| Tabungan C | 1.006.629,67 | 1.006.629,67 |
 | Tabungan D | 0 | 0 |
 | Tabungan E | 0 | 0 |
-| **TOTAL** | **280.941.750** | **288.175.713** |
+| **TOTAL** | **290.187.692,58** | **293.720.428,64** |
 
 ### 🔎 Temuan penting di `recurring` — bukti rate tabungan ≠ deposito
 
@@ -1083,8 +1114,10 @@ flowchart TD
 | 1 | **`agents.md`** | Aturan kerja · larangan · pelajaran bug — **baca setiap sesi** |
 | 2 | **`rencanakerja.md`** | Papan order + konsep lengkap (tag, bunga, tampilan) — **mana sudah, mana belum** |
 | 3 | **`prompt.md`** (dokumen ini) | Cetak biru teknis — skema, `code`, aturan, uji |
-| 4 | **`uangku.html`** | 📱 **Aplikasi versi HP yang SUDAH JADI** — sumber kebenaran **tampilan** paling baru (kalau berbeda dengan mockup, **ikuti berkas ini**) |
-| 5 | `design/ui-hp.html` | Rancangan tampilan HP — 🔒 **BEKU** (2 layar sudah tertinggal, lihat Bagian 12) |
+| 4 | **`uangku.html`** | 📱 **Aplikasi versi HP yang SUDAH JADI** — sumber kebenaran **tampilan** paling baru (kalau berbeda dengan mockup, **ikuti berkas ini**). 🔴 **TIDAK boleh masuk repo publik** (memuat data asli) |
+| 5 | **`uangku-cloud.html`** | 🎉 **Halaman yang DIPAKAI Bapak setiap hari** (13 Okt 2026) — https://suwandhih.github.io/uangku/uangku-cloud.html · PIN **616098**. Disusun oleh `tools/bangun-cloud.cjs` dari `uangku.html` |
+| 6 | **`cloudflare/worker.js`** | 🚪 Perantara aman ke Layerbase — satu-satunya jalan masuk data. Baca + tulis |
+| 7 | `design/ui-hp.html` | Rancangan tampilan HP — 🔒 **BEKU** (2 layar sudah tertinggal, lihat Bagian 12) |
 
 ---
 
@@ -1092,6 +1125,11 @@ flowchart TD
 `keuangan.db` (dibaca langsung, hanya baca) + arahan Bapak 24–25 Sep 2026.*
 *Tidak ada data, kode, atau saldo yang diubah saat membuat dokumen ini.*
 
+> 🔄 **Diperbarui 13 Okt 2026** (UangKu aktif dipakai): ① **Bagian 15** ditambah **tahap CLOUD
+> SUDAH SELESAI** + 10 aturan wajib versi cloud · ② **Bagian 16** angka disamakan dengan
+> keadaan terbaru (1.889 tx · total **293.720.428,64** · saldo 18 fund Okt 2026) ·
+> ③ **Bagian 17** ditambah `uangku-cloud.html` + `cloudflare/worker.js`.
+>
 > 🔄 **Diperbarui 25 Sep 2026** (setelah aplikasi versi HP selesai): ① **angka Bagian 16 dikoreksi**
 > (Pajak & Bunga **TIDAK** dikecualikan → keluar **7.340.614,86**, selisih **+6.851.246,51**;
 > angka lama 7.009.382 / +7.182.479 **SALAH**) · ② **Bagian 12** ditambah **10 aturan tata letak

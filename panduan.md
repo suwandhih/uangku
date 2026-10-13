@@ -1,24 +1,90 @@
-# 📖 PANDUAN — UangKu (versi HP)
+# 📖 PANDUAN — UangKu
 
 > **Untuk siapa:** Bapak. Bahasa awam, tanpa istilah teknis.
-> **Berlaku untuk:** `uangku.html` — aplikasi versi HP (Android), dibuka lewat **Chrome**.
-> **Sifatnya:** **HANYA MELIHAT** (baca saja). Mencatat transaksi tetap di komputer.
+> **Berlaku untuk:** **`uangku-cloud.html`** — halaman yang Bapak pakai setiap hari (13 Okt 2026).
+> **Sifatnya:** **BISA MELIHAT dan BISA MENCATAT.** Yang dicatat langsung tersimpan di server.
 > **Dokumen pasangan:** `agents.md` (aturan kerja AI) · `rencanakerja.md` (rencana) · `prompt.md` (cetak biru)
 
 ---
 
-## 1. 🚀 Cara menjalankan (3 langkah)
+## 1. 🚀 Cara membuka (2 langkah)
 
 ```
-① Di komputer :  node tools\siapkan-data.cjs
-② Kirim uangku.html ke HP   (WhatsApp / Telegram / kabel)
-③ Di HP       :  buka dengan Chrome   →   UangKu langsung jalan
+① Buka Chrome (di HP atau di komputer)
+② Ketik / tekan simpanan:   https://suwandhih.github.io/uangku/uangku-cloud.html
+③ Masukkan PIN:  616098      →  tekan "Simpan & sambung"
 ```
 
-> 💡 **Tidak butuh internet, tidak butuh server.** Semua angka sudah "tertanam" di dalam berkas itu.
-> Jadi bisa dibuka di mana saja — bahkan tanpa sinyal.
+> 💡 **PIN hanya perlu dimasukkan sekali.** Sesudah itu HP mengingatnya sendiri.
+> **PIN disimpan di perangkat Bapak saja** — tidak dikirim ke mana-mana.
 
-**Kalau angkanya ingin diperbarui:** ulangi langkah ① dan ② (jalankan alat, kirim ulang berkasnya).
+**Supaya seperti aplikasi (tidak perlu ketik alamat lagi):**
+di Chrome tekan menu **⋮** → **"Tambahkan ke layar utama"**. Nanti ada ikon UangKu di layar HP.
+
+> 🔴 **Bisa dibuka dari komputer DAN HP, angkanya selalu sama** — karena datanya satu, di server.
+> Yang Bapak catat di HP langsung terlihat di komputer, dan sebaliknya.
+
+### ⚠️ Kalau PIN salah
+
+Muncul tulisan **"PIN salah"**. Coba lagi. Kalau lupa PIN, tanya AI — PIN ada di berkas `.env` di komputer.
+
+---
+
+## 1b. 📅 SETIAP AWAL BULAN — jangan lupa!
+
+> 🔴 **Ini penting.** Kalau bulan baru belum dibuka, Bapak **tidak bisa mencatat**.
+
+```
+Pengaturan  →  📅 Bulan Baru  →  tombol "Buka bulan baru"
+```
+
+Yang terjadi: saldo akhir bulan lalu **otomatis jadi saldo awal** bulan baru, lalu bulan lama **dikunci**
+(tidak bisa diubah lagi). Selesai — tinggal mencatat seperti biasa.
+
+> 💡 **Kalau lupa, Dashboard akan mengingatkan sendiri** — muncul pita kuning
+> *"⚠️ Bulan ini belum dibuka"* lengkap dengan tombol **Buka sekarang**.
+> Jadi Bapak tidak akan terjebak tidak bisa mencatat.
+
+---
+
+## 1c. ✍️ Cara MENCATAT transaksi
+
+```
+Transaksi  →  tekan tombol ＋ (kanan atas)  →  isi  →  Simpan
+```
+
+| Yang diisi | Keterangan |
+|---|---|
+| **Tanggal** | Sudah terisi hari ini. Bisa diganti |
+| **Keterangan** | Mis. "makan siang", "biaya admin" |
+| **Fund** | Kotak uangnya (Superbank, SeaBank, …) |
+| **Tag** | Untuk apa — ini yang menentukan artinya |
+| **D / K** | Masuk (D) atau keluar (K). **Untuk sebagian besar tag, ini terisi sendiri** |
+| **Jumlah** | Angkanya saja, mis. `30000` |
+
+> 💡 **Satu tindakan boleh berisi beberapa baris.** Contoh: transfer Superbank → SeaBank
+> = 2 baris (Superbank keluar, SeaBank masuk). Tekan **"＋ Tambah baris jurnal"**.
+
+**Kalau salah?** Di daftar bawah ada tombol **↩️ Batalkan** pada tiap baris.
+Saldo langsung kembali seperti sebelum transaksi itu.
+
+**Mau mengembalikan yang sudah dibatalkan?**
+```
+Transaksi  →  Riwayat  →  cari barisnya  →  ↩️ Pulihkan
+```
+
+---
+
+## 1d. 📜 Layar RIWAYAT
+
+```
+Transaksi  →  tombol "Riwayat" (kiri atas)
+```
+
+Semua **catat · ubah · batalkan** tercatat di sini — tidak ada yang bisa hilang.
+Yang sudah dibatalkan bisa **dipulihkan** dengan satu tombol.
+
+> 🔑 Inilah yang membuat Bapak **berani mencoba**: apa pun yang salah, bisa dikembalikan.
 
 ---
 
@@ -30,7 +96,7 @@ Selalu ada 3 tab di paling bawah layar:
 |---|---|
 | **📊 Dashboard** | Halaman pertama. Daftar semua kotak uang + saldo, total, ringkasan, bunga & pajak, transaksi terbaru |
 | **🧾 Transaksi** | Semua catatan uang — bisa disaring & diurut |
-| **⚙️ Pengaturan** | Daftar Fund · Daftar Tag · Pajak & Bunga · Bahasa · Daftar Istilah · Tentang |
+| **⚙️ Pengaturan** | Bulan · Daftar Fund · Daftar Tag · Pajak & Bunga · Bahasa · **📅 Bulan Baru** · Daftar Istilah · Tentang |
 
 > ⬅️ **Pindah halaman cukup tekan tab bawah.** Tidak ada tombol pintas di dalam halaman
 > (supaya tidak dobel dan membingungkan).
@@ -156,12 +222,13 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 
 | Hal | Keterangan |
 |---|---|
-| **Hanya melihat** | Versi HP ini **baca saja**. Tombol **＋** akan bilang: mencatat dilakukan di komputer |
-| **Angka pasti sama dengan PC** | Angka HP memakai aturan yang sama dengan `core/saldo.ts`. Kalau berbeda → itu **bug**, bukan beda tampilan |
-| **3 bulan** | Berisi 3 bulan terakhir (September, Agustus, Juli 2026) |
-| **Bulan lain** | Bisa dipilih di **Pengaturan → Bulan** |
+| **Bisa melihat DAN mencatat** | Yang dicatat langsung tersimpan di server — dari HP maupun komputer |
+| **Angka pasti sama di mana saja** | Angka memakai aturan yang sama dengan `core/saldo.ts`. Kalau berbeda → itu **bug**, bukan beda tampilan |
+| **6 bulan terakhir** | Bisa dipilih di **Pengaturan → Bulan** |
 | **Terang / gelap** | Bisa dipilih di Pengaturan |
 | **Simpan ke layar utama** | Bisa — supaya seperti aplikasi biasa (ada di Pengaturan) |
+| **PIN** | Disimpan di perangkat Bapak saja. Tidak perlu diketik ulang |
+| **Data tidak ada di dalam berkas halaman** | Halaman hanya menampilkan; datanya di server. Jadi aman dibuka dari mana saja |
 
 ---
 
@@ -169,9 +236,12 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 
 | Gejala | Yang dicek |
 |---|---|
-| Angka tidak muncul / kosong | Berkas belum diisi data → jalankan `node tools\siapkan-data.cjs`, kirim ulang |
+| **Tidak bisa mencatat / tanggal ditolak** | Bulan baru belum dibuka → **Pengaturan → 📅 Bulan Baru → Buka bulan baru** |
+| Angka tidak muncul / kosong | Internet mati, atau PIN salah. Coba muat ulang halaman |
+| Muncul "PIN salah" | Ketik ulang **616098**. Kalau lupa, tanya AI |
 | Angka beda dengan komputer | **Laporkan** — itu bug (aturan C18) |
 | Tampilan terpotong | Putar HP / kecilkan huruf di Chrome, lalu laporkan |
+| Salah mencatat | Buka **Transaksi → Riwayat → ↩️ Pulihkan**, atau **Batalkan** di daftar transaksi |
 
 ---
 
@@ -179,9 +249,25 @@ Yang **TIDAK** berganti: **nama kotak uang** & **nama tag** (supaya laporan teta
 
 | Hal | Keadaan |
 |---|---|
-| **Mencatat / mengedit transaksi dari HP** | ⬜ Belum — sengaja, supaya angka HP & PC tidak bentrok |
-| **Aplikasi versi komputer (PC)** | ⬜ Belum dibuat (berikutnya **T2 — Transaksi Sederhana**) |
-| **Sinkronisasi otomatis** | ⬜ Belum — cukup **1× salinan akhir** setelah UangKu benar |
+| **Mengubah (edit) transaksi** | ⬜ Belum — untuk sekarang: **batalkan** lalu **catat ulang** |
+| **Mengisi Saldo Awal dari HP** | ⬜ Belum — saldo awal diisi lewat **Buka Bulan Baru** |
+| **Batasi percobaan PIN** | ⬜ Belum — kalau PIN salah berkali-kali, tidak ada penguncian |
+| **Aplikasi versi komputer (server lokal)** | ⬜ Belum — tidak diperlukan, halaman cloud sudah bisa mencatat dari komputer |
+
+---
+
+## 10. 🔄 Kalau Bapak masih mencatat di `c:\data\keuangan`
+
+Halaman cloud **tidak otomatis** mengambil catatan baru dari sistem lama.
+Kalau ada catatan baru di sana, minta AI menjalankan:
+
+```
+node tools\salinan-kerja.cjs          (keuangan → uangku.db)
+node tools\siapkan-cloud.cjs --ulang  (uangku.db → server)
+node tools\cek-sama-cloud.cjs         (pembukti: harus IDENTIK 100%)
+```
+
+> ⚠️ **Jangan** mencatat di dua tempat sekaligus untuk transaksi yang sama — nanti dobel.
 | **Jembatan cloud Layerbase** | ⬜ Akun sudah ada, database belum dibuat |
 
 ---

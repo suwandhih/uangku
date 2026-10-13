@@ -6,6 +6,63 @@
 
 ---
 
+## 13 Oktober 2026 — 🎉 UangKu SIAP DIPAKAI SETIAP HARI
+
+> **Alamat:** https://suwandhih.github.io/uangku/uangku-cloud.html · **PIN: 616098**
+> Bisa dibuka dari **PC maupun HP**. Yang dicatat di situ **langsung tersimpan di server**.
+
+### ✅ Data sudah pindah — dan sudah dibuktikan sama
+
+- ✅ Seluruh isi `c:\data\keuangan` dipindah ke server: **1.889 transaksi · 21 fund · 20 tag · 225 snapshot · 63 rutin · 1.817 riwayat**
+- ✅ Dibuktikan **IDENTIK 100%** dengan alat baru [cek-sama-cloud.cjs](c:/data/UangKu/tools/cek-sama-cloud.cjs) — membandingkan **setiap baris & setiap kolom** 15 tabel antara `keuangan.db` ↔ `uangku.db` ↔ server, plus 18 saldo fund
+- ✅ Total Oktober 2026: **Rp 293.720.428,64** — sama persis di ketiga tempat
+- 🔴 `keuangan.db` tetap **hanya dibaca** — tidak pernah diubah
+
+### 🆕 Halaman baru: `uangku-cloud.html`
+
+- 🆕 Dibuka dari GitHub, **tanpa memasang apa pun**. Semua fitur UangKu yang sudah Bapak pakai **dipakai apa adanya** — yang berganti hanya dari mana angkanya datang
+- 🔐 **Gerbang PIN** — tanpa PIN yang benar, data tidak bisa dibaca
+- ✅ Dashboard · Transaksi (4 urutan + pencarian + penyaring) · Catat · Pengaturan (Bulan · Daftar Fund · Daftar Tag · Pajak & Bunga · Bahasa · Daftar Istilah · Tentang) · **Riwayat**
+- ✅ **Bahasa Indonesia ↔ English** tetap jalan
+- ✅ Tampilan **sama persis** dengan versi lama — diuji di 360/390/430/560/960 px: jumlah kolom, lebar kartu, dan angka **identik**
+
+### 🆕 Bisa MENCATAT dari HP (sebelumnya hanya melihat)
+
+- 🆕 Tombol **＋** di Transaksi → isi tanggal, keterangan, fund, tag, jumlah → **Simpan** → langsung masuk server
+- 🆕 Satu tindakan boleh berisi **beberapa jurnal** (mis. transfer = 2 baris)
+- 🆕 **Batalkan** per transaksi — saldo langsung kembali
+- 🆕 Layar **Riwayat** — semua catat/ubah/batalkan tercatat, dan bisa **dipulihkan**
+- ✅ Uji nyata: catat → jumlah naik · batalkan → kembali · pulihkan → naik lagi · **tanpa galat**
+
+### 🆕 Buka Bulan Baru — supaya bisa mencatat mulai 1 November
+
+- 🔴 **Masalah nyata yang ditemukan:** saldo awal tiap bulan disimpan di tabel `monthly_snapshots`. Isinya **berhenti di Oktober 2026** — jadi mulai **1 November Bapak tidak bisa mencatat sama sekali**
+- 🆕 Menu **Pengaturan → 📅 Bulan Baru** → tombol **Buka bulan baru**
+- ✅ Cara kerjanya: saldo awal bulan baru = saldo akhir bulan terakhir, lalu bulan lama **dikunci**
+- ✅ Diuji: November dibuat dari Oktober → **18 dari 18 fund cocok** · Oktober terkunci
+- 🆕 **Pita peringatan di Dashboard** muncul sendiri kalau bulan berjalan belum dibuka, lengkap dengan tombol **Buka sekarang**
+
+### 🔒 Keamanan
+
+- ✅ PIN salah / kosong → **ditolak** (401). Sudah diuji
+- ✅ Repo GitHub **publik** tapi **tidak memuat data keuangan**: `uangku.html`, `lab-uang2.html`, `data/`, dan `.env` dikecualikan
+- ✅ Diperiksa: tidak ada kunci API yang bocor, tidak ada angka saldo asli di berkas yang di-upload
+
+### 🔴 Bug yang diperbaiki hari ini
+
+- 🔴 Angka pembanding uji September 2026 sudah basi (keuangan bertambah 234 → 307 transaksi). UangKu sendiri **sudah benar** — yang salah hanya angka ujinya. Sekarang **99 uji lolos, 0 gagal**
+- 🔴 Tombol "Buka bulan baru" sempat membuat galat karena dipasang sebelum tombolnya ada. Sekarang memakai satu pendengar klik di seluruh halaman
+- 🔴 Layar **Tentang** masih berbunyi *"tidak butuh server dan tidak butuh internet"* — sekarang jujur: *"angkanya diambil dari server setiap kali dibuka"*
+- 🔴 `wrangler.jsonc` sampah (dibuat otomatis) menutupi konfigurasi yang benar → dihapus
+
+### ⚠️ Yang perlu Bapak tahu
+
+- ⚠️ **Setiap awal bulan**, buka **Pengaturan → 📅 Bulan Baru → Buka bulan baru** sebelum mencatat. Kalau lupa, Dashboard akan mengingatkan
+- ⚠️ Kalau Bapak masih mencatat di `c:\data\keuangan`, jalankan `node tools\salinan-kerja.cjs` lalu `node tools\siapkan-cloud.cjs --ulang` supaya server ikut terbarui
+- ⚠️ Belum ada batas percobaan PIN (kalau PIN salah berkali-kali, tidak ada penguncian)
+
+---
+
 ## 8 Oktober 2026
 
 ### 🗓️ Status akhir hari (8 Okt 2026)

@@ -1,7 +1,9 @@
 # 🧠 AGENTS.md — Otak UangKu
 
 > **Untuk siapa:** **AI** yang mengerjakan UangKu. **WAJIB dibaca setiap sesi sebelum kerja.**
-> **Dibuat:** 25 September 2026 · **Status:** ✅ **kode SUDAH ADA** — T1 Fondasi (99 uji lolos) + versi HP `uangku.html`
+> **Dibuat:** 25 September 2026 · **Diperbarui:** 13 Oktober 2026
+> **Status:** 🎉 **SIAP DIPAKAI SETIAP HARI** — https://suwandhih.github.io/uangku/uangku-cloud.html (PIN **616098**)
+> Data server **IDENTIK 100%** dengan `c:\data\keuangan` · 99 uji lolos · bisa dibaca **dan dicatat** dari PC maupun HP
 > **Pasangan dokumen ini:** `rencanakerja.md` (papan order + rencana + konsep detail Bapak)
 > **Asal konsep:** sistem lama `c:\data\keuangan` — **hanya konsep & metode yang dibawa**, bukan kodenya
 
@@ -12,11 +14,12 @@
 > Disalin **8 Oktober 2026** dari C:\data\Peta dunia\agents.md.
 > Bagian **F** (khusus peta) dan **I** (khusus MapLibre) **TIDAK** disalin — tidak berlaku untuk UangKu.
 > Di proyek ini papan order ada di encanakerja.md **bagian 1**.
-## 🔴 4 ATURAN PALING PENTING (ingat ini dulu, selalu)
+## 🔴 3 ATURAN PALING PENTING (ingat ini dulu, selalu)
 
 > ⚡ **1. JANGAN mulai apa pun tanpa aba-aba dari Bapak.**
 > ⚡ **2. BACA ULANG seluruh berkas ini SETIAP SESI** — bukan asumsi, bukan "mungkin".
-> ⚡ **3. JANGAN tinggalkan sampah di script.** → lihat bagian **G**.
+> ⚡ **3. JANGAN tinggalkan sampah di script.** → lihat bagian **F**.
+> ⚡ **4. JANGAN mengubah sistem UangKu yang sudah siap pakai** (aturan 13 Okt 2026, Bagian 2).
 
 ---
 
@@ -95,7 +98,7 @@
 ---
 
 
-## G. 🗑️ ATURAN SAMPAH DI SCRIPT
+## F. 🗑️ ATURAN SAMPAH DI SCRIPT
 
 > *"Jika ada revisi/perbaikan, **tidak meninggalkan sampah pada script**. Jika ada script
 > yang perlu disimpan, buatkan file baru `catatanAI.md` — jadi script AI bisa ditempatkan
@@ -103,18 +106,18 @@
 
 | # | Aturan | Pelaksanaan |
 |---|--------|-----------|
-| **H1** | ❌ **DILARANG** meninggalkan kode lama di script dengan alasan *"supaya bisa revert"* | Kode tak terpakai **harus dihapus** dari script |
-| **H2** | Kalau memang perlu disimpan | **Pindahkan ke `catatanAI.md`** — buat berkasnya kalau belum ada |
-| **H3** | Fitur dihapus permanen | Arsipkan ke `backups/` — ❌ jangan tinggalkan di script utama |
-| **H4** | Hapus harus **menyeluruh** | Kode + gaya + uji + catatan dokumen yang menyebutnya ikut dibersihkan |
-| **H5** | Catatan dokumen yang **bertentangan** dengan keadaan nyata | Wajib dibersihkan |
+| **F1** | ❌ **DILARANG** meninggalkan kode lama di script dengan alasan *"supaya bisa revert"* | Kode tak terpakai **harus dihapus** dari script |
+| **F2** | Kalau memang perlu disimpan | **Pindahkan ke `catatanAI.md`** — buat berkasnya kalau belum ada |
+| **F3** | Fitur dihapus permanen | Arsipkan ke `backups/` — ❌ jangan tinggalkan di script utama |
+| **F4** | Hapus harus **menyeluruh** | Kode + gaya + uji + catatan dokumen yang menyebutnya ikut dibersihkan |
+| **F5** | Catatan dokumen yang **bertentangan** dengan keadaan nyata | Wajib dibersihkan |
 
 ⚠️ **Kenapa:** kode tak terpakai yang tertinggal di script ⇒ AI berikutnya akan **meniru**-nya ⇒
 sistem makin lama makin rusak tanpa disadari.
 
 ---
 
-## H. Aturan PAPAN ORDER (`rencanakerja.md` bagian 1)
+## G. Aturan PAPAN ORDER (`rencanakerja.md` bagian 1)
 
 Tanda: ✅ selesai · 🔨 sedang · ⬜ belum · ⚠️ bermasalah · ⏳ antre · 🟡 perlu diperdalam ·
 ⚪ belum diputuskan · ⏸️ ditahan · ❌ dibuang
@@ -434,26 +437,38 @@ akar semua bug. Di UangKu: **satu logika = satu berkas**. Yang lama **dihapus**.
 
 ## 2. 📍 Posisi Pekerjaan Sekarang (25 Sep 2026)
 
+> 🔴 **Diperbarui 13 Okt 2026.** Keadaan sebelumnya (25 Sep) sudah tidak berlaku.
+
 | Hal | Keadaan |
 |---|---|
-| **Kode (PC)** | ✅ **SUDAH ADA** — `server/core/` 5 berkas (`uang` · `periode` · `saldo` · `bunga` · `aturan`) + `server/db/index.ts` + `server/uji/` 5 berkas uji. **99 uji LOLOS** (`npm run uji`) · `npm run cek` bersih |
-| **`uangku.html`** | ✅ **SELESAI 25 Sep** — versi HP (Android), **mandiri** (tanpa server/internet/`node_modules`), isi **3 bulan** (Sep/Agu/Jul 2026) · 18 fund · 15 tag · 234/323/345 transaksi. **Baca saja** |
-| **`data/uangku.db`** | ✅ **ADA** — salinan kerja **752 KB** (1.679 tx · 21 fund · 20 tag · 207 snapshot · 63 rutin). Aplikasi bekerja di sini |
-| **`design/ui-hp.html`** | ⚠️ Mockup HP (5 layar + 6 layar setting) — 🔒 **BEKU** (C14), **tetapi layar Dashboard & Transaksi sudah tertinggal** dari revisi 25 Sep (lihat bawah) |
-| **`prompt.md`** | ✅ **SELESAI 25 Sep** (17 bagian — cetak biru untuk AI mana pun) |
+| **🎉 UangKu SIAP DIPAKAI** | ✅ **13 Okt 2026** — Bapak mencatat setiap hari di **https://suwandhih.github.io/uangku/uangku-cloud.html** (PIN **616098**), dari **PC maupun HP** |
+| **Kode (PC)** | ✅ `server/core/` 5 berkas (`uang` · `periode` · `saldo` · `bunga` · `aturan`) + `server/db/index.ts` + `server/uji/` 5 berkas uji. **99 uji LOLOS** (`npm run uji`) · `npm run cek` bersih |
+| **`uangku-cloud.html`** | ✅ **BARU 13 Okt** — halaman yang dipakai Bapak. **Seluruh kode tampilan `uangku.html` dipakai APA ADANYA**; yang berganti hanya ① sumber data (server) ② tempat simpan (server). Ditambah gerbang PIN + layar Riwayat + menu Bulan Baru. **Aman masuk repo publik** (tanpa data keuangan) |
+| **`uangku.html`** | ✅ versi HP lama — **mandiri**, data disuntik `tools/siapkan-data.cjs`. **Baca saja**. 🔴 **TIDAK boleh masuk repo publik** (memuat data asli) |
+| **`data/uangku.db`** | ✅ salinan kerja — **1.889 tx · 21 fund · 20 tag · 225 snapshot · 63 rutin · 1.817 riwayat** |
+| **Server (Layerbase)** | ✅ **PostgreSQL** — skema `uangku`. **IDENTIK 100%** dengan `keuangan.db` (dibuktikan `tools/cek-sama-cloud.cjs`) |
+| **Worker** | ✅ `uangku-api.suwandhih.workers.dev` — perantara aman. BACA: bulan · bukaBulan · dashboard · fund · tag · snapshot · transaksi · saldo · ringkasan · riwayat. TULIS: catat · ubah · batalkan · pulihkan |
+| **GitHub** | ✅ repo **publik** `suwandhih/uangku` · GitHub Pages aktif · 34 berkas, **tanpa rahasia & tanpa data keuangan** |
+| **`design/ui-hp.html`** | ⚠️ Mockup HP — 🔒 **BEKU** (C14), sudah tertinggal dari kenyataan |
+| **`prompt.md`** | ✅ cetak biru (17 bagian) — ⚠️ bagian 15–16 masih keadaan 25 Sep |
 | **`agents.md`** | ✅ dokumen ini (otak + aturan kerja) |
 | **`rencanakerja.md`** | ✅ papan order (4 tabel) + 17 bagian konsep |
-| **`CHANGELOG.md`** | ✅ **BARU 25 Sep** — catatan perubahan untuk Bapak (terbaru di atas) |
-| **`panduan.md`** | ✅ **BARU 25 Sep** — panduan pemakaian versi HP, bahasa awam + banyak diagram |
-| **Aplikasi PC** | ⬜ **BELUM ADA** — belum ada server, rute, atau halaman PC. Yang ada baru `core/` + uji + `uangku.html` (HP, baca saja) |
-| **⏳ Pekerjaan berikutnya** | **T2 — Transaksi SEDERHANA**: 1 catatan · 1 fund · 1 arah D/K · tag · keterangan · jumlah. Belum dimulai. Rencana 7 tahap T1–T7 ada di `rencanakerja.md` |
-| **Keputusan baru** | ✅ **25 Sep** — (1) keuangan tetap diupdate selama bangun, (2) 1× salinan akhir bersih, (3) jembatan HP = **Layerbase** |
-| **Dokumen lain** | 🗑️ **Sudah dihapus** — semua isinya dipindah ke 3 dokumen ini (`agents.md` · `rencanakerja.md` · `prompt.md`). Salinan asli tetap ada di `c:\data\keuangan`. ✅ **`CHANGELOG.md` + `panduan.md` sudah dibuat 25 Sep** |
-| **Keuangan (selama bangun)** | 🔄 **Masih dipakai & diupdate Bapak** — jadi **sumber data sebenarnya**. UangKu **berhenti** sinkronisasi terus-menerus; cukup **1× salinan akhir yang bersih** |
-| **Jembatan cloud** | ✅ **Layerbase** (`cloud.layerbase.com`) — ditentukan Bapak 25 Sep 2026. ✅ Akun sudah dibuat · ⬜ database belum dibuat |
-| **Sistem lama** | ⚠️ **Masih jalan** di `c:\data\keuangan` (port 5174 + 3003). K3 (Report Bunga Rp 0) **belum diperbaiki** |
-| **Produksi `keuangan.db`** | ✅ ~720 KB + WAL 4 MB · 1.597 transaksi · 18 fund · 15 tag · 44 rutin |
-| **Perintah penting** | `npm run uji` (99 uji) · `npm run cek` (TypeScript) · `node tools\salinan-kerja.cjs` (salinan DB) · `node tools\siapkan-data.cjs` (isi data ke `uangku.html`) |
+| **`CHANGELOG.md`** | ✅ catatan perubahan untuk Bapak (terbaru di atas) |
+| **`panduan.md`** | ✅ panduan pemakaian, bahasa awam + diagram |
+| **Aplikasi PC (server lokal)** | ⬜ **BELUM ADA** — tidak diperlukan lagi; halaman cloud sudah bisa mencatat dari PC |
+| **Keuangan** | ⏸️ **Bapak berhenti memakainya** (13 Okt). Kalau masih ada catatan baru di sana → jalankan `salinan-kerja.cjs` lalu `siapkan-cloud.cjs --ulang` |
+| **Perintah penting** | `npm run uji` (99 uji) · `npm run cek` · `node tools\salinan-kerja.cjs` (keuangan → uangku.db) · `node tools\siapkan-cloud.cjs --ulang` (uangku.db → server) · `node tools\cek-sama-cloud.cjs` (pembukti identik) · `node tools\bangun-cloud.cjs` (susun halaman cloud) · `npx wrangler deploy -c cloudflare/wrangler.toml` (unggah Worker) |
+
+### 🔴 Aturan baru 13 Okt 2026 — WAJIB dipatuhi
+
+| # | Aturan |
+|---|---|
+| **1** | **JANGAN mengubah sistem UangKu yang sudah siap pakai.** Kode tampilan dipakai apa adanya. Yang boleh diganti hanya **sumber data** dan **tempat simpan** |
+| **2** | **Setiap awal bulan** → **Pengaturan → 📅 Bulan Baru → Buka bulan baru**. Tanpa ini Bapak **tidak bisa mencatat** (bulan baru belum punya saldo awal). Dashboard akan mengingatkan sendiri |
+| **3** | **Setelah data keuangan berubah** → `salinan-kerja.cjs` → `siapkan-cloud.cjs --ulang` → `cek-sama-cloud.cjs` (harus **IDENTIK 100%**) |
+| **4** | **Jangan menaruh angka saldo asli / nama fund asli** di berkas yang masuk repo publik (termasuk alat pemeriksa) |
+| **5** | **`uangku.html` · `lab-uang2.html` · `data/` · `.env`** → 🔴 **DILARANG** masuk repo (sudah dijaga `.gitignore`) |
+| **6** | **PIN ada di DUA tempat** — `.env` (`LB_PIN`) dan secret Cloudflare (`PIN`). Ganti harus **keduanya** |
 
 ### ⚠️ Dokumen sumber yang sudah dihapus — di mana isinya sekarang
 
@@ -976,6 +991,41 @@ flowchart LR
 > Keduanya gratis & sama-sama SQLite-compatible, jadi SQL-nya tetap sama.
 
 ---
+
+## 7c. ✅ KENYATAAN 13 Okt 2026 — yang BENAR-BENAR dipakai
+
+> Bagian 7b di atas adalah **rencana** (25 Sep). Yang **benar-benar dibangun** berbeda —
+> dan **lebih baik**. Bagian ini yang berlaku.
+
+```mermaid
+flowchart LR
+    A["🖥️ PC<br/>uangku.db<br/>(salinan kerja)"] -->|siapkan-cloud.cjs| B["☁️ Layerbase<br/>PostgreSQL · skema uangku<br/>SELURUH data"]
+    B --> C["🚪 Cloudflare Worker<br/>uangku-api<br/>(PIN + perintah tetap)"]
+    C --> D["📱 HP / PC<br/>uangku-cloud.html<br/>BACA + CATAT"]
+    D -->|catat · batalkan · pulihkan| C
+```
+
+| Hal | Rencana (7b) | ✅ Kenyataan (7c) |
+|---|---|---|
+| **Mesin** | SQLite / libSQL | **PostgreSQL** (Layerbase menyediakannya) |
+| **Isi server** | hanya bulan berjalan | **SELURUH data** (1.889 tx, 13 bulan) |
+| **Arah** | satu arah (PC → server) | **dua arah** — HP/PC bisa **mencatat** |
+| **Cara HP akses** | HTTP query API langsung | lewat **Worker** (kunci tidak pernah sampai ke browser) |
+| **Halaman** | "halaman pembaca" baru | **`uangku-cloud.html`** — kode `uangku.html` dipakai apa adanya |
+| **Sumber kebenaran** | PC | **server** (PC menyimpan salinan) |
+
+### 🔴 Aturan penting yang lahir dari kenyataan ini
+
+| # | Aturan |
+|---|---|
+| **1** | **Kunci Layerbase TIDAK PERNAH sampai ke browser.** Browser hanya bicara ke Worker |
+| **2** | **Tidak ada SQL dari luar.** Worker hanya menerima **nama perintah** + nilai; SQL disusun di dalam Worker |
+| **3** | **Setiap tulis WAJIB tercatat di `audit_log`** (aturan C6 rollback) |
+| **4** | **Nilai wajib di-escape** — Layerbase **tidak mendukung** `$1` parameter binding |
+| **5** | **Angka dibulatkan 2 desimal** sebelum dikirim — SQLite & PostgreSQL menjumlah dengan urutan berbeda (debu ~1e-9) |
+| **6** | **Daftar bulan WAJIB dari `monthly_snapshots`** — bukan dari tanggal transaksi (ada 2 tx bertanggal salah: 2027-09 & 2026-12) |
+| **7** | **Bulan baru harus dibuka dulu** (`bukaBulan`) sebelum bisa dicatat |
+| **8** | **`bulat()` memakai `Math.trunc`** — PostgreSQL mengembalikan BIGINT sebagai **teks**, jadi `Number.isInteger` gagal |
 
 ---
 
