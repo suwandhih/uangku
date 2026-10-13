@@ -1,552 +1,1793 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="UangKu — catatan keuangan, versi HP">
 <title>UangKu</title>
 <style>
 /* ============================================================
-   UangKu — halaman cloud (HP + PC)
-   Hitam-putih · rapat · tab bawah (aturan C8 · C10 · C20)
+   UangKu — versi HP (Android / Chrome)
+   • Hitam-putih · warna HANYA untuk peringatan
+   • Tanpa server · tanpa internet · data tersimpan di berkas ini
+   • Tampilan mengikuti rancangan yang sudah disetujui (BEKU)
    ============================================================ */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#fff; --fg:#111; --dua:#666; --garis:#dcdcdc; --btn:#111; --btnFg:#fff;
+  --bg:#ffffff; --text:#111111; --text2:#6b6b6b; --line:#e0e0e0;
+  --ink:#111111; --onink:#ffffff; --soft:#f6f6f6; --warn:#b8860b; --danger:#b00020;
+  --sp:12px; --rad:10px;
 }
-@media (prefers-color-scheme: dark){
-  :root{ --bg:#000; --fg:#eee; --dua:#999; --garis:#333; --btn:#eee; --btnFg:#000; }
+html.dark{
+  --bg:#0d0d0d; --text:#f5f5f5; --text2:#9a9a9a; --line:#2a2a2a;
+  --ink:#f5f5f5; --onink:#0d0d0d; --soft:#171717; --warn:#e0b64a; --danger:#ff6b7a;
 }
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;height:100%}
 body{
-  background:var(--bg); color:var(--fg);
-  font:14px/1.45 -apple-system,"Segoe UI",Roboto,sans-serif;
-  padding-bottom:64px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg); color:var(--text); font-size:14px; line-height:1.35;
+  display:flex;flex-direction:column;
+  height:100vh;          /* fallback — browser lama tidak kenal dvh */
+  height:100dvh;         /* Android Chrome 108+ : ikut tinggi nyata layar */
+  max-height:100dvh;
+  overflow:hidden;
+  padding-bottom:env(safe-area-inset-bottom);
+  -webkit-text-size-adjust:100%;
 }
-header{
-  position:sticky; top:0; z-index:5; background:var(--bg);
-  border-bottom:1px solid var(--garis); padding:8px 10px;
-  display:flex; align-items:center; gap:8px;
-}
-header h1{font-size:15px; margin:0; flex:1}
-header .bulan{
-  border:1px solid var(--garis); background:none; color:var(--fg);
-  padding:3px 7px; border-radius:6px; font-size:13px;
-}
-main{padding:8px 10px}
-section{display:none}
-section.aktif{display:block}
+.mono{font-variant-numeric:tabular-nums}
 
-/* kartu grid fund — nama boleh dipotong, ANGKA jangan (aturan C19) */
-.grid{display:grid; gap:5px}
-/* ⚠️ HANYA `min-width` + nilai bawaan — kalau pakai pasangan min+max,
-   lebar pecahan (mis. 340,8 px) tidak cocok ke aturan mana pun → 1 kolom (bug nyata).
-   Ambang 480 px dipilih supaya angka panjang (ratusan juta) TIDAK terpotong. */
-.grid{grid-template-columns:repeat(2,1fr)}
-@media (min-width:341px){ .grid{grid-template-columns:repeat(3,1fr)} }
-@media (min-width:480px){ .grid{grid-template-columns:repeat(4,1fr)} }
-@media (min-width:620px){ .grid{grid-template-columns:repeat(5,1fr)} }
-.kartu{border:1px solid var(--garis); border-radius:6px; padding:5px 6px; min-width:0}
-.kartu .nm{
-  font-size:11px; color:var(--dua); overflow:hidden; display:-webkit-box;
-  -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:break-word;
+/* ---------------------- kepala ---------------------- */
+.head{
+  flex:0 0 auto;display:flex;align-items:center;gap:8px;
+  padding:calc(10px + env(safe-area-inset-top)) var(--sp) 10px;
+  border-bottom:1px solid var(--line);background:var(--bg);
+  position:relative;z-index:20;
 }
-.kartu .rp{font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.kartu .rp span{white-space:nowrap}
-.kartu.merah .rp{color:#c00}
-@media (prefers-color-scheme: dark){ .kartu.merah .rp{color:#ff6b6b} }
+.head .h1{font-size:15px;font-weight:700;margin:0;flex:1 1 auto;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head button{
+  flex:0 0 auto;border:1px solid var(--line);background:var(--bg);color:var(--text);
+  border-radius:8px;min-width:32px;height:32px;padding:0 8px;font-size:13px;
+  font-family:inherit;cursor:pointer;
+}
+.head button:active{background:var(--soft)}
+.head .plus{background:var(--ink);color:var(--onink);border-color:var(--ink);font-size:19px;font-weight:700}
 
-/* total */
-.total{border:1px solid var(--fg); border-radius:8px; padding:8px 10px; margin-bottom:8px}
-.total .lbl{font-size:11px; color:var(--dua)}
-.total .rp{font-size:19px; font-weight:700}
-.baris2{display:flex; gap:8px; font-size:12px; color:var(--dua); flex-wrap:wrap}
-.baris2 b{color:var(--fg); font-weight:600}
+/* ---------------------- isi ---------------------- */
+.body{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:var(--sp) var(--sp) 24px;overscroll-behavior:contain}
+.body[hidden]{display:none}
 
-h2{font-size:12px; text-transform:uppercase; letter-spacing:.4px; color:var(--dua); margin:12px 0 5px}
+.sec{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.06em;
+  text-transform:uppercase;margin:16px 2px 7px}
+.sec:first-child{margin-top:2px}
 
-/* tabel transaksi */
-table{width:100%; border-collapse:collapse; font-size:12.5px}
-th{text-align:left; font-size:11px; color:var(--dua); font-weight:600; padding:4px 3px; border-bottom:1px solid var(--garis)}
-td{padding:5px 3px; border-bottom:1px solid var(--garis); vertical-align:top}
-td.ke{text-align:right; white-space:nowrap; font-weight:600}
-td.ke.k{color:var(--fg)}
-tr.sub td{font-size:11px; color:var(--dua); padding-top:0; border-bottom:1px solid var(--garis)}
-.wrap{overflow-x:auto}
+/* kotak saldo */
+.saldo{border:1px solid var(--line);border-radius:var(--rad);overflow:hidden;background:var(--bg)}
+.saldo .top{padding:12px;border-bottom:1px solid var(--line)}
+.saldo .top .k{font-size:11px;color:var(--text2)}
+.saldo .top .v{font-size:25px;font-weight:700;margin-top:2px;letter-spacing:-.5px}
+.saldo .top .v small{font-size:12px;font-weight:400;color:var(--text2);margin-left:3px}
+.saldo .grid{display:grid;grid-template-columns:repeat(3,1fr)}
+/* 4 kolom: Saldo awal · Masuk · Keluar · Saldo akhir
+   (permintaan Bapak 25 Sep 2026 — bagian atas dihapus, Saldo akhir dipindah ke bawah) */
+.saldo .grid.k4{grid-template-columns:repeat(4,1fr)}
+.saldo .grid.k4 .cell{padding:9px 7px}
+.saldo .cell{padding:9px 10px;border-right:1px solid var(--line)}
+.saldo .cell:last-child{border-right:0}
+/* label boleh TURUN 2 BARIS — lebih baik daripada terpotong "Saldo akh…" */
+.saldo .cell .k{font-size:10px;color:var(--text2);line-height:1.15;overflow-wrap:break-word}
+.saldo .cell .v{font-size:13px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saldo .cell .v.neg{color:var(--danger)}
 
-/* form */
-label{display:block; font-size:12px; color:var(--dua); margin:8px 0 3px}
-input,select,textarea{
-  width:100%; padding:8px; font-size:15px; border:1px solid var(--garis);
-  border-radius:6px; background:var(--bg); color:var(--fg);
-}
-.chips{display:flex; flex-wrap:wrap; gap:4px}
-.chip{
-  border:1px solid var(--garis); background:none; color:var(--fg);
-  padding:5px 8px; border-radius:14px; font-size:12.5px;
-}
-.chip.pilih{background:var(--btn); color:var(--btnFg); border-color:var(--btn)}
-.tombol{
-  width:100%; padding:11px; font-size:15px; font-weight:600; margin-top:12px;
-  border:0; border-radius:8px; background:var(--btn); color:var(--btnFg);
-}
-.tombol.kosong{background:none; color:var(--fg); border:1px solid var(--garis)}
-.btnKecil{
-  border:1px solid var(--garis); background:none; color:var(--fg);
-  padding:4px 8px; border-radius:6px; font-size:12px;
-}
-.pesan{padding:8px; border-radius:6px; margin-top:8px; font-size:13px; display:none}
-.pesan.tampil{display:block}
-.pesan.ok{border:1px solid var(--fg)}
-.pesan.salah{border:1px solid #c00; color:#c00}
-@media (prefers-color-scheme: dark){ .pesan.salah{border-color:#ff6b6b; color:#ff6b6b} }
+/* kartu */
+.card{border:1px solid var(--line);border-radius:var(--rad);overflow:hidden;background:var(--bg);margin-bottom:8px}
+.chead{padding:10px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;
+  gap:8px;cursor:pointer;background:var(--soft);border-bottom:1px solid var(--line)}
+.chead .ctog{margin-left:auto;font-weight:400;color:var(--text2);font-size:11px}
+.cbody{padding:4px 12px}
+.card.fold .cbody{display:none}
+.card.fold.open .cbody{display:block}
+.crow{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);
+  font-size:13px}
+.crow:last-child{border-bottom:0}
+.crow .cl{color:var(--text2);flex:0 0 auto}
+.crow b{margin-left:auto;white-space:nowrap}
+.crow .mini{font-size:11px;color:var(--text2);flex:0 0 auto}
+
+/* peringatan — satu-satunya tempat warna */
+.alert{border:1px solid var(--warn);color:var(--warn);border-radius:var(--rad);
+  padding:9px 12px;font-size:12.5px;font-weight:600;margin:10px 0;display:flex;
+  align-items:center;gap:8px}
+.alert .go{margin-left:auto;font-weight:700}
+.hint{border:1px solid var(--line);border-radius:var(--rad);padding:9px 12px;font-size:11.5px;
+  color:var(--text2);margin:10px 0;line-height:1.5}
+
+/* tombol pintu */
+.goto{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:var(--rad);
+  padding:12px;font-family:inherit;font-size:14px;cursor:pointer;margin:8px 0}
+.goto:active{background:var(--soft)}
+.goto .gi{font-size:21px;flex:0 0 auto}
+.goto .gt{font-weight:700;display:block;font-size:14px}
+.goto .gs{color:var(--text2);font-size:11.5px;display:block}
+.goto .garrow{margin-left:auto;color:var(--text2);font-size:19px}
+.goto.accent{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.goto.accent .gs{color:var(--onink);opacity:.72}
+
+/* DAFTAR TRANSAKSI — TABEL HP (meniru Transaksi di keuangan:
+   Tanggal · Keterangan · Fund · Tag · Tipe · Jumlah).
+   Tabel hanya boleh digeser ke samping DI DALAM kotaknya. */
+.txw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--rad);margin-bottom:8px}
+.txt{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px}
+.txt th{font-size:10px;font-weight:700;color:var(--text2);text-align:left;padding:6px 4px;
+  border-bottom:1px solid var(--line);background:var(--soft);white-space:nowrap;overflow:hidden}
+.txt td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top;overflow:hidden}
+.txt tr:last-child td{border-bottom:0}
+.txt .c-tgl{width:40px;white-space:nowrap;color:var(--text2)}
+.txt .c-dk{width:30px;text-align:center}
+.txt .c-jml{width:92px;text-align:right;white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums}
+.txt .sub{font-size:10px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txt .ket{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  overflow-wrap:anywhere;font-size:11.5px;line-height:1.3}
+.txt .bd{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:0 3px;
+  font-size:9.5px;font-weight:400;color:var(--text2);margin-left:2px;white-space:nowrap}
+.txt .bd.pajak{border-color:var(--warn);color:var(--warn)}
+.txt tr.pr td:first-child{box-shadow:inset 3px 0 0 var(--ink)}
+.txt tr.grp td{background:var(--soft);font-size:10.5px;color:var(--text2);padding:5px 6px;white-space:normal}
+.txt tr.grp b{color:var(--text)}
+
+.daylabel{font-size:11px;font-weight:700;color:var(--text2);margin:14px 2px 6px;
+  display:flex;align-items:center;gap:8px}
+.daylabel::after{content:"";flex:1 1 auto;height:1px;background:var(--line)}
+
+/* PEMILIH TAG — muncul hanya saat urutan = Tag (hemat ruang, aturan C10).
+   Satu baris tertutup; klik → grid tag terbuka; pilih tag → menutup lagi. */
+.tagsum{display:flex;align-items:center;gap:6px;width:100%;
+  border:1px solid var(--line);background:var(--bg);color:var(--text);
+  border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;
+  font-family:inherit;cursor:pointer;min-width:0;margin-bottom:6px}
+.tagsum .nm{flex:1 1 auto;min-width:0;text-align:left;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tagsum .ar{flex:0 0 auto;font-size:10px;color:var(--text2)}
+/* grid tag di layar Transaksi — di luar .chips, jadi kolom & jarak ditulis di sini */
+.chipgrid.buka{display:grid;gap:6px;margin-bottom:8px;
+  grid-template-columns:repeat(var(--kolom,3),minmax(0,1fr))}
+
+/* filter — SOURCE FUND, hemat ruang (revisi Bapak 25 Sep 2026)
+   Ruang kerja harus seefektif mungkin. Yang tampak HANYA SATU baris:
+   nama fund yang sedang dipilih (atau "Semua Fund").
+   • Klik baris itu  → grid fund TERBUKA
+   • Pilih satu fund → grid MENUTUP lagi, barisnya berganti nama fund itu
+   Jumlah kolom grid ikut pengaturan "Daftar Fund" (kolomFund). */
+.chips{display:block;margin-bottom:8px}
+.chips .kepala{display:flex;align-items:center;gap:6px;width:100%;
+  border:1px solid var(--line);background:var(--bg);color:var(--text);
+  border-radius:14px;padding:7px 10px;font-size:12px;font-weight:600;
+  font-family:inherit;cursor:pointer;min-width:0}
+.chips.ada .kepala{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.chips .kepala .nm{flex:1 1 auto;min-width:0;text-align:left;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.chips .kepala .pn{flex:0 0 auto;font-size:10.5px;opacity:.75;margin-left:6px}
+.chips .kepala .ar{flex:0 0 auto;font-size:10px;opacity:.8;margin-left:6px}
+.chips .chipgrid{display:none;gap:6px;margin-top:6px;
+  grid-template-columns:repeat(var(--kolom,3),minmax(0,1fr))}
+.chips.terbuka .chipgrid{display:grid}
+/* Chip: nama DIPOTONG dengan `…` (1 baris) — keputusan Bapak:
+   *"masih kebaca.. ok"* → pemotongan masih bisa dikenali, dan bentuknya
+   rapi & seragam (tinggi sama). Nama lengkap ada di tooltip.
+   ⚠️ `-webkit-line-clamp` TIDAK bekerja di <button> — jangan dipakai. */
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--text);
+  border-radius:14px;padding:7px 6px;font-size:11px;font-family:inherit;cursor:pointer;
+  min-width:0;text-align:center;line-height:1.25;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.chip.on{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.chipgrid .chip.semua{grid-column:1 / -1}
+.search{display:flex;align-items:center;gap:7px;border:1px solid var(--line);
+  border-radius:var(--rad);padding:8px 11px;margin-bottom:8px;background:var(--bg)}
+.search input{border:0;outline:0;background:transparent;color:var(--text);
+  font-family:inherit;font-size:14px;width:100%;min-width:0}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.seg button{flex:1 1 0;border:0;background:var(--bg);color:var(--text);font-family:inherit;
+  font-size:12px;padding:8px 4px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--onink)}
+
+/* ============================================================
+   KARTU GRID — Source Fund & Tag
+   Tujuan: SEMUA fund terlihat sekaligus walau jumlahnya bertambah.
+   • Jumlah kolom dihitung dari LEBAR TERSEDIA → baris turun ke bawah.
+   • 🆕 **Nama fund BOLEH DIPOTONG dengan tanda `…`** (maksimum 2 baris),
+     supaya lebih banyak kolom muat. Keputusan Bapak 25 Sep 2026:
+     *"coba nama fund dipotong saja.. biar muat.. sepertinya tidak terlalu
+      sulit mengenali nama walau terpotong"*
+   • 🔴 **ANGKA JANGAN DIPOTONG** — angka terpotong bisa salah baca
+     (mis. 22.057.864 terbaca 22.057). Angka hanya boleh patah di titik ribuan.
+   • Nama fund LENGKAP selalu bisa dibaca di:
+     ① tooltip (tekan lama) ② halaman Detail ③ penyaring/chip di Transaksi.
+   ============================================================ */
+.grid4{display:grid;gap:6px;margin-bottom:8px;align-items:start;
+  grid-template-columns:repeat(var(--kolom,2),minmax(0,1fr))}
+
+/* satu kartu kecil di dalam grid */
+.item{border:1px solid var(--line);border-radius:var(--rad);background:var(--bg);
+  padding:6px 7px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.item .baris{display:flex;align-items:flex-start;gap:3px;min-width:0}
+.item .ic{font-size:13px;flex:0 0 auto;line-height:1.25}
+/* nama — DIPOTONG dengan … setelah 2 baris */
+.item .nm{font-size:11px;font-weight:600;min-width:0;line-height:1.25;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow-wrap:break-word;word-break:normal}
+/* angka — TIDAK dipotong (hanya boleh patah di titik ribuan) */
+.item .val{font-size:11px;font-weight:700;margin-top:auto;line-height:1.3;
+  overflow-wrap:break-word;word-break:normal;font-variant-numeric:tabular-nums}
+.item .val.neg{color:var(--danger)}
+.item .sub{font-size:9px;color:var(--text2);line-height:1.35;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow-wrap:break-word;word-break:normal}
+.item.warn{border-color:var(--danger)}
+.item.warn .val{color:var(--danger)}
+
+.pill{font-size:10px;border:1px solid var(--line);border-radius:5px;padding:1px 5px;
+  color:var(--text2);margin-left:4px;white-space:nowrap}
+.pill.k{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.item .pill{margin-left:0;padding:0 4px;flex:0 0 auto}
+
+/* CATAT (TES) — layar input multi-jurnal (hitam-putih) */
+.tl-banner{font-size:11px;font-weight:700;border:1px dashed var(--text);border-radius:var(--rad);
+  padding:7px 10px;margin-bottom:6px;text-align:center}
+.tl-card{border:1px solid var(--line);border-radius:var(--rad);padding:10px;margin-bottom:8px;background:var(--bg)}
+.tl-card input,.tl-card select,.tl-row input,.tl-row select{width:100%;font:inherit;border:1px solid var(--line);
+  border-radius:8px;padding:8px;background:var(--bg);color:var(--text);min-width:0}
+.tl-row{padding:8px 0;border-bottom:1px dashed var(--line)}
+.tl-row:first-child{padding-top:0}
+.tl-row:last-child{border-bottom:0;padding-bottom:0}
+.tl-r1{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:6px}
+.tl-r2{display:grid;grid-template-columns:86px minmax(0,1fr) 36px;gap:6px;align-items:center;margin-top:6px}
+.tl-r2 input{text-align:right}
+.tl-r2 .seg button:disabled{cursor:default}
+.tl-r2 .seg.auto button:not(.on){color:#bbb}
+.tl-r2 .seg.auto button.on{color:var(--onink)}
+.tl-del{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:8px;height:36px;cursor:pointer;font:inherit}
+.tl-r{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
+.tl-r:last-child{border-bottom:0}
+.tl-r.sub{padding-left:12px;color:var(--text2);font-size:12px}
+.tl-tes{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.tl-tes:last-child{border-bottom:0}
+.tl-tes b{font-size:13px;overflow-wrap:anywhere}
+.tl-tes small{display:block;color:var(--text2);font-size:11px}
+.btn-kecil{border:1px solid var(--text);background:var(--bg);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.btn-kecil:disabled{opacity:.35;cursor:default}
+.btn-utama{border:1px solid var(--ink);background:var(--ink);color:var(--onink);border-radius:8px;padding:10px;font:inherit;font-weight:700;cursor:pointer}
 
 /* tab bawah */
-nav{
-  position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--bg);
-  border-top:1px solid var(--garis); padding-bottom:env(safe-area-inset-bottom);
-}
-nav button{
-  flex:1; padding:11px 4px; font-size:12px; background:none; border:0;
-  color:var(--dua); border-top:2px solid transparent;
-}
-nav button.aktif{color:var(--fg); border-top-color:var(--fg); font-weight:600}
-.rahasia{font-size:12px; color:var(--dua); margin-top:6px}
+.tabs{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--bg);
+  padding-bottom:env(safe-area-inset-bottom);position:relative;z-index:30}
+.tabs button{flex:1 1 0;border:0;background:transparent;color:var(--text2);font-family:inherit;
+  font-size:10.5px;padding:7px 2px 8px;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:2px;min-height:50px;justify-content:center}
+.tabs button .ti{font-size:18px;line-height:1}
+.tabs button.on{color:var(--text);font-weight:700}
+
+/* bahasa */
+.langrow{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);
+  border-radius:var(--rad);margin-bottom:6px;background:var(--bg);cursor:pointer;width:100%;
+  font-family:inherit;font-size:14px;color:var(--text);text-align:left}
+.langrow.on{border-color:var(--ink);border-width:2px;padding:10px 11px;font-weight:700}
+.langrow .chk{margin-left:auto;font-size:16px}
+
+/* istilah */
+.grp{border:1px solid var(--line);border-radius:var(--rad);margin-bottom:8px;overflow:hidden}
+.grp .gh{padding:9px 12px;background:var(--soft);font-size:12px;font-weight:700;
+  border-bottom:1px solid var(--line)}
+.ist{display:flex;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px}
+.ist:last-child{border-bottom:0}
+.ist .id{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.ist .en{flex:1 1 0;min-width:0;color:var(--text2);overflow-wrap:anywhere}
+
+/* muat / kosong */
+.empty{text-align:center;color:var(--text2);font-size:12.5px;padding:30px 16px;line-height:1.7}
+.err{border:1px solid var(--danger);color:var(--danger);border-radius:var(--rad);
+  padding:12px;font-size:12.5px;line-height:1.6}
 </style>
 </head>
 <body>
 
-<header>
-  <h1 id="judul">UangKu</h1>
-  <input class="bulan" id="bulan" type="month" aria-label="Pilih bulan">
-</header>
+<!-- DATA — diambil dari server oleh skrip di bawah -->
 
-<main>
-  <!-- ============ DASHBOARD ============ -->
-  <section id="s-dash" class="aktif">
-    <div class="total">
-      <div class="lbl">TOTAL SALDO (semua fund)</div>
-      <div class="rp" id="dTotal">—</div>
-      <div class="baris2">
-        <span>Masuk <b id="dMasuk">—</b></span>
-        <span>Keluar <b id="dKeluar">—</b></span>
-        <span>Selisih <b id="dSelisih">—</b></span>
-      </div>
-    </div>
-    <h2>Sumber fund</h2>
-    <div class="grid" id="dFund"></div>
-    <h2>Transaksi terbaru</h2>
-    <div class="wrap" id="dTx"></div>
-  </section>
+<div class="head">
+  <button id="btnBack" hidden title="Kembali">‹</button>
+  <h1 class="h1" id="title">UangKu</h1>
+  <button id="btnRiwayat" hidden title="Riwayat">Riwayat</button>
+  <button id="btnAdd" hidden title="Tambah transaksi" class="plus">＋</button>
+</div>
 
-  <!-- ============ TRANSAKSI ============ -->
-  <section id="s-tx">
-    <div style="display:flex;gap:6px;align-items:center">
-      <div style="flex:1">
-        <label style="margin-top:0">Sumber fund</label>
-        <select id="tFund"><option value="">Semua fund</option></select>
-      </div>
-      <button class="btnKecil" id="tCatat" style="margin-top:16px">＋ Catat</button>
-      <button class="btnKecil" id="tRiwayat" style="margin-top:16px">↩︎ Riwayat</button>
-    </div>
-    <h2 id="tJumlah">—</h2>
-    <div class="wrap" id="tTabel"></div>
-  </section>
-
-  <!-- ============ CATAT ============ -->
-  <section id="s-catat">
-    <h2 style="margin-top:4px">Catat transaksi</h2>
-    <label>Tanggal</label>
-    <input id="cTanggal" type="date">
-    <label>Jumlah (Rp)</label>
-    <input id="cJumlah" type="text" inputmode="numeric" placeholder="mis. 18.000">
-    <label>Keterangan</label>
-    <input id="cKet" type="text" placeholder="mis. belanja bulanan" maxlength="300">
-    <label>Sumber fund</label>
-    <div class="chips" id="cFund"></div>
-    <label>Tag</label>
-    <div class="chips" id="cTag"></div>
-    <div id="cArahWrap" style="display:none">
-      <label>Arah (tag ini dua arah)</label>
-      <div class="chips" id="cArah">
-        <button class="chip" data-a="D">Debit (masuk)</button>
-        <button class="chip" data-a="K">Kredit (keluar)</button>
-      </div>
-    </div>
-    <div class="pesan" id="cPesan"></div>
-    <button class="tombol" id="cSimpan">Simpan</button>
-    <button class="tombol kosong" id="cBatal">Kembali</button>
-  </section>
-
-  <!-- ============ RIWAYAT ============ -->
-  <section id="s-riwayat">
-    <h2 style="margin-top:4px">Riwayat perubahan</h2>
-    <div class="rahasia">Setiap catat / ubah / batalkan tercatat di sini. Bisa dikembalikan.</div>
-    <div id="rDaftar"></div>
-    <button class="tombol kosong" id="rKembali">Kembali</button>
-  </section>
-
-  <!-- ============ PENGATURAN ============ -->
-  <section id="s-set">
-    <h2 style="margin-top:4px">Pengaturan</h2>
-    <label>PIN</label>
-    <input id="pPin" type="password" placeholder="PIN akses" autocomplete="off">
-    <label>Alamat Worker</label>
-    <input id="pUrl" type="text" autocomplete="off">
-    <button class="tombol" id="pSimpan">Simpan &amp; sambung</button>
-    <div class="pesan" id="pPesan"></div>
-    <div class="rahasia">
-      PIN &amp; alamat disimpan di perangkat ini saja (localStorage). Tidak ada data keuangan di dalam berkas ini — semuanya diambil dari server.
-    </div>
-    <h2>Uji sambungan</h2>
-    <button class="tombol kosong" id="pUji">Uji sekarang</button>
-    <div class="pesan" id="pUjiPesan"></div>
-  </section>
+<!-- ---------------------------- DASHBOARD ---------------------------- -->
+<main class="body" id="pgDash">
+  <div id="dashIsi"></div>
 </main>
 
-<nav>
-  <button data-s="s-dash" class="aktif">Dashboard</button>
-  <button data-s="s-tx">Transaksi</button>
-  <button data-s="s-set">Pengaturan</button>
+<!-- ---------------------------- TRANSAKSI ---------------------------- -->
+<main class="body" id="pgTx" hidden>
+  <div class="chips" id="chips"></div>
+  <label class="search">🔎 <input id="cari" placeholder="Cari keterangan…" autocomplete="off"></label>
+  <div class="seg" id="segUrut"></div>
+  <div id="txSaldo"></div>
+  <div id="txDaftar"></div>
+</main>
+
+<!-- ---------------------------- DETAIL ---------------------------- -->
+
+<!-- ---------------------------- PENGATURAN ---------------------------- -->
+<main class="body" id="pgSet" hidden>
+  <div id="setIsi"></div>
+</main>
+
+<!-- ----------------------- SUB HALAMAN SETTING ----------------------- -->
+<main class="body" id="pgInput" hidden>
+  <div id="inputIsi"></div>
+</main>
+<main class="body" id="pgSub" hidden>
+  <div id="subIsi"></div>
+</main>
+
+<nav class="tabs" id="tabs" hidden>
+  <button data-tab="dash" class="on"><span class="ti">📊</span><span id="tbDash">Dashboard</span></button>
+  <button data-tab="tx"><span class="ti">🧾</span><span id="tbTx">Transaksi</span></button>
+  <button data-tab="set"><span class="ti">⚙️</span><span id="tbSet">Pengaturan</span></button>
 </nav>
 
+
+<!-- ---------------------------- RIWAYAT ---------------------------- -->
+<main class="body" id="pgRiwayat" hidden>
+  <div id="riwayatIsi"></div>
+</main>
+
+<!-- ---------------------------- GERBANG PIN ---------------------------- -->
+<div id="gerbang">
+  <div class="gerbang-kartu">
+    <div class="gerbang-judul">UangKu</div>
+    <div class="gerbang-ket">Masukkan PIN untuk menyambung ke server.</div>
+    <label class="gerbang-label">PIN</label>
+    <input id="gPin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN akses">
+    <label class="gerbang-label">Alamat server</label>
+    <input id="gAlamat" type="text" autocomplete="off">
+    <button id="gMasuk" class="gerbang-tombol">Simpan &amp; sambung</button>
+    <div class="gerbang-pesan" id="gerbangPesan"></div>
+    <div class="gerbang-kaki">PIN disimpan di perangkat ini saja. Data keuangan tidak ada di dalam berkas ini.</div>
+  </div>
+</div>
+
+<style>
+/* gaya tambahan — sepadan dengan rancangan hitam-putih yang sudah ada */
+#gerbang{
+  position:fixed; inset:0; z-index:50; background:var(--bg,#fff);
+  display:flex; align-items:center; justify-content:center; padding:16px;
+}
+#gerbang[hidden]{display:none}
+.gerbang-kartu{width:100%; max-width:340px; border:1px solid #ddd; border-radius:10px; padding:14px}
+.gerbang-judul{font-size:19px; font-weight:700; margin-bottom:4px}
+.gerbang-ket{font-size:13px; color:#666; margin-bottom:10px}
+.gerbang-label{display:block; font-size:12px; color:#666; margin:8px 0 3px}
+.gerbang-kartu input{width:100%; padding:9px; font-size:16px; border:1px solid #ddd; border-radius:6px}
+.gerbang-tombol{
+  width:100%; margin-top:12px; padding:11px; font-size:15px; font-weight:600;
+  border:0; border-radius:8px; background:#111; color:#fff;
+}
+.gerbang-pesan{margin-top:8px; font-size:13px; display:none}
+.gerbang-pesan.tampil{display:block}
+.gerbang-pesan.salah{color:#c00; font-weight:600}
+.gerbang-kaki{margin-top:10px; font-size:11px; color:#888; line-height:1.4}
+#btnRiwayat{
+  border:1px solid #ddd; background:none; color:inherit; font-size:12px;
+  padding:4px 8px; border-radius:6px; margin-left:auto;
+}
+@media (prefers-color-scheme: dark){
+  #gerbang{background:#000; color:#eee}
+  .gerbang-kartu{border-color:#333}
+  .gerbang-kartu input{background:#000; color:#eee; border-color:#333}
+  .gerbang-tombol{background:#eee; color:#000}
+  .gerbang-pesan.salah{color:#ff6b6b}
+  .gerbang-ket,.gerbang-label,.gerbang-kaki{color:#999}
+  #btnRiwayat{border-color:#333}
+}
+</style>
+
 <script>
+'use strict';
+
 /* ============================================================
-   UangKu — halaman cloud
-   Semua angka diambil dari Worker (server). Tidak ada perhitungan
-   saldo di sini — rumus tetap satu tempat (aturan C2).
+   1. BACA DATA
    ============================================================ */
-const AMBANG_DISIMPAN = 'uangku.pin';
-const AMBANG_URL = 'uangku.url';
+var DATA;
+try {
+  DATA = JSON.parse(document.getElementById('data-uangku').textContent);
+} catch (e) {
+  DATA = null;
+}
 
-let PIN = localStorage.getItem(AMBANG_DISIMPAN) || '';
-let ALAMAT = localStorage.getItem(AMBANG_URL) || 'https://uangku-api.suwandhih.workers.dev';
+var BULAN = (DATA && DATA.bulan && DATA.bulan.length) ? DATA.bulan : [];
 
-let DATA_FUND = [];
-let DATA_TAG = [];
-let BULAN = '';
-let cFundPilih = null, cTagPilih = null, cArahPilih = null;
+/* ============================================================
+   2. BAHASA — ID ↔ EN
+   ============================================================ */
+var KAMUS = {
+  'Dashboard':'Dashboard','Transaksi':'Transactions','Pengaturan':'Settings',
+  'Total semua fund':'Total all funds','Tersedia':'Available','Diblokir':'Blocked',
+  'Titipan':'Held for others','Saldo akhir':'Closing balance','Saldo awal':'Opening balance',
+  'Masuk':'In','Keluar':'Out','Selisih':'Net','Bulan':'Month',
+  'Sumber fund · saldo akhir':'Source funds · closing balance',
+  'Ringkasan bulan ini':'This month summary','Dikecualikan':'Excluded',
+  'Bunga & pajak bulan ini':'Interest & tax this month','Bunga':'Interest','Pajak':'Tax',
+  'Bunga neto':'Net interest','cocok mutasi bank':'matches bank statement',
+  'transaksi':'transactions','Transaksi terbaru':'Recent transactions',
+  'Semua Fund':'All funds','Cari keterangan…':'Search description…','Semua':'All',
+  'Semua Tag':'All tags','Tanggal':'Date','Urutkan':'Sort by',
+  'Keterangan':'Description','Tag':'Tag','Fund':'Fund','Tanggal':'Date','Jumlah':'Amount',
+  'Tgl':'Date','Tipe':'Type',
+  'Sumber dana (fund)':'Source fund','Tag — menentukan artinya':'Tag — decides the meaning',
+  'Daftar Fund':'Fund list','Daftar Tag':'Tag list','Pajak & Bunga':'Tax & Interest',
+  'Bahasa':'Language','Daftar Istilah':'Glossary','Tentang':'About',
+  'Saldo': 'Balance','jumlah transaksi':'transactions',
+  'dari':'of','Terkunci':'Locked','Terbuka':'Open','tidak ada transaksi':'no transactions',
+  'Belum ada data':'No data yet','Tidak ketemu':'Not found',
+  'Transfer · Pinjam · Reimburse · Koreksi · Hutang':'Transfer · Lend · Reimburse · Correction · Debt',
+  'Dasar':'Core','Akun':'Account','Aplikasi':'App','Tampilan':'Display','Informasi':'Info',
+  'Ikut dihitung':'Included','Tidak dihitung':'Excluded','Sistem':'System',
+  'Kena pajak':'Taxable','Satu arah':'One-way','Dua arah':'Two-way',
+  'Bebas':'Free','ya':'yes','tidak':'no','Saldo minimum':'Minimum balance',
+  'Bagikan / simpan':'Share / save','Gelap':'Dark','Terang':'Light',
+  'Versi HP — dibuat':'Mobile version — built','Angka memakai aturan yang sama dengan':'Numbers use the same rules as',
+  'Simpan ke layar utama':'Save to home screen','sudah dipasang':'already installed',
+  'Kembali':'Back','Tambah':'Add','pajak':'tax','dikecualikan':'excluded',
+  'Pilih sumber dana':'Choose source fund','Semua Fund':'All funds',
+  'Sumber dana':'Source fund',
+  'kotak uang':'money boxes','penentu makna':'decides the meaning',
+  'rate & potongan':'rates & deduction','padanan istilah keuangan':'financial term pairs',
+  'tentang berkas ini':'about this file','Indonesia ↔ English':'Indonesian ↔ English',
+  'Daftar Fund':'Fund list','Daftar Tag':'Tag list','daftar fund':'fund list',
+  'hari ini':'today','Rumus & aturan':'Formula & rules','Pajak & Bunga':'Tax & interest',
+  'Kena pajak':'Taxable','Terkunci':'Locked','tidak ada transaksi':'no transactions',
+  'Pilih bahasa':'Choose language','Simpan ke layar utama':'Save to home screen',
+  'Belum ada data.':'No data yet.','Tidak ketemu':'Not found',
+  'masuk':'in','keluar':'out','catatan':'records','Bulan':'Month',
+  'Otomatis':'Auto','awal':'open','Semua fund terlihat sekaligus — diurutkan sesuai nomor urut yang Bapak atur di komputer.':'All funds at a glance — ordered by the sequence you set on the computer.',
+  'Nama panjang dipotong dengan … — tekan lama kartu untuk melihat nama lengkap.':'Long names are shortened with … — press and hold a card to see the full name.'
+};
 
-/* ---------- alat bantu ---------- */
-const el = (id) => document.getElementById(id);
+var LANG = 'id';
+try { LANG = localStorage.getItem('uangku-lang') === 'en' ? 'en' : 'id'; } catch (e) { /* diam */ }
 
-/** Rupiah — dibulatkan 2 desimal supaya debu pembulatan tidak terlihat. */
+/* terjemahkan HANYA teks (bukan angka, bukan nama fund/tag) */
+function t(teks) {
+  if (LANG !== 'en' || !teks) return teks;
+  var s = String(teks);
+  if (KAMUS[s] !== undefined) return KAMUS[s];
+  /* ganti kata di dalam kalimat (kata panjang dulu) */
+  var kunci = Object.keys(KAMUS).sort(function (a, b) { return b.length - a.length; });
+  for (var i = 0; i < kunci.length; i++) {
+    var k = kunci[i];
+    if (k.length < 3) continue;
+    if (s.indexOf(k) !== -1) s = s.split(k).join(KAMUS[k]);
+  }
+  return s;
+}
+
+/* ============================================================
+   3. ALAT ANGKA & TANGGAL
+   ============================================================ */
+var NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus',
+  'September','Oktober','November','Desember'];
+var HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
 function rp(n) {
-  const v = Math.round((Number(n) || 0) * 100) / 100;
-  return 'Rp ' + v.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var neg = n < 0;
+  var a = Math.abs(Math.round(n));
+  var s = String(a).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (neg ? '−' : '') + s;
+}
+function rp2(n) {
+  var neg = n < 0;
+  var a = Math.abs(n);
+  var bulat = Math.floor(a + 1e-9);
+  var sen = Math.round((a - bulat) * 100);
+  if (sen === 100) { bulat++; sen = 0; }
+  var s = String(bulat).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  if (sen > 0) s += ',' + (sen < 10 ? '0' + sen : sen);
+  return (neg ? '−' : '') + s;
 }
 function rpRingkas(n) {
-  const v = Math.round((Number(n) || 0) * 100) / 100;
-  return v.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var a = Math.abs(n);
+  if (a >= 1e9) return (n < 0 ? '−' : '') + (a / 1e9).toFixed(2).replace('.', ',') + ' M';
+  if (a >= 1e6) return (n < 0 ? '−' : '') + (a / 1e6).toFixed(2).replace('.', ',') + ' jt';
+  if (a >= 1000) return rp(n);
+  return rp2(n);   /* di bawah 1.000 → tampilkan sen juga (mis. 0,29) */
 }
-function tglPendek(s) { return String(s || '').slice(8, 10) + '/' + String(s || '').slice(5, 7); }
-
-function bulanSekarang() {
-  const d = new Date(Date.now() + 7 * 3600 * 1000);
-  return d.toISOString().slice(0, 7);
+/* Angka panjang boleh PATAH di titik ribuan — bukan di tengah angka.
+   Dipakai di kartu kecil supaya angka TIDAK terpotong di layar sempit. */
+function pecahAngka(teks) {
+  return String(teks).replace(/\./g, '.<wbr>').replace(',', ',<wbr>');
+}
+/* tanggal ringkas untuk kolom tabel: "24 Sep" (bulan sudah dipilih di kepala) */
+function tglRingkas(iso) {
+  var p = String(iso).split('-');
+  return parseInt(p[2], 10) + ' ' + NAMA_BULAN[parseInt(p[1], 10) - 1].slice(0, 3);
+}
+function tglPanjang(iso) {
+  var p = String(iso).split('-');
+  var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+  return HARI[d.getDay()] + ', ' + parseInt(p[2], 10) + ' ' + NAMA_BULAN[d.getMonth()] + ' ' + d.getFullYear();
+}
+function hariIniISO() {
+  var d = new Date();
+  var b = d.getMonth() + 1, t = d.getDate();
+  return d.getFullYear() + '-' + (b < 10 ? '0' + b : b) + '-' + (t < 10 ? '0' + t : t);
+}
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function ikonTag(nama) {
+  var arr = TAG();
+  for (var i = 0; i < arr.length; i++) if (arr[i].nama === nama) return arr[i].ikon;
+  return '🏷️';
 }
 
-/** Angka dari masukan pengguna: buang titik/spasi, koma → titik desimal. */
-function bacaJumlah(s) {
-  let t = String(s || '').trim().replace(/[.\s]/g, '');
-  t = t.replace(',', '.');
-  const n = Number(t);
-  return Number.isFinite(n) ? n : NaN;
-}
+/* ============================================================
+   4. KEADAAN
+   ============================================================ */
+var idxBulan = 0;                 /* 0 = bulan terbaru */
+/* fund awal layar Transaksi (rekomendasi Bapak 8 Okt 2026). '' = semua fund */
+var FUND_AWAL = 'Superbank';
+var fundSaring = FUND_AWAL;
+var chipsTerbuka = false;           /* grid source fund tertutup (hemat ruang) */
+/* URUTAN tampilan Transaksi — 4 cara melihat (permintaan Bapak 25 Sep 2026):
+   *"pilih sumber fund > superbank > tampil seluruh transaksi superbank saja..
+    baik debit atau kredit.. di sort by tanggal.. dan bisa sort by tag atau
+    sort by debit / kredit"* */
+var urut = 'tanggal';             /* tanggal · tag · masuk · keluar */
+var tagSaring = '';               /* '' = semua tag (dipakai saat urut = 'tag') */
+var tagTerbuka = false;           /* daftar tag terbuka (hemat ruang) */
+var cariTeks = '';
 
-function pesan(id, jenis, teks) {
-  const p = el(id);
-  p.className = 'pesan tampil ' + jenis;
-  p.textContent = teks;
-}
-function sembunyikanPesan(id) { el(id).className = 'pesan'; }
+/* daftar pilihan urutan di atas daftar transaksi */
+var URUT = [
+  ['tanggal', '📅', 'Tanggal'],
+  ['tag',     '🏷️', 'Tag'],
+  ['masuk',   '＋',  'Masuk'],
+  ['keluar',  '−',  'Keluar']
+];
 
-/* ---------- panggil Worker ---------- */
-async function panggil(aksi, tambahan) {
-  const wadah = Object.assign({ pin: PIN, aksi: aksi }, tambahan || {});
-  let r;
+/* ============================================================
+   4b. JALUR SERVER (UangKu versi cloud)
+   ------------------------------------------------------------
+   Sumber data = Worker (bukan berkas ini). PIN disimpan di
+   perangkat ini saja. Tampilan TIDAK diubah sama sekali —
+   yang berganti hanya dari mana angkanya datang.
+   ============================================================ */
+var CLOUD = {
+  pin: (function () { try { return localStorage.getItem('uangku.pin') || ''; } catch (e) { return ''; } })(),
+  alamat: (function () {
+    try { return localStorage.getItem('uangku.alamat') || 'https://uangku-api.suwandhih.workers.dev'; }
+    catch (e) { return 'https://uangku-api.suwandhih.workers.dev'; }
+  })(),
+  bulanMaks: 6
+};
+
+function simpanCloud() {
   try {
-    r = await fetch(ALAMAT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(wadah)
-    });
-  } catch (e) {
-    return { ok: false, error: 'Tidak bisa menghubungi server. Periksa internet & alamat.' };
-  }
-  let j = {};
-  try { j = await r.json(); } catch (e) {
-    return { ok: false, error: 'Jawaban server tidak dikenal (HTTP ' + r.status + ')' };
-  }
-  if (!j.ok) {
-    if (r.status === 401) return { ok: false, error: 'PIN salah.', pinSalah: true };
-    return { ok: false, error: j.error || ('Gagal (HTTP ' + r.status + ')') };
-  }
-  return j;
+    localStorage.setItem('uangku.pin', CLOUD.pin);
+    localStorage.setItem('uangku.alamat', CLOUD.alamat);
+  } catch (e) { /* diam */ }
 }
 
-/* ---------- pindah halaman ---------- */
-function pindah(idBagian) {
-  document.querySelectorAll('section').forEach((s) => s.classList.toggle('aktif', s.id === idBagian));
-  document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('aktif', b.dataset.s === idBagian));
-  el('judul').textContent =
-    idBagian === 's-dash' ? 'UangKu' :
-    idBagian === 's-tx' ? 'Transaksi' :
-    idBagian === 's-catat' ? 'Catat' :
-    idBagian === 's-riwayat' ? 'Riwayat' : 'Pengaturan';
-  window.scrollTo(0, 0);
+/** Panggil Worker. Semua nilai lewat JSON — tidak ada SQL dari halaman. */
+function panggilServer(aksi, tambahan) {
+  var isi = { pin: CLOUD.pin, aksi: aksi };
+  if (tambahan) { for (var k in tambahan) { if (tambahan.hasOwnProperty(k)) isi[k] = tambahan[k]; } }
+  return fetch(CLOUD.alamat, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(isi)
+  }).then(function (r) {
+    return r.json().then(function (j) {
+      if (r.status === 401) throw new Error('PIN salah');
+      if (!j.ok) throw new Error(j.error || ('Gagal (HTTP ' + r.status + ')'));
+      return j;
+    });
+  }).catch(function (e) {
+    if (e && e.message) throw e;
+    throw new Error('Tidak bisa menghubungi server');
+  });
 }
-document.querySelectorAll('nav button').forEach((b) => {
-  b.onclick = () => pindah(b.dataset.s);
+
+/* keadaaan tampilan terkunci selama data dimuat */
+var SIAP = false;
+
+var layar = 'dash';
+var subNama = '';
+var riwayatLayar = [];
+
+function B() { return BULAN[idxBulan] || null; }
+function FUND() { return B() ? B().fund : []; }
+function TAG() { return B() ? B().tag : []; }
+function TX() { return B() ? B().tx : []; }
+
+/* ============================================================
+   5. TUKAR LAYAR
+   ============================================================ */
+var JUDUL = {
+  dash: function () { return t('Dashboard'); },
+  tx: function () { return t('Transaksi'); },
+  input: function () { return t('Catat'); },
+  riwayat: function () { return t('Riwayat'); },
+  set: function () { return t('Pengaturan'); }
+};
+
+function tampil(nama, sub) {
+  layar = nama; subNama = sub || '';
+  ['pgDash','pgTx','pgInput','pgSet','pgSub','pgRiwayat'].forEach(function (id) {
+    document.getElementById(id).hidden = true;
+  });
+  var peta = { dash: 'pgDash', tx: 'pgTx', input: 'pgInput', set: 'pgSet', sub: 'pgSub', riwayat: 'pgRiwayat' };
+  document.getElementById(peta[nama === 'sub' ? 'sub' : nama] || 'pgDash').hidden = false;
+
+  document.getElementById('btnBack').hidden = (nama === 'dash');
+  document.getElementById('btnAdd').hidden = (nama !== 'tx');
+  document.getElementById('btnRiwayat').hidden = (nama !== 'tx');
+  document.getElementById('title').textContent =
+    (nama === 'sub' ? t(sub) : JUDUL[nama]()) + ' · ' + (B() ? B().labelSingkat : '');
+  document.querySelectorAll('.tabs button').forEach(function (b) {
+    var tb = b.getAttribute('data-tab');
+    b.classList.toggle('on', tb === (nama === 'dash' ? 'dash' : (nama === 'tx' || nama === 'input') ? 'tx' : 'set'));
+  });
+  document.querySelector('.body:not([hidden])').scrollTop = 0;
+  gambar();
+}
+
+function ke(nama, sub) {
+  if (layar !== nama || (nama === 'sub' && subNama !== sub)) riwayatLayar.push([layar, subNama]);
+  tampil(nama, sub);
+}
+function kembali() {
+  var s = riwayatLayar.pop();
+  if (s) tampil(s[0], s[1]); else tampil('dash');
+}
+
+/* ============================================================
+   6. GAMBAR — DASHBOARD
+   ============================================================ */
+function kartuRingkas(r) {
+  return '<div class="card"><div class="cbody">' +
+    '<div class="crow"><span class="cl">' + t('Masuk') + '</span><b class="mono">+' + rp2(r.masuk) + '</b></div>' +
+    '<div class="crow"><span class="cl">' + t('Keluar') + '</span><b class="mono">−' + rp2(r.keluar) + '</b></div>' +
+    '<div class="crow"><span class="cl">' + t('Selisih') + '</span><b class="mono">' +
+      (r.selisih < 0 ? '−' : '+') + rp2(Math.abs(r.selisih)) + '</b></div>' +
+    '<div class="crow"><span class="cl">' + t('Dikecualikan') + '</span>' +
+      '<span class="mini">' + t('Transfer · Pinjam · Reimburse · Koreksi · Hutang') + '</span></div>' +
+    '</div></div>';
+}
+
+function gbrDash() {
+  var b = B();
+  if (!b) {
+    document.getElementById('dashIsi').innerHTML =
+      '<div class="err"><b>Belum ada data.</b><br><br>' +
+      'Berkas ini perlu diisi angka dulu dari komputer:<br>' +
+      '<code>node tools\\siapkan-data.cjs</code><br><br>' +
+      'Setelah itu buka lagi berkas ini di HP.</div>';
+    return;
+  }
+  var r = b.ringkas;
+  var h = '';
+
+  /* ① SUMBER FUND — PALING ATAS, semua fund + saldo akhir.
+     Permintaan Bapak 25 Sep 2026: *"di posisi paling atas sumber fund dengan
+     saldo akhir superbank Rp..... < saldo akhir ditampilkan"* dan
+     *"di tampil semua tanpa di hide"* → SEMUA fund (termasuk 0) ditampilkan. */
+  h += '<div class="sec">' + t('Sumber fund · saldo akhir') + '</div>' +
+    kisiFund(document.getElementById('dashIsi'));
+
+  /* ② peringatan saldo minimum */
+  var kurang = FUND().filter(function (f) {
+    return f.minSaldo !== null && f.minSaldo !== undefined && f.saldo < f.minSaldo;
+  });
+  if (kurang.length) {
+    h += '<div class="alert">⚠️ ' + kurang.length + ' fund di bawah ' + t('Saldo minimum').toLowerCase() +
+      ' <span class="go" data-ke="fund">lihat ›</span></div>';
+  }
+
+  /* ③ total semua fund */
+  h += '<div class="saldo"><div class="top">' +
+    '<div class="k">' + t('Total semua fund') + ' · ' + esc(b.label) + '</div>' +
+    '<div class="v mono">' + rp2(r.total) + ' <small>Rp</small></div></div>' +
+    '<div class="grid">' +
+    '<div class="cell"><div class="k">' + t('Tersedia') + '</div><div class="v mono">' + rpRingkas(r.tersedia) + '</div></div>' +
+    '<div class="cell"><div class="k">' + t('Diblokir') + ' 🔒</div><div class="v mono">' + rpRingkas(r.diblokir) + '</div></div>' +
+    '<div class="cell"><div class="k">' + t('Titipan') + ' 👥</div><div class="v mono">' + rpRingkas(r.titipan) + '</div></div>' +
+    '</div></div>';
+
+  /* ringkasan */
+  h += '<div class="sec">' + t('Ringkasan bulan ini') + '</div>' + kartuRingkas(r);
+
+  /* bunga & pajak */
+  h += '<div class="sec">' + t('Bunga & pajak bulan ini') + '</div>' +
+    '<div class="card"><div class="cbody">' +
+    '<div class="crow"><span class="cl">' + t('Bunga') + ' 🌸</span><b class="mono">+' + rp2(r.bunga) + '</b>' +
+      '<span class="mini">' + r.nBunga + ' ' + t('transaksi') + '</span></div>' +
+    '<div class="crow"><span class="cl">' + t('Pajak') + ' 🧾</span><b class="mono">−' + rp2(r.pajak) + '</b>' +
+      '<span class="mini">' + r.nPajak + ' ' + t('transaksi') + '</span></div>' +
+    '<div class="crow"><span class="cl">' + t('Bunga neto') + '</span><b class="mono">+' + rp2(r.bungaNeto) + '</b>' +
+      '<span class="mini">' + t('cocok mutasi bank') + '</span></div>' +
+    '</div></div>';
+
+  /* transaksi terbaru */
+  var terbaru = TX().slice(0, 4);
+  h += '<div class="sec">' + t('Transaksi terbaru') + '</div>';
+  if (!terbaru.length) {
+    h += '<div class="empty">' + t('tidak ada transaksi') + '</div>';
+  } else {
+    h += tabelTx([{ judul: '', isi: terbaru.map(function (x) { return barisTabel(x, false); }).join('') }]);
+  }
+
+  /* Navigasi ke Transaksi TIDAK pakai tombol di sini — cukup tab bawah
+     Dashboard | Transaksi | Pengaturan (keputusan Bapak 25 Sep 2026). */
+
+  document.getElementById('dashIsi').innerHTML = h;
+  pasangKlik(document.getElementById('dashIsi'));
+}
+
+/* ============================================================
+   DAFTAR TRANSAKSI = TABEL (meniru Transaksi di keuangan)
+   Dipakai bersama oleh Dashboard (Transaksi terbaru) dan Transaksi — C19.
+   ============================================================ */
+
+/* satu baris tabel. pr = bagian dari pasangan (transfer / bunga + pajak) */
+function barisTabel(x, pr) {
+  var masuk = x.arah === 'D';
+  return '<tr' + (pr ? ' class="pr"' : '') + '>' +
+    '<td class="c-tgl">' + tglRingkas(x.tanggal) + '</td>' +
+    '<td><div class="ket" title="' + esc(x.ket) + '">' + esc(x.ket) +
+      (x.pasangan ? ' <span class="bd">⇄</span>' : '') +
+      (x.pajak ? ' <span class="bd pajak">' + t('pajak') + '</span>' : '') + '</div>' +
+      '<div class="sub" title="' + esc(t(x.tag) + ' · ' + x.fund) + '">' + ikonTag(x.tag) + ' ' +
+      esc(t(x.tag)) + ' · ' + esc(x.fund) + '</div></td>' +
+    '<td class="c-dk">' + (masuk ? 'D' : 'K') + '</td>' +
+    '<td class="c-jml">' + (masuk ? '+' : '−') + rp2(x.jumlah) + '</td>' +
+    '</tr>';
+}
+
+/* kerangka tabel. grup = [{ judul: html kelompok (boleh kosong), isi: baris html }] */
+function tabelTx(grup) {
+  var h = '<div class="txw"><table class="txt"><thead><tr>' +
+    '<th class="c-tgl">' + t('Tgl') + '</th>' +
+    '<th>' + t('Keterangan') + '</th>' +
+    '<th class="c-dk">' + t('Tipe') + '</th>' +
+    '<th class="c-jml">' + t('Jumlah') + '</th>' +
+    '</tr></thead><tbody>';
+  grup.forEach(function (g) {
+    if (g.judul) h += '<tr class="grp"><td colspan="4">' + g.judul + '</td></tr>';
+    h += g.isi;
+  });
+  return h + '</tbody></table></div>';
+}
+
+/* satu kelompok: pasangan dirapatkan HANYA kalau KEDUA anggotanya ada di kelompok ini
+   (aturan 25 Sep: pasangan Bunga + Pajak beda tag tidak boleh tampil dua kali). */
+function rowsKelompok(arr) {
+  var h = '', sudah = {};
+  arr.forEach(function (x) {
+    if (sudah[x.id]) return;
+    var anggota = anggotaPasangan(x);
+    var seKelompok = anggota.length > 1 && anggota.every(function (y) {
+      return arr.indexOf(y) !== -1;
+    });
+    if (seKelompok) {
+      anggota.forEach(function (y) { sudah[y.id] = 1; h += barisTabel(y, true); });
+      return;
+    }
+    sudah[x.id] = 1;
+    h += barisTabel(x, false);
+  });
+  return h;
+}
+
+/* ============================================================
+   7. GAMBAR — TRANSAKSI
+   ============================================================ */
+
+/* pilihan urutan (Tanggal · Tag · Masuk ＋ · Keluar −) */
+function gambarSegUrut() {
+  var w = document.getElementById('segUrut');
+  if (!w) return;
+  var h = '';
+  URUT.forEach(function (u) {
+    var label = (u[1] === '＋' || u[1] === '−')
+      ? u[1] + ' ' + t(u[2])
+      : u[1] + ' ' + t(u[2]);
+    h += '<button class="' + (urut === u[0] ? 'on' : '') + '" data-urut="' +
+      u[0] + '">' + esc(label) + '</button>';
+  });
+  w.innerHTML = h;
+  w.querySelectorAll('button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      urut = b.getAttribute('data-urut');
+      tagSaring = ''; tagTerbuka = false;
+      gbrTx();
+    });
+  });
+}
+
+/* 🔗 KUNCI PASANGAN
+   ⚠️ PENTING: `transfer_pair_id` BUKAN nomor grup bersama.
+   Ia MENUNJUK ke id pasangannya — jadi #2997 punya pair=2996 dan sebaliknya.
+   Karena itu kuncinya = id terkecil + id terbesar (urutan tidak penting). */
+function kunciPasangan(x) {
+  if (!x.pasangan) return '';
+  var a = x.id, b = x.pasangan;
+  return (a < b ? a + '-' + b : b + '-' + a);
+}
+
+/** Ambil semua anggota pasangan pada daftar yang sedang tampil.
+ *  Kalau pasangannya ada di bulan lain → kembalikan hanya dirinya (tampil sendiri). */
+function anggotaPasangan(x) {
+  var k = kunciPasangan(x);
+  if (!k) return [x];
+  var arr = TX().filter(function (y) { return kunciPasangan(y) === k; });
+  return arr.length > 1 ? arr : [x];
+}
+
+/** Urut transaksi: TERBARU di atas (tanggal turun, lalu nomor besar dulu). */
+function urutTanggal(a, b) {
+  if (a.tanggal !== b.tanggal) return a.tanggal < b.tanggal ? 1 : -1;
+  return b.id - a.id;
+}
+
+function gbrTx() {
+  var b = B();
+  var wadahChips = document.getElementById('chips');
+  if (!b) { bukaKosong('txDaftar'); return; }
+  if (!wadahChips) return;       /* pengaman — jangan sampai layar error */
+
+  /* pilihan urutan: Tanggal · Tag · Masuk ＋ · Keluar − */
+  gambarSegUrut();
+
+  /* SOURCE FUND — hemat ruang (revisi Bapak 25 Sep 2026):
+     yang tampak hanya SATU baris = fund yang sedang dipilih.
+     Klik baris itu → grid fund terbuka. Pilih fund → grid menutup lagi. */
+  wadahChips.classList.toggle('ada', fundSaring !== '');
+  wadahChips.classList.toggle('terbuka', chipsTerbuka);
+
+  var fokusChip = fundSaring ? FUND().filter(function (f) { return f.nama === fundSaring; })[0] : null;
+  var hc = '<button class="kepala" data-buka="1" title="' +
+    esc(t('Pilih sumber dana')) + '">' +
+    '<span class="nm">' + esc(fokusChip ? fokusChip.ikon + ' ' + fokusChip.nama : t('Semua Fund')) + '</span>' +
+    (fokusChip ? '<span class="pn mono">' + rpRingkas(fokusChip.saldo) + '</span>' : '') +
+    '<span class="ar">' + (chipsTerbuka ? '▴' : '▾') + '</span></button>';
+
+  if (chipsTerbuka) {
+    hc += '<div class="chipgrid" style="--kolom:' + hitungKolom(kolomFund, wadahChips) + '">';
+    hc += '<button class="chip semua' + (fundSaring === '' ? ' on' : '') + '" data-fund="">' +
+      t('Semua Fund') + '</button>';
+    FUND().forEach(function (f) {
+      hc += '<button class="chip' + (fundSaring === f.nama ? ' on' : '') + '" data-fund="' +
+        esc(f.nama) + '" title="' + esc(f.nama + ' — ' + rp2(f.saldo) + ' Rp') + '">' +
+        f.ikon + ' ' + esc(f.nama) + '</button>';
+    });
+    hc += '</div>';
+  }
+  wadahChips.innerHTML = hc;
+
+  /* kotak saldo fund terpilih — 4 kolom sejajar:
+     Saldo awal · Masuk · Keluar · Saldo akhir (permintaan Bapak 25 Sep 2026) */
+  var fokus = fundSaring ? FUND().filter(function (f) { return f.nama === fundSaring; })[0] : null;
+  if (fokus) {
+    document.getElementById('txSaldo').innerHTML =
+      '<div class="saldo" style="margin-bottom:10px"><div class="grid k4">' +
+      '<div class="cell"><div class="k">' + t('Saldo awal') + '</div><div class="v mono">' +
+        rpRingkas(fokus.saldoAwal) + '</div></div>' +
+      '<div class="cell"><div class="k">' + t('Masuk') + '</div><div class="v mono">+' +
+        rpRingkas(fokus.masuk) + '</div></div>' +
+      '<div class="cell"><div class="k">' + t('Keluar') + '</div><div class="v mono">−' +
+        rpRingkas(fokus.keluar) + '</div></div>' +
+      '<div class="cell"><div class="k">' + t('Saldo akhir') + '</div><div class="v mono' +
+        (fokus.saldo < 0 ? ' neg' : '') + '">' + rpRingkas(fokus.saldo) + '</div></div>' +
+      '</div></div>';
+  } else {
+    document.getElementById('txSaldo').innerHTML = '';
+  }
+
+  /* saring */
+  var daftar = TX().filter(function (x) {
+    if (fundSaring && x.fund !== fundSaring) return false;
+    if (urut === 'tag' && tagSaring && x.tag !== tagSaring) return false;
+    if (cariTeks && x.ket.toLowerCase().indexOf(cariTeks) === -1 &&
+        x.tag.toLowerCase().indexOf(cariTeks) === -1 &&
+        x.fund.toLowerCase().indexOf(cariTeks) === -1) return false;
+    return true;
+  });
+
+  /* jumlahkan yang tersaring */
+  var masuk = 0, keluar = 0;
+  daftar.forEach(function (x) { if (x.arah === 'D') masuk += x.jumlah; else keluar += x.jumlah; });
+
+  var h = '', kotak = [];
+  if (daftar.length) {
+    h += '<div class="hint"><b>' + daftar.length + '</b> ' + t('transaksi') + ' · ' +
+      t('Masuk') + ' <b class="mono">+' + rp2(masuk) + '</b> · ' +
+      t('Keluar') + ' <b class="mono">−' + rp2(keluar) + '</b></div>';
+  }
+
+  if (!daftar.length) {
+    h += '<div class="empty">' + t('Tidak ketemu') + '</div>';
+  }
+
+  /* ---------- URUTAN ① TANGGAL (urutan biasa) ---------- */
+  else if (urut === 'tanggal') {
+    var grup = [], petaGrup = {};
+    daftar.forEach(function (x) {
+      if (!petaGrup[x.tanggal]) { petaGrup[x.tanggal] = []; grup.push(x.tanggal); }
+      petaGrup[x.tanggal].push(x);
+    });
+    grup.forEach(function (tanggal) {
+      kotak.push({
+        judul: tglPanjang(tanggal) + (tanggal === hariIniISO() ? ' · ' + t('hari ini') : ''),
+        isi: rowsKelompok(petaGrup[tanggal])
+      });
+    });
+  }
+
+  /* ---------- URUTAN ② TAG (kelompok per tag + total) ---------- */
+  else if (urut === 'tag') {
+    /* daftar pilihan tag — tertutup, hemat ruang */
+    var daftarTag = TAG().filter(function (g) {
+      return daftar.some(function (x) { return x.tag === g.nama; });
+    });
+    h += '<button class="tagsum" data-tagbuka="1">' +
+      '<span class="nm">' + (tagSaring ? ikonTag(tagSaring) + ' ' + esc(t(tagSaring))
+        : '🏷️ ' + t('Semua Tag')) + '</span>' +
+      '<span class="ar">' + (tagTerbuka ? '▴' : '▾') + '</span></button>';
+
+    if (tagTerbuka) {
+      h += '<div class="chipgrid buka" style="--kolom:' +
+        hitungKolom(kolomTag, document.getElementById('txDaftar')) + '">';
+      h += '<button class="chip semua' + (tagSaring === '' ? ' on' : '') +
+        '" data-tag="">' + t('Semua Tag') + '</button>';
+      daftarTag.forEach(function (g) {
+        h += '<button class="chip' + (tagSaring === g.nama ? ' on' : '') +
+          '" data-tag="' + esc(g.nama) + '">' + g.ikon + ' ' + esc(t(g.nama)) + '</button>';
+      });
+      h += '</div>';
+    }
+
+    /* kelompok per tag — besar di atas */
+    var grupTag = [], petaTag = {};
+    daftar.forEach(function (x) {
+      if (!petaTag[x.tag]) { petaTag[x.tag] = []; grupTag.push(x.tag); }
+      petaTag[x.tag].push(x);
+    });
+    grupTag.sort(function (a, c) { return petaTag[c].length - petaTag[a].length; });
+
+    grupTag.forEach(function (namaTag) {
+      var arr = petaTag[namaTag].slice().sort(urutTanggal);
+      var tm = 0, tk = 0;
+      arr.forEach(function (x) { if (x.arah === 'D') tm += x.jumlah; else tk += x.jumlah; });
+      kotak.push({
+        judul: '<b>' + ikonTag(namaTag) + ' ' + esc(t(namaTag)) + ' · ' + arr.length + ' ' + t('transaksi') + '</b> ' +
+          '<span class="mono">' + (tm > 0 ? '+' : '') + rp2(tm) + ' ' + t('Masuk') +
+          ' · ' + (tk > 0 ? '−' : '') + rp2(tk) + ' ' + t('Keluar') + '</span>',
+        isi: rowsKelompok(arr)
+      });
+    });
+  }
+
+  /* ---------- URUTAN ③ MASUK ＋ / ④ KELUAR − ----------
+     Satu daftar lurus (tanpa kelompok), diurut JUMLAH TERBESAR di atas.
+     Tanggal tetap tertera di tiap baris. */
+  else {
+    var mau = (urut === 'masuk') ? 'D' : 'K';
+    var arr2 = daftar.filter(function (x) { return x.arah === mau; })
+      .sort(function (a, c) { return c.jumlah - a.jumlah; });
+    kotak.push({ judul: '', isi: arr2.map(function (x) { return barisTabel(x, false); }).join('') });
+  }
+  if (kotak.length) h += tabelTx(kotak);
+
+  document.getElementById('txDaftar').innerHTML = h;
+  pasangKlik(document.getElementById('txDaftar'));
+
+  /* klik kepala pemilih tag → buka/tutup daftar tag */
+  var tglBuka = document.querySelector('#txDaftar .tagsum');
+  if (tglBuka) {
+    tglBuka.addEventListener('click', function () { tagTerbuka = !tagTerbuka; gbrTx(); });
+  }
+  document.querySelectorAll('#txDaftar .chipgrid [data-tag]').forEach(function (c) {
+    c.addEventListener('click', function () {
+      tagSaring = c.getAttribute('data-tag') || '';
+      tagTerbuka = false;
+      gbrTx();
+    });
+  });
+
+  /* klik baris fund terpilih → buka/tutup grid */
+  wadahChips.querySelectorAll('.kepala').forEach(function (c) {
+    c.addEventListener('click', function () {
+      chipsTerbuka = !chipsTerbuka;
+      gbrTx();
+    });
+  });
+  /* pilih fund → grid MENUTUP lagi, barisnya berganti nama fund itu */
+  wadahChips.querySelectorAll('.chipgrid .chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      fundSaring = c.getAttribute('data-fund');
+      chipsTerbuka = false;
+      riwayatLayar = [];
+      gbrTx();
+    });
+  });
+}
+
+function bukaKosong(id) {
+  document.getElementById(id).innerHTML =
+    '<div class="err"><b>Belum ada data.</b><br><br>Jalankan di komputer:<br>' +
+    '<code>node tools\\siapkan-data.cjs</code></div>';
+}
+
+
+/* ============================================================
+   9. GAMBAR — PENGATURAN
+   ============================================================ */
+var MENU_SET = [
+  { n: 'Daftar Fund', i: '💰', s: 'kotak uang' },
+  { n: 'Daftar Tag', i: '🏷️', s: 'penentu makna' },
+  { n: 'Pajak & Bunga', i: '🧾', s: 'rate & potongan' },
+  { n: 'Bahasa', i: '🌐', s: 'Indonesia ↔ English' },
+  { n: 'Daftar Istilah', i: '📖', s: 'padanan istilah keuangan' },
+  { n: 'Tentang', i: 'ℹ️', s: 'tentang berkas ini' }
+];
+
+function gbrSet() {
+  var b = B();
+  var h = '';
+
+  /* pemilih bulan */
+  if (BULAN.length > 1) {
+    h += '<div class="sec">' + t('Bulan') + '</div>';
+    BULAN.forEach(function (x, i) {
+      h += '<button class="langrow' + (i === idxBulan ? ' on' : '') + '" data-bulan="' + i + '">' +
+        '<span>' + esc(x.label) + '</span>' +
+        '<span class="chk">' + (x.terkunci ? '🔒' : '') + '</span></button>';
+    });
+  }
+
+  h += '<div class="sec">' + t('Pengaturan') + '</div>';
+  MENU_SET.forEach(function (m) {
+    var kakinya = '';
+    if (m.n === 'Daftar Fund' && b) kakinya = b.fund.length + ' fund';
+    if (m.n === 'Daftar Tag' && b) kakinya = b.tag.length + ' tag';
+    h += '<button class="goto" data-sub="' + esc(m.n) + '"><span class="gi">' + m.i + '</span>' +
+      '<span style="flex:1 1 auto;min-width:0"><span class="gt">' + t(m.n) + '</span>' +
+      '<span class="gs">' + t(m.s) + (kakinya ? ' · ' + kakinya : '') + '</span></span>' +
+      '<span class="garrow">›</span></button>';
+  });
+
+  /* ringkas bulan */
+  if (b) {
+    var r = b.ringkas;
+    h += '<div class="sec">' + t('Ringkasan bulan ini') + '</div>' + kartuRingkas(r);
+  }
+
+  document.getElementById('setIsi').innerHTML = h;
+  pasangKlik(document.getElementById('setIsi'));
+  document.getElementById('setIsi').querySelectorAll('[data-bulan]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      idxBulan = parseInt(el.getAttribute('data-bulan'), 10);
+      fundSaring = FUND_AWAL; tagSaring = ''; tagTerbuka = false; cariTeks = '';
+      var inp = document.getElementById('cari'); if (inp) inp.value = '';
+      gbrSet();
+    });
+  });
+}
+
+/* ============================================================
+   10. GAMBAR — SUB HALAMAN
+   ============================================================ */
+
+/* jumlah kolom kartu.
+   Cara hitung: LEBAR SASARAN per kartu, dibulatkan, maksimum 5.
+   • LEBAR_AMAN = batas paling sempit supaya kartu tidak terlalu sempit.
+   • Nama fund DIPOTONG dengan `…` kalau tidak muat — keputusan Bapak.
+   • 🔴 Angka tidak pernah dipotong (hanya patah di titik ribuan). */
+var LEBAR_SASARAN = 78;   /* sasaran lebar satu kartu */
+/* 🔴 Lebar paling sempit yang MASIH AMAN (25 Sep 2026).
+   Dulu 72 px → kartu terlalu sempit: angka panjang (`22.057.864,95`) turun
+   baris dan nama seperti "Superbank" terpotong di tengah kata ("Superba/nk").
+   Aturan Bapak: **angka jangan sampai salah baca** → 96 px. */
+var LEBAR_AMAN = 96;
+var JARAK_KARTU = 6;
+var KOLOM_MAKS = 5;
+var kolomFund = 'auto';
+var kolomTag = 'auto';
+
+/** Berapa kolom yang benar-benar dipakai.
+ *  ⚠️ Lebar diambil dari wadah grid (CLIENT width) — dihitung TANPA padding
+ *     halaman. Kalau padding ikut dihitung, kolom jadi kelebihan satu dan
+ *     nama fund terpotong (bug nyata 25 Sep).
+ *  🔴 SETIAP halaman WAJIB mengirim wadahnya sendiri (mis. `#dashIsi`,
+ *     `#subIsi`) — semuanya selebar isi `.body` → jumlah kolom PASTI sama.
+ *     (Bug nyata 25 Sep: Dashboard 3 kolom vs Daftar Fund 4 kolom karena
+ *      Dashboard memakai lebar cadangan yang berbeda.) */
+function hitungKolom(pilih, wadahUkur) {
+  var lebar = 0;
+  if (wadahUkur && wadahUkur.clientWidth) lebar = wadahUkur.clientWidth;
+  if (!lebar) {
+    /* cadangan: lebar jendela − padding halaman kiri+kanan.
+       Dipakai kalau wadah sedang disembunyikan (clientWidth = 0). */
+    var jendela = document.documentElement.clientWidth || window.innerWidth || 384;
+    lebar = Math.max(120, jendela - 24);
+  }
+
+  /* paling banyak yang masih AMAN (kata terpanjang tidak terpotong) */
+  var aman = Math.floor((lebar + JARAK_KARTU) / (LEBAR_AMAN + JARAK_KARTU));
+  aman = Math.max(2, Math.min(KOLOM_MAKS, aman));
+
+  /* sasaran enak dibaca, tapi tidak boleh melebihi batas aman */
+  var sasaran = Math.round(lebar / LEBAR_SASARAN);
+  sasaran = Math.max(2, Math.min(KOLOM_MAKS, sasaran));
+
+  var hasil = Math.min(sasaran, aman);
+  if (pilih === 'auto') return hasil;
+  var mau = parseInt(pilih, 10) || hasil;
+  return Math.max(2, Math.min(mau, aman));
+}
+
+function gayaGrid(jenis, wadah) {
+  var pilih = (jenis === 'fund' ? kolomFund : kolomTag);
+  return ' style="--kolom:' + hitungKolom(pilih, wadah) + '"';
+}
+
+/* tombol pengatur jumlah kolom, supaya Bapak bisa mengatur sendiri */
+function tombolKolom(jenis, wadah) {
+  var sekarang = jenis === 'fund' ? kolomFund : kolomTag;
+  var terpakai = hitungKolom(sekarang, wadah);
+  var pilih = [['auto', t('Otomatis') + ' (' + terpakai + ')'], ['3', '3'], ['4', '4'], ['5', '5']];
+  var h = '<div class="seg">';
+  pilih.forEach(function (p) {
+    h += '<button class="' + (sekarang === p[0] ? 'on' : '') + '" data-kolom="' +
+      p[0] + '" data-jenis="' + jenis + '">' + esc(p[1]) + '</button>';
+  });
+  return h + '</div>';
+}
+
+/* ---------- SATU pembuat kartu fund — dipakai Daftar Fund & Dashboard ----------
+   Dibuat 25 Sep 2026 supaya TIDAK ada dua versi penataan/logika (aturan C12/C17).
+   🔴 ANGKA TIDAK DIPOTONG — hanya boleh patah di titik ribuan (pecahAngka).
+   🔴 Lencana 🔒 diblokir / 👥 titipan DITARUH DI DEPAN keterangan supaya tidak
+      ikut terpotong (tanda ini penting bagi Bapak).
+   🔴 Nama fund BOLEH dipotong `…` (2 baris) — nama lengkap ada di tooltip. */
+function kartuFund(f) {
+  var bawah = f.minSaldo !== null && f.minSaldo !== undefined && f.saldo < f.minSaldo;
+  var tanda = [];
+  if (f.diblokir) tanda.push('🔒');
+  if (f.titipan) tanda.push('👥');
+  var ket = t('awal') + ' ' + rpRingkas(f.saldoAwal);
+  if (f.n) ket += ' · ' + f.n + ' tx';
+  if (tanda.length) ket = tanda.join('') + ' · ' + ket;
+  /* tooltip: nama LENGKAP + saldo penuh — supaya nama yang terpotong
+     masih bisa dibaca utuh dengan menekan lama */
+  var tip = f.nama + ' — ' + rp2(f.saldo) + ' Rp' +
+    (tanda.length ? ' (' + (f.diblokir ? 'diblokir ' : '') + (f.titipan ? 'titipan' : '') + ')' : '');
+  return '<div class="item' + (bawah ? ' warn' : '') + '" title="' + esc(tip) + '">' +
+    '<span class="baris"><span class="ic">' + f.ikon + '</span>' +
+      '<span class="nm">' + esc(f.nama) + '</span></span>' +
+    '<span class="val mono' + (f.saldo < 0 ? ' neg' : '') + '">' + pecahAngka(rp2(f.saldo)) + '</span>' +
+    '<span class="sub">' + esc(ket) + '</span>' +
+    '</div>';
+}
+
+/* kisi seluruh fund — jumlah kolom ikut pengaturan Daftar Fund (kolomFund).
+   `wadah` = elemen halaman yang sedang dibangun, supaya lebar ukurnya sama. */
+function kisiFund(wadah) {
+  var h = '<div class="grid4"' + gayaGrid('fund', wadah) + '>';
+  FUND().forEach(function (f) { h += kartuFund(f); });
+  return h + '</div>';
+}
+
+function gbrSub() {
+  var b = B();
+  var h = '';
+
+  if (subNama === 'Daftar Fund') {
+    if (!b) { bukaKosong('subIsi'); return; }
+    var t2 = b.fund.reduce(function (s, f) { return s + f.saldo; }, 0);
+    var kurang = b.fund.filter(function (f) {
+      return f.minSaldo !== null && f.minSaldo !== undefined && f.saldo < f.minSaldo;
+    });
+
+    /* Total di ATAS — info penting harus terlihat tanpa menggeser (aturan C10) */
+    h += '<div class="saldo" style="margin-bottom:8px"><div class="top">' +
+      '<div class="k">' + t('Total semua fund') + ' · ' + b.fund.length + ' fund</div>' +
+      '<div class="v mono">' + rp2(t2) + ' <small>Rp</small></div></div></div>';
+
+    if (kurang.length) {
+      h += '<div class="alert">⚠️ ' + kurang.length + ' fund di bawah ' +
+        t('Saldo minimum').toLowerCase() + '</div>';
+    }
+
+    h += '<div class="hint">' + t('Semua fund terlihat sekaligus — diurutkan sesuai nomor ' +
+      'urut yang Bapak atur di komputer.') + '<br>' +
+      t('Nama panjang dipotong dengan … — tekan lama kartu untuk melihat nama lengkap.') +
+      '</div>';
+    h += tombolKolom('fund', document.getElementById('subIsi'));
+    h += kisiFund(document.getElementById('subIsi'));
+  }
+
+  else if (subNama === 'Daftar Tag') {
+    if (!b) { bukaKosong('subIsi'); return; }
+    var masukT = b.tag.reduce(function (s, g) { return s + (g.masuk || 0); }, 0);
+    var keluarT = b.tag.reduce(function (s, g) { return s + (g.keluar || 0); }, 0);
+    h += '<div class="card" style="margin-bottom:8px"><div class="cbody">' +
+      '<div class="crow"><span class="cl">' + t('Daftar Tag') + ' · ' + b.tag.length + ' tag</span>' +
+      '<b class="mono">' + t('Masuk') + ' +' + rpRingkas(masukT) + ' · ' +
+      t('Keluar') + ' −' + rpRingkas(keluarT) + '</b></div></div></div>';
+    h += '<div class="hint">' + t('Tag = penanda proses. Arah jurnal dan perlakuan di laporan ' +
+      'ditentukan dari tag.') + '</div>';
+    h += tombolKolom('tag', document.getElementById('subIsi'));
+    h += '<div class="grid4"' + gayaGrid('tag', document.getElementById('subIsi')) + '>';
+    b.tag.forEach(function (g) {
+      var arah = g.arah === 'D' ? t('Masuk') + ' ＋' : g.arah === 'K' ? t('Keluar') + ' −' : t('Bebas');
+      var tanda = [];
+      if (g.sistem) tanda.push('🔧');
+      if (g.pajak) tanda.push(t('pajak'));
+      if (g.dikecualikan) tanda.push('✕');
+      var nilai = g.masuk ? '+' + rpRingkas(g.masuk) : g.keluar ? '−' + rpRingkas(g.keluar) : '—';
+      var ket = arah + ' · ' + g.n + ' tx';
+      if (g.dikecualikan) ket += ' · ' + t('Tidak dihitung');
+      h += '<div class="item">' +
+        '<span class="baris"><span class="ic">' + g.ikon + '</span>' +
+          '<span class="nm">' + esc(t(g.nama)) + '</span></span>' +
+        '<span class="val mono">' + pecahAngka(nilai) + '</span>' +
+        '<span class="sub">' + esc(ket) +
+          (tanda.length ? ' · ' + esc(tanda.join(' ')) : '') + '</span>' +
+        '</div>';
+    });
+    h += '</div>';
+    h += '<div class="hint"><b>🔧</b> = tag sistem (jangan dihapus) · <b>✕</b> = ' +
+      t('Tidak dihitung') + ' di ringkasan bulanan (' + t('Transfer · Pinjam · Reimburse · Koreksi · Hutang') + ').</div>';
+  }
+
+  else if (subNama === 'Pajak & Bunga') {
+    h += '<div class="dl">' +
+      '<div class="r"><span class="k">🏦 Deposito</span><span class="v"><b>7,5% p.a</b></span></div>' +
+      '<div class="r"><span class="k">🐷 Tabungan</span><span class="v"><b>5,0% p.a</b></span></div>' +
+      '<div class="r"><span class="k">🧾 Pajak</span><span class="v"><b>20%</b> ' + t('dari') + ' ' + t('Bunga').toLowerCase() + '</span></div>' +
+      '</div>';
+    h += '<div class="sec">' + t('Contoh hitungan') + '</div>' +
+      '<div class="card"><div class="cbody">' +
+      '<div class="crow"><span class="cl">Pokok</span><b class="mono">100.000.000</b></div>' +
+      '<div class="crow"><span class="cl">Rate</span><b class="mono">7,5% p.a</b></div>' +
+      '<div class="crow"><span class="cl">Hari</span><b class="mono">31</b></div>' +
+      '<div class="crow"><span class="cl">' + t('Bunga') + ' 🌸</span><b class="mono">+636.986,30</b></div>' +
+      '<div class="crow"><span class="cl">' + t('Pajak') + ' 20%</span><b class="mono">−127.397,26</b></div>' +
+      '<div class="crow"><span class="cl">' + t('Bunga neto') + '</span><b class="mono">+509.589,04</b></div>' +
+      '</div></div>';
+    h += '<div class="sec">Rumus &amp; aturan</div>' +
+      '<div class="hint">Rumus: <b>' + t('Bunga') + ' = pokok × rate ÷ 100 × hari ÷ 365</b><br>' +
+      'Dihitung dalam <b>sen</b> (bilangan bulat) supaya tidak ada selisih pembulatan.<br>' +
+      'Rate <b>wajib diisi</b> — sistem menolak rate kosong (cegah bug 30 Agu).<br>' +
+      'Tabungan <b>5%</b> dan Deposito <b>7,5%</b> <b>berbeda</b> — jangan tertukar.</div>';
+  }
+
+  else if (subNama === 'Bahasa') {
+    h += '<button class="langrow' + (LANG === 'id' ? ' on' : '') + '" data-lang="id">' +
+      '<span>🇮🇩 Bahasa Indonesia</span><span class="chk">' + (LANG === 'id' ? '✓' : '') + '</span></button>' +
+      '<button class="langrow' + (LANG === 'en' ? ' on' : '') + '" data-lang="en">' +
+      '<span>🇬🇧 English</span><span class="chk">' + (LANG === 'en' ? '✓' : '') + '</span></button>';
+    h += '<div class="hint">' + t('Nama fund, nama tag, dan angka TIDAK diterjemahkan — ' +
+      'hanya tulisan halaman. Ini supaya laporan tetap sama walau bahasanya berganti.') + '</div>';
+  }
+
+  else if (subNama === 'Daftar Istilah') {
+    var KELOMPOK = [
+      ['Dasar', ['Debit','Kredit','Jurnal','Saldo','Saldo awal','Saldo akhir','Transaksi','Fund','Tag']],
+      ['Bulanan', ['Ringkasan','Masuk','Keluar','Selisih','Dikecualikan','Terkunci']],
+      ['Bunga', ['Bunga','Pajak','Pokok','Rate','Neto','Bunga neto']],
+      ['Pindah uang', ['Transfer','Pinjam','Hutang','Reimburse','Koreksi']],
+      ['Pendapatan', ['Pendapatan','Bonus','Hilang','Biaya']],
+      ['Simpanan', ['Deposito','Tabungan','Titipan','Diblokir','Saldo minimum']]
+    ];
+    var PADANAN = {
+      'Debit':'Debit','Kredit':'Credit','Jurnal':'Journal','Saldo':'Balance',
+      'Saldo awal':'Opening balance','Saldo akhir':'Closing balance','Transaksi':'Transaction',
+      'Fund':'Fund','Tag':'Tag','Ringkasan':'Summary','Masuk':'In','Keluar':'Out',
+      'Selisih':'Net','Dikecualikan':'Excluded','Terkunci':'Locked','Bunga':'Interest',
+      'Pajak':'Tax','Pokok':'Principal','Rate':'Rate','Neto':'Net','Bunga neto':'Net interest',
+      'Transfer':'Transfer','Pinjam':'Lend','Hutang':'Debt','Reimburse':'Reimburse',
+      'Koreksi':'Correction','Pendapatan':'Income','Bonus':'Bonus','Hilang':'Lost',
+      'Biaya':'Expense','Deposito':'Deposit','Tabungan':'Savings','Titipan':'Held for others',
+      'Diblokir':'Blocked','Saldo minimum':'Minimum balance'
+    };
+    KELOMPOK.forEach(function (g) {
+      h += '<div class="grp"><div class="gh">' + t(g[0]) + '</div>';
+      g[1].forEach(function (k) {
+        h += '<div class="ist"><span class="id">' + esc(k) + '</span>' +
+          '<span class="en">' + esc(PADANAN[k] || '—') + '</span></div>';
+      });
+      h += '</div>';
+    });
+  }
+
+  else if (subNama === 'Tentang') {
+    var meta = (DATA && DATA.meta) || {};
+    h += '<div class="dl">' +
+      '<div class="r"><span class="k">Versi</span><span class="v">HP (Android)</span></div>' +
+      '<div class="r"><span class="k">' + t('Saldo') + '</span><span class="v">' + t('Versi HP — dibuat') + ' ' +
+        esc(meta.dibuat || '—') + '</span></div>' +
+      '<div class="r"><span class="k">Sumber</span><span class="v">' + esc(meta.sumber || '—') + '</span></div>' +
+      '<div class="r"><span class="k">Bulan</span><span class="v">' + BULAN.length + ' bulan</span></div>' +
+      '</div>';
+    h += '<div class="sec">' + t('Informasi') + '</div>' +
+      '<div class="hint">Berkas ini <b>berdiri sendiri</b> — tidak butuh server dan tidak butuh internet.<br><br>' +
+      'Data <b>tidak</b> berubah-ubah: angkanya diambil dari ' + t('Saldo') + ' kerja di komputer. ' +
+      'Kalau catatan di komputer berubah, jalankan <code>node tools\\siapkan-data.cjs</code> ' +
+      'lalu kirim ulang berkas ini ke HP.<br><br>' +
+      t('Angka memakai aturan yang sama dengan') + ' <code>core/saldo.ts</code> — ' +
+      'batas bulan wajib awal dan akhir, dan 5 tag dikecualikan.<br><br>' +
+      '<b>' + t('Simpan ke layar utama') + ':</b> di Chrome tekan menu ⋮ → ' +
+      '“Tambahkan ke layar utama”.</div>';
+    h += '<div class="sec">' + t('Tampilan') + '</div>' +
+      '<div class="seg" id="segTema"><button class="' + (document.documentElement.classList.contains('dark') ? '' : 'on') + '" data-tema="terang">☀️ ' + t('Terang') + '</button>' +
+      '<button class="' + (document.documentElement.classList.contains('dark') ? 'on' : '') + '" data-tema="gelap">🌙 ' + t('Gelap') + '</button></div>';
+  }
+
+  var wadahSub = document.getElementById('subIsi');
+  if (!wadahSub) return;          /* pengaman — jangan sampai layar error */
+  wadahSub.innerHTML = h;
+  pasangKlik(wadahSub);
+  wadahSub.querySelectorAll('[data-lang]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      LANG = el.getAttribute('data-lang');
+      try { localStorage.setItem('uangku-lang', LANG); } catch (e) { /* diam */ }
+      gambarUlang();
+    });
+  });
+  wadahSub.querySelectorAll('[data-tema]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var gelap = el.getAttribute('data-tema') === 'gelap';
+      document.documentElement.classList.toggle('dark', gelap);
+      try { localStorage.setItem('uangku-tema', gelap ? 'gelap' : 'terang'); } catch (e) { /* diam */ }
+      gbrSub();
+    });
+  });
+  document.getElementById('subIsi').querySelectorAll('[data-kolom]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var v = el.getAttribute('data-kolom');
+      if (el.getAttribute('data-jenis') === 'fund') kolomFund = v; else kolomTag = v;
+      gbrSub();
+    });
+  });
+}
+/* ============================================================
+   11. GAMBAR — PUSAT
+   ============================================================ */
+/* gambar ulang SELURUH layar + kepala + tab bawah (dipakai setelah ganti bahasa) */
+function gambarUlang() {
+  document.getElementById('tbDash').textContent = t('Dashboard');
+  document.getElementById('tbTx').textContent = t('Transaksi');
+  document.getElementById('tbSet').textContent = t('Pengaturan');
+  document.getElementById('btnRiwayat').textContent = t('Riwayat');
+  document.getElementById('cari').placeholder = t('Cari keterangan…');
+  gambarSegUrut();
+  document.getElementById('title').textContent =
+    (layar === 'sub' ? t(subNama) : JUDUL[layar]()) + ' · ' + (B() ? B().labelSingkat : '');
+  gambar();
+}
+
+function gambar() {
+  if (layar === 'dash') gbrDash();
+  else if (layar === 'tx') gbrTx();
+  else if (layar === 'input') gbrInput();
+  else if (layar === 'set') gbrSet();
+  else if (layar === 'sub') gbrSub();
+  else if (layar === 'riwayat') gbrRiwayat();
+}
+
+/* ============================================================
+   12. KLIK
+   ============================================================ */
+function pasangKlik(wadah) {
+  wadah.querySelectorAll('[data-ke]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var k = el.getAttribute('data-ke');
+      if (k === 'tx') { ke('tx'); }
+      else if (k === 'fund') { ke('sub', 'Daftar Fund'); }
+      else ke(k);
+    });
+  });
+  wadah.querySelectorAll('[data-sub]').forEach(function (el) {
+    el.addEventListener('click', function () { ke('sub', el.getAttribute('data-sub')); });
+  });
+  wadah.querySelectorAll('[data-fold]').forEach(function (el) {
+    el.addEventListener('click', function () { el.parentElement.classList.toggle('open'); });
+  });
+}
+
+document.querySelectorAll('.tabs button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    riwayatLayar = [];
+    tampil(b.getAttribute('data-tab'));
+  });
+});
+document.getElementById('btnBack').addEventListener('click', kembali);
+document.getElementById('btnRiwayat').addEventListener('click', function () { ke('riwayat'); });
+document.getElementById('btnAdd').addEventListener('click', function () {
+  ke('input');
+});
+document.getElementById('cari').addEventListener('input', function (e) {
+  cariTeks = e.target.value.trim().toLowerCase();
+  gbrTx();
 });
 
-/* ---------- muat data dasar ---------- */
-async function muatDasar() {
-  const f = await panggil('fund');
-  if (!f.ok) { return f; }
-  DATA_FUND = f.data;
-  const t = await panggil('tag');
-  if (!t.ok) { return t; }
-  DATA_TAG = t.data;
+/* ============================================================
+   13. MULAI
+   ============================================================ */
+try {
+  if (localStorage.getItem('uangku-tema') === 'gelap') document.documentElement.classList.add('dark');
+} catch (e) { /* diam */ }
 
-  const pilih = el('tFund');
-  pilih.innerHTML = '<option value="">Semua fund</option>' +
-    DATA_FUND.map((x) => `<option value="${x.id}">${x.name}</option>`).join('');
+/* pemilih bulan cepat — geser ke kiri/kanan di kepala */
+var sentuhX = null;
+document.querySelector('.head').addEventListener('touchstart', function (e) {
+  sentuhX = e.touches[0].clientX;
+}, { passive: true });
+document.querySelector('.head').addEventListener('touchend', function (e) {
+  if (sentuhX === null || BULAN.length < 2) return;
+  var d = e.changedTouches[0].clientX - sentuhX;
+  sentuhX = null;
+  if (Math.abs(d) < 60) return;
+  var n = d < 0 ? idxBulan + 1 : idxBulan - 1;
+  if (n < 0 || n >= BULAN.length) return;
+  idxBulan = n; fundSaring = FUND_AWAL; tagSaring = ''; tagTerbuka = false; cariTeks = '';
+  tampil(layar);
+});
 
-  el('cFund').innerHTML = DATA_FUND
-    .map((x) => `<button class="chip" data-f="${x.id}">${x.name}</button>`).join('');
-  el('cTag').innerHTML = DATA_TAG
-    .map((x) => `<button class="chip" data-t="${x.name}">${x.name}</button>`).join('');
+/* Hitung ulang jumlah kolom saat layar diputar / ukuran berubah,
+   supaya nama fund tetap utuh (tidak terpotong). */
+var tundaUbah = null;
+window.addEventListener('resize', function () {
+  if (tundaUbah) clearTimeout(tundaUbah);
+  tundaUbah = setTimeout(function () {
+    tundaUbah = null;
+    if (layar === 'tx') {
+      gbrTx();
+    } else if (layar === 'sub' && (subNama === 'Daftar Fund' || subNama === 'Daftar Tag') &&
+        document.getElementById('subIsi')) {
+      gbrSub();
+    }
+  }, 180);
+});
 
-  el('cFund').querySelectorAll('.chip').forEach((b) => {
-    b.onclick = () => {
-      cFundPilih = Number(b.dataset.f);
-      el('cFund').querySelectorAll('.chip').forEach((x) => x.classList.toggle('pilih', x === b));
-    };
-  });
-  el('cTag').querySelectorAll('.chip').forEach((b) => {
-    b.onclick = () => {
-      cTagPilih = b.dataset.t;
-      el('cTag').querySelectorAll('.chip').forEach((x) => x.classList.toggle('pilih', x === b));
-      const tag = DATA_TAG.find((x) => x.name === cTagPilih);
-      const duaArah = !tag || (tag.journal_type !== 'D' && tag.journal_type !== 'K');
-      el('cArahWrap').style.display = duaArah ? 'block' : 'none';
-      if (!duaArah) {
-        cArahPilih = tag.journal_type;
-        el('cArah').querySelectorAll('.chip').forEach((x) => x.classList.remove('pilih'));
-      }
-    };
-  });
-  el('cArah').querySelectorAll('.chip').forEach((b) => {
-    b.onclick = () => {
-      cArahPilih = b.dataset.a;
-      el('cArah').querySelectorAll('.chip').forEach((x) => x.classList.toggle('pilih', x === b));
-    };
-  });
-  return { ok: true };
+/* ============================================================
+   CATAT (TES) — transaksi multi-jurnal, disimpan di browser ini saja
+   Data tes ikut tampil di Transaksi & fund. Bisa dibatalkan satu-satu.
+   Tidak masuk uangku.db — hanya untuk tes (lihat K29).
+   ============================================================ */
+var TES_KEY = 'uangku-tes-v1';
+var BULAN_ASLI = null;
+var formTes = null;
+var KMAX_TES = 6;
+/* 4 tag dua arah — arah WAJIB dipilih manual (agents.md Bagian 9) */
+var DUA_ARAH_TES = ['Transfer', 'Pinjam', 'Hutang', 'Reimburse'];
+var SINGKAT_TAG = { Rumah:'RMH', Pribadi:'PRB', Pet:'PET', Mobil:'MBL', Bunga:'BNG', Pajak:'PJK',
+  Koreksi:'KRK', Bonus:'BNS', Hilang:'HLG', biaya:'BYA', Pinjam:'PNJ', Pendapatan:'PDP',
+  Reimburse:'RMB', Transfer:'TRF', Hutang:'HTG' };
+
+function singkatTag(n) { return SINGKAT_TAG[n] || String(n || '-').slice(0, 3).toUpperCase(); }
+function numTes(s) { var n = parseFloat(String(s).replace(/\./g, '').replace(',', '.')); return isNaN(n) ? 0 : n; }
+function bacaTes() { try { return JSON.parse(localStorage.getItem(TES_KEY) || '[]'); } catch (e) { return []; } }
+function simpanTesKeMemori(arr) { localStorage.setItem(TES_KEY, JSON.stringify(arr)); }
+function bulanDariTgl(tgl) {
+  for (var i = 0; i < BULAN.length; i++) if (tgl >= BULAN[i].awal && tgl <= BULAN[i].akhir) return BULAN[i];
+  return null;
+}
+function arahTetapTag(nama) {
+  var tg = (B() ? B().tag : []).filter(function (x) { return x.nama === nama; })[0];
+  if (!tg || DUA_ARAH_TES.indexOf(nama) !== -1) return null;
+  return (tg.arah === 'D' || tg.arah === 'K') ? tg.arah : null;
 }
 
-/* ---------- DASHBOARD ---------- */
-async function muatDashboard() {
-  const s = await panggil('saldo', { bulan: BULAN });
-  if (!s.ok) return s;
-  const r = await panggil('ringkasan', { bulan: BULAN });
-  if (!r.ok) return r;
-  const tx = await panggil('transaksi', { bulan: BULAN });
-  if (!tx.ok) return tx;
+/* tidak dipakai lagi — data datang utuh dari server */
+function terapkanTes() {
+  if (true) return;
+  if (!BULAN_ASLI) BULAN_ASLI = JSON.parse(JSON.stringify(BULAN));
+  BULAN = JSON.parse(JSON.stringify(BULAN_ASLI));
+  bacaTes().forEach(function (e) {
+    var bln = bulanDariTgl(e.tgl);
+    if (!bln) return;
+    e.baris.forEach(function (b, i) {
+      var n = numTes(b.jml);
+      var f = bln.fund.filter(function (x) { return x.nama === b.fund; })[0];
+      if (!(n > 0) || !f) return;
+      bln.tx.push({ id: e.id * 10 + i, tanggal: e.tgl, ket: '[TES] ' + e.ket, jumlah: n, arah: b.arah,
+        tag: b.tag, fund: b.fund, fid: f.id, pasangan: 0, pajak: false, catatan: 'tes' });
+      if (b.arah === 'D') { f.masuk += n; f.saldo += n; } else { f.keluar += n; f.saldo -= n; }
+      f.masuk = Math.round(f.masuk * 100) / 100;
+      f.keluar = Math.round(f.keluar * 100) / 100;
+      f.saldo = Math.round(f.saldo * 100) / 100;
+      f.n += 1;
+    });
+    bln.tx.sort(urutTanggal);
+  });
+}
 
-  const total = s.data.reduce((a, x) => a + x.saldo, 0);
-  el('dTotal').textContent = rp(total);
-  el('dMasuk').textContent = rpRingkas(r.data.masuk);
-  el('dKeluar').textContent = rpRingkas(r.data.keluar);
-  el('dSelisih').textContent = rpRingkas(r.data.selisih);
-
-  el('dFund').innerHTML = s.data.map((f) => {
-    const merah = f.minimumSaldo !== null && f.saldo < f.minimumSaldo ? ' merah' : '';
-    const tanda = (f.isBlocked ? '🔒' : '') + (f.isTitipan ? '👥' : '');
-    return `<div class="kartu${merah}">
-      <div class="nm">${tanda ? tanda + ' ' : ''}${f.nama}</div>
-      <div class="rp">${rpRingkas(f.saldo)}</div>
-    </div>`;
+function gbrInput() {
+  var wadah = document.getElementById('inputIsi');
+  var bln = B();
+  if (!bln) { wadah.innerHTML = ''; return; }
+  if (!formTes) formTes = { tgl: hariIniISO(), ket: '', baris: [
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: 'Transfer', arah: 'K', jml: '' },
+    { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: 'Transfer', arah: 'K', jml: '' } ] };
+  var pilihFund = function (sel) {
+    return bln.fund.map(function (f) { return '<option' + (f.nama === sel ? ' selected' : '') + '>' + esc(f.nama) + '</option>'; }).join('');
+  };
+  var pilihTag = function (sel) {
+    return bln.tag.map(function (g) {
+      return '<option value="' + esc(g.nama) + '"' + (g.nama === sel ? ' selected' : '') + '>' + g.ikon + ' ' + singkatTag(g.nama) + '</option>';
+    }).join('');
+  };
+  var baris = formTes.baris.map(function (b, i) {
+    var tetap = arahTetapTag(b.tag);
+    var arah = tetap || b.arah;
+    return '<div class="tl-row">' +
+      '<div class="tl-r1"><select data-i="' + i + '" data-k="fund">' + pilihFund(b.fund) + '</select>' +
+      '<select data-i="' + i + '" data-k="tag" title="Tag">' + pilihTag(b.tag) + '</select></div>' +
+      '<div class="tl-r2"><div class="seg' + (tetap ? ' auto' : '') + '">' +
+      '<button data-arah="D" data-i="' + i + '" class="' + (arah === 'D' ? 'on' : '') + '"' + (tetap ? ' disabled' : '') + '>D</button>' +
+      '<button data-arah="K" data-i="' + i + '" class="' + (arah === 'K' ? 'on' : '') + '"' + (tetap ? ' disabled' : '') + '>K</button></div>' +
+      '<input type="text" inputmode="decimal" data-i="' + i + '" data-k="jml" value="' + esc(b.jml) + '" placeholder="0">' +
+      '<button class="tl-del" data-del="' + i + '" title="Hapus baris">✕</button></div></div>';
   }).join('');
-
-  const baris = tx.data.slice(0, 8);
-  el('dTx').innerHTML = tabelTransaksi(baris, false, false);
-  return { ok: true };
+  var daftarTes = TX().slice(0, 12).map(function (e) {
+    return '<div class="tl-tes"><div><b>' + esc(e.ket) + '</b><small>' + esc(String(e.tanggal).split('-').reverse().join('/')) +
+      ' · ' + esc(e.fund) + ' · ' + esc(e.tag) + ' · ' + (e.arah === 'D' ? 'masuk' : 'keluar') + ' ' + rp2(e.jumlah) +
+      '</small></div><button class="btn-kecil" data-batal="' + e.id + '">↩️ ' + t('Batalkan') + '</button></div>';
+  }).join('');
+  wadah.innerHTML =
+    '<div class="tl-banner">' + t('Tersimpan di server') + ' · ' + esc(B() ? B().label : '') + '</div>' +
+    '<div class="sec">TANGGAL & KETERANGAN</div>' +
+    '<div class="tl-card"><input type="date" id="tlTgl" value="' + esc(formTes.tgl) + '">' +
+    '<input type="text" id="tlKet" placeholder="Keterangan" value="' + esc(formTes.ket) + '" style="margin-top:6px"></div>' +
+    '<div class="sec">JURNAL — tiap baris = 1 catatan bank, punya tag sendiri</div>' +
+    '<div class="tl-card">' + baris +
+    '<button class="btn-kecil" id="tlTambah" style="width:100%;margin-top:8px"' + (formTes.baris.length >= KMAX_TES ? ' disabled' : '') + '>＋ Tambah baris jurnal</button></div>' +
+    '<div class="sec">RINGKASAN</div><div class="tl-card" id="tlRing"></div>' +
+    '<div class="tl-card"><button class="btn-utama" id="tlSimpan" style="width:100%">' + t('Simpan') + '</button></div>' +
+    '<div class="sec">' + t('Tersimpan di server') + '</div>' +
+    (daftarTes ? '<div class="tl-card">' + daftarTes + '</div>' : '<div class="empty">' + t('Belum ada transaksi') + '</div>');
+  hitungRingTes();
 }
 
-function tabelTransaksi(daftar, tampilFund, bisaBatal) {
-  if (!daftar.length) return '<div class="rahasia">Belum ada transaksi bulan ini.</div>';
-  let h = '<table><thead><tr><th>Tgl</th><th>Keterangan</th><th style="text-align:right">Jumlah</th></tr></thead><tbody>';
-  for (const t of daftar) {
-    const ikon = t.arah === 'D' ? '＋' : '−';
-    h += `<tr>
-      <td>${tglPendek(t.date)}</td>
-      <td>${(t.description || '').replace(/[<>&]/g, '')}</td>
-      <td class="ke">${ikon} ${rpRingkas(t.amount)}</td>
-    </tr>`;
-    const ket = `${t.fund} · ${t.tag || 'tanpa tag'}` + (tampilFund ? ` · ${t.arah === 'D' ? 'Debit' : 'Kredit'}` : '');
-    const tombol = bisaBatal
-      ? `<button class="btnKecil" data-batal="${t.id}" style="float:right">Batalkan</button>`
-      : '';
-    h += `<tr class="sub"><td></td><td colspan="2">${tombol}${ket}</td></tr>`;
-  }
-  return h + '</tbody></table>';
-}
-
-/* ---------- TRANSAKSI ---------- */
-async function muatTransaksi() {
-  const tx = await panggil('transaksi', { bulan: BULAN });
-  if (!tx.ok) return tx;
-  const fundId = el('tFund').value;
-  const daftar = fundId ? tx.data.filter((x) => String(x.source_fund_id) === String(fundId)) : tx.data;
-  el('tJumlah').textContent = daftar.length + ' transaksi';
-  el('tTabel').innerHTML = tabelTransaksi(daftar, true, true);
-
-  /* tombol Batalkan — konfirmasi menyebut dampaknya (agents.md Bagian 6) */
-  el('tTabel').querySelectorAll('button[data-batal]').forEach((b) => {
-    b.onclick = async () => {
-      if (!confirm('Batalkan transaksi ini?\nSaldo fund akan kembali seperti sebelum transaksi ini dibuat.')) return;
-      b.disabled = true;
-      const hasil = await panggil('batalkan', { id: Number(b.dataset.batal) });
-      b.disabled = false;
-      if (!hasil.ok) { alert(hasil.error); return; }
-      await muatTransaksi();
-      await muatDashboard();
-    };
+/* ringkasan: Masuk & Keluar HANYA dari tag yang dihitung laporan.
+   Transfer · Koreksi · Pinjam · Hutang · Reimburse = uang numpang lewat, tidak dihitung (agents.md Bagian 9). */
+var TAG_TIDAK_DIHITUNG = ['Transfer', 'Koreksi', 'Pinjam', 'Hutang', 'Reimburse'];
+function hitungRingTes() {
+  var masuk = 0, keluar = 0, per = {};
+  formTes.baris.forEach(function (b) {
+    var n = numTes(b.jml), a = arahTetapTag(b.tag) || b.arah;
+    if (TAG_TIDAK_DIHITUNG.indexOf(b.tag) === -1) {
+      if (a === 'D') masuk += n; else keluar += n;
+    }
+    per[b.fund] = (per[b.fund] || 0) + (a === 'D' ? n : -n);
   });
-  return { ok: true };
+  var r = document.getElementById('tlRing');
+  if (!r) return;
+  r.innerHTML = '<div class="tl-r"><span>Total masuk (dihitung)</span><b class="mono">+' + rp2(masuk) + '</b></div>' +
+    '<div class="tl-r"><span>Total keluar (dihitung)</span><b class="mono">' + (keluar ? '−' : '') + rp2(keluar) + '</b></div>' +
+    Object.keys(per).map(function (f) {
+      return '<div class="tl-r sub"><span>' + esc(f) + '</span><b class="mono">' + (per[f] >= 0 ? '+' : '') + rp2(per[f]) + '</b></div>';
+    }).join('');
 }
 
-/* ---------- CATAT ---------- */
-function siapkanCatat() {
-  el('cTanggal').value = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
-  el('cJumlah').value = '';
-  el('cKet').value = '';
-  cFundPilih = null; cTagPilih = null; cArahPilih = null;
-  el('cFund').querySelectorAll('.chip').forEach((x) => x.classList.remove('pilih'));
-  el('cTag').querySelectorAll('.chip').forEach((x) => x.classList.remove('pilih'));
-  el('cArah').querySelectorAll('.chip').forEach((x) => x.classList.remove('pilih'));
-  el('cArahWrap').style.display = 'none';
-  sembunyikanPesan('cPesan');
-}
+/* SIMPAN KE SERVER — satu tindakan boleh berisi beberapa jurnal.
+   Tampilan TIDAK berubah; yang berganti hanya tujuannya (server). */
+function simpanTesDariForm() {
+  var tgl = document.getElementById('tlTgl').value;
+  var ket = document.getElementById('tlKet').value.trim();
+  var bln = bulanDariTgl(tgl);
+  var isi = formTes.baris.filter(function (b) { return numTes(b.jml) > 0; });
+  if (!bln) { alert(t('Tanggal di luar bulan yang tersedia.')); return; }
+  if (!ket) { alert(t('Keterangan belum diisi.')); return; }
+  if (!isi.length) { alert(t('Belum ada jumlah yang diisi.')); return; }
 
-async function simpanCatat() {
-  const jumlah = bacaJumlah(el('cJumlah').value);
-  if (!Number.isFinite(jumlah) || jumlah <= 0) { return pesan('cPesan', 'salah', 'Jumlah belum benar.'); }
-  if (!cFundPilih) { return pesan('cPesan', 'salah', 'Pilih sumber fund dulu.'); }
-  if (!cTagPilih) { return pesan('cPesan', 'salah', 'Pilih tag dulu.'); }
-  const tag = DATA_TAG.find((x) => x.name === cTagPilih);
-  if (tag && (tag.journal_type !== 'D' && tag.journal_type !== 'K') && !cArahPilih) {
-    return pesan('cPesan', 'salah', 'Tag ini dua arah — pilih Debit atau Kredit.');
-  }
+  var tombol = document.getElementById('tlSimpan');
+  if (tombol) { tombol.disabled = true; tombol.textContent = t('Menyimpan…'); }
 
-  el('cSimpan').disabled = true;
-  const hasil = await panggil('catat', {
-    tanggal: el('cTanggal').value,
-    jumlah: jumlah,
-    keterangan: el('cKet').value.trim(),
-    fundId: cFundPilih,
-    tag: cTagPilih,
-    arah: cArahPilih
+  panggilServer('catat', {
+    tanggal: tgl,
+    keterangan: ket,
+    baris: isi.map(function (b) {
+      var f = FUND().filter(function (x) { return x.nama === b.fund; })[0];
+      return { fundId: f ? f.id : 0, tag: b.tag, arah: arahTetapTag(b.tag) || b.arah, jumlah: numTes(b.jml) };
+    })
+  }).then(function (r) {
+    formTes = null;
+    return muatDariServer();
+  }).then(function () {
+    gbrInput();
+    alert(t('Tersimpan ke server.'));
+  }).catch(function (e) {
+    if (tombol) { tombol.disabled = false; tombol.textContent = t('Simpan'); }
+    alert(e.message);
   });
-  el('cSimpan').disabled = false;
-
-  if (!hasil.ok) { return pesan('cPesan', 'salah', hasil.error); }
-  pesan('cPesan', 'ok', 'Tersimpan · id ' + hasil.id + ' · ' + (hasil.arah === 'D' ? 'Debit' : 'Kredit'));
-  el('cJumlah').value = '';
-  el('cKet').value = '';
-  await muatTransaksi();
 }
 
-/* ---------- RIWAYAT ---------- */
-async function muatRiwayat() {
-  const r = await panggil('riwayat', { batas: 60 });
-  if (!r.ok) return r;
-  if (!r.data.length) { el('rDaftar').innerHTML = '<div class="rahasia">Belum ada riwayat.</div>'; return { ok: true }; }
+function batalkanTes(id) {
+  if (!confirm(t('Batalkan transaksi ini?') + '\n' + t('Saldo fund akan kembali seperti sebelum transaksi ini.'))) return;
+  panggilServer('batalkan', { id: Number(id) }).then(function () {
+    return muatDariServer();
+  }).then(function () {
+    gbrInput(); gbrDash();
+    alert(t('Sudah dibatalkan.'));
+  }).catch(function (e) { alert(e.message); });
+}
 
-  const warna = { CREATE: 'baru dibuat', UPDATE: 'diubah', DELETE: 'dibatalkan', RESTORE: 'dipulihkan' };
-  let h = '<div class="wrap"><table><thead><tr><th>Tgl</th><th>Aksi</th><th>Transaksi</th><th></th></tr></thead><tbody>';
-  for (const x of r.data) {
-    let isi = '(tidak terbaca)';
-    try {
-      const o = x.new_data ? JSON.parse(x.new_data) : (x.old_data ? JSON.parse(x.old_data) : null);
-      if (o) isi = (o.description || '') + ' · ' + Number(o.amount || 0).toLocaleString('id-ID');
-    } catch (e) { /* biarkan */ }
-    const bisa = x.action === 'DELETE' || x.action === 'RESTORE';
-    const tombol = x.action === 'DELETE'
-      ? `<button class="btnKecil" data-aksi="pulihkan" data-id="${x.record_id}">↩︎ Pulihkan</button>`
-      : (x.action === 'RESTORE' ? `<button class="btnKecil" data-aksi="batalkan" data-id="${x.record_id}">Batalkan</button>` : '');
-    h += `<tr>
-      <td>${String(x.timestamp || '').slice(5, 16)}</td>
-      <td>${warna[x.action] || x.action}</td>
-      <td>${isi}</td>
-      <td style="text-align:right">${tombol}</td>
-    </tr>`;
+function _batalLamaJanganDipakai(id) {
+  simpanTesKeMemori(bacaTes().filter(function (e) { return String(e.id) !== String(id); }));
+  terapkanTes();
+  gbrInput();
+}
+
+document.getElementById('inputIsi').addEventListener('input', function (e) {
+  if (!formTes) return;
+  if (e.target.id === 'tlTgl') formTes.tgl = e.target.value;
+  else if (e.target.id === 'tlKet') formTes.ket = e.target.value;
+  else if (e.target.dataset.k === 'jml') { formTes.baris[+e.target.dataset.i].jml = e.target.value; hitungRingTes(); }
+});
+document.getElementById('inputIsi').addEventListener('change', function (e) {
+  if (!formTes) return;
+  var i = +e.target.dataset.i;
+  if (e.target.dataset.k === 'fund') { formTes.baris[i].fund = e.target.value; hitungRingTes(); }
+  if (e.target.dataset.k === 'tag') {
+    formTes.baris[i].tag = e.target.value;
+    var tetap = arahTetapTag(e.target.value);
+    if (tetap) formTes.baris[i].arah = tetap;
+    gbrInput();
   }
-  el('rDaftar').innerHTML = h + '</tbody></table></div>';
+});
+document.getElementById('inputIsi').addEventListener('click', function (e) {
+  var b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  if (b.id === 'tlSimpan') { simpanTesDariForm(); return; }
+  if (b.id === 'tlTambah') { formTes.baris.push({ fund: B().fund[0].nama, tag: 'Transfer', arah: 'K', jml: '' }); gbrInput(); return; }
+  if (b.dataset.arah) { formTes.baris[+b.dataset.i].arah = b.dataset.arah; gbrInput(); return; }
+  if (b.dataset.del !== undefined && formTes.baris.length > 1) { formTes.baris.splice(+b.dataset.del, 1); gbrInput(); return; }
+  if (b.dataset.batal) { if (confirm('Batalkan data tes ini?')) batalkanTes(b.dataset.batal); }
+});
 
-  el('rDaftar').querySelectorAll('button[data-aksi]').forEach((b) => {
-    b.onclick = async () => {
-      b.disabled = true;
-      const hasil = await panggil(b.dataset.aksi, { id: Number(b.dataset.id) });
-      b.disabled = false;
-      if (!hasil.ok) { alert(hasil.error); return; }
-      await muatRiwayat();
-      await muatTransaksi();
-      await muatDashboard();
-    };
+/* ---- 15. MULAI — tunggu server dulu ---- */
+pasangGerbang();
+
+if (CLOUD.pin) {
+  muatDariServer().then(function () {
+    document.getElementById('gerbang').hidden = true;
+    document.getElementById('tabs').hidden = false;
+    document.querySelector('.head').hidden = false;
+    tampil('dash');
+  }).catch(function (e) {
+    document.getElementById('gerbangPesan').className = 'gerbang-pesan tampil salah';
+    document.getElementById('gerbangPesan').textContent = e.message;
   });
-  return { ok: true };
 }
 
-/* ---------- MUAT SEMUA ---------- */
-async function muatSemua() {
-  if (!PIN) { pindah('s-set'); pesan('pPesan', 'salah', 'Masukkan PIN dulu.'); return; }
-  const dasar = await muatDasar();
-  if (!dasar.ok) {
-    if (dasar.pinSalah) { pindah('s-set'); pesan('pPesan', 'salah', dasar.error); return; }
-    pindah('s-set'); pesan('pPesan', 'salah', dasar.error); return;
-  }
-  await muatDashboard();
-  await muatTransaksi();
-  await muatRiwayat();
+/* ============================================================
+   14. CLOUD — pemuat data, gerbang PIN, layar Riwayat
+   ============================================================ */
+
+/** Ambil seluruh data bulan dari server, lalu gambar ulang seperti biasa. */
+function muatDariServer() {
+  return panggilServer('bulan', { batas: CLOUD.bulanMaks }).then(function (r) {
+    var daftar = r.data;
+    if (!daftar.length) throw new Error('Belum ada data di server');
+    return panggilServer('dashboard', { bulan: daftar });
+  }).then(function (r) {
+    BULAN = r.data;
+    BULAN_ASLI = null;
+    idxBulan = 0;
+    if (!FUND().some(function (f) { return f.nama === fundSaring; })) fundSaring = FUND_AWAL;
+    SIAP = true;
+    gambarUlang();
+    return true;
+  });
 }
 
-/* ---------- PENGATURAN ---------- */
-el('pPin').value = PIN;
-el('pUrl').value = ALAMAT;
-el('pSimpan').onclick = async () => {
-  PIN = el('pPin').value.trim();
-  ALAMAT = el('pUrl').value.trim();
-  localStorage.setItem(AMBANG_DISIMPAN, PIN);
-  localStorage.setItem(AMBANG_URL, ALAMAT);
-  sembunyikanPesan('pPesan');
-  const uji = await panggil('fund');
-  if (!uji.ok) { pesan('pPesan', 'salah', uji.error); return; }
-  pesan('pPesan', 'ok', 'Tersambung · ' + uji.data.length + ' fund');
-  await muatSemua();
-  pindah('s-dash');
-};
-el('pUji').onclick = async () => {
-  sembunyikanPesan('pUjiPesan');
-  const uji = await panggil('fund');
-  if (!uji.ok) { pesan('pUjiPesan', 'salah', uji.error); return; }
-  const t = await panggil('tag');
-  pesan('pUjiPesan', 'ok', 'Tersambung · ' + uji.data.length + ' fund · ' + (t.ok ? t.data.length : '?') + ' tag');
-};
+/* ---------- gerbang PIN ---------- */
+function pasangGerbang() {
+  var g = document.getElementById('gerbang');
+  var ge = document.getElementById('gerbangPesan');
+  document.getElementById('gPin').value = CLOUD.pin;
+  document.getElementById('gAlamat').value = CLOUD.alamat;
 
-el('bulan').onchange = async () => { BULAN = el('bulan').value; await muatDashboard(); await muatTransaksi(); };
-el('tFund').onchange = muatTransaksi;
-el('tCatat').onclick = () => { siapkanCatat(); pindah('s-catat'); };
-el('tRiwayat').onclick = () => { pindah('s-riwayat'); muatRiwayat(); };
-el('rKembali').onclick = () => pindah('s-tx');
-el('cSimpan').onclick = simpanCatat;
-el('cBatal').onclick = () => pindah('s-tx');
+  document.getElementById('gMasuk').addEventListener('click', function () {
+    CLOUD.pin = document.getElementById('gPin').value.trim();
+    CLOUD.alamat = document.getElementById('gAlamat').value.trim() || CLOUD.alamat;
+    ge.className = 'gerbang-pesan tampil';
+    ge.textContent = t('Menyambung…');
+    simpanCloud();
+    muatDariServer().then(function () {
+      g.hidden = true;
+      document.getElementById('tabs').hidden = false;
+      document.querySelector('.head').hidden = false;
+      tampil('dash');
+      ge.className = 'gerbang-pesan';
+    }).catch(function (e) {
+      ge.className = 'gerbang-pesan tampil salah';
+      ge.textContent = e.message;
+    });
+  });
+}
 
-/* ---------- mulai ---------- */
-BULAN = bulanSekarang();
-el('bulan').value = BULAN;
-muatSemua();
+/* ---------- layar Riwayat ---------- */
+function gbrRiwayat() {
+  var wadah = document.getElementById('riwayatIsi');
+  if (!wadah) return;
+  jadikanRiwayat = [];
+  wadah.innerHTML = '<div class="sec">' + t('Riwayat perubahan') + '</div>' +
+    '<div class="hint">' + t('Setiap catat, ubah, dan batalkan tercatat di sini. Bisa dikembalikan.') + '</div>' +
+    '<div id="riwayatDaftar"><div class="empty">' + t('Sedang memuat…') + '</div></div>';
+
+  panggilServer('riwayat', { batas: 60 }).then(function (r) {
+    var kotak = document.getElementById('riwayatDaftar');
+    if (!kotak) return;
+    if (!r.data.length) { kotak.innerHTML = '<div class="empty">' + t('Belum ada riwayat') + '</div>'; return; }
+
+    var nama = { CREATE: 'dibuat', UPDATE: 'diubah', DELETE: 'dibatalkan', RESTORE: 'dipulihkan' };
+    kotak.innerHTML = '<div class="cover">' + r.data.map(function (x, i) {
+      var isi = '';
+      try {
+        var o = x.new_data ? JSON.parse(x.new_data) : (x.old_data ? JSON.parse(x.old_data) : null);
+        if (o) {
+          if (o.keterangan) isi = o.keterangan;
+          else if (o.description) isi = o.description;
+          else if (o.baris) isi = o.baris.length + ' jurnal';
+          else if (o.grup) isi = o.grup;
+          var n = o.amount || (o.baris && o.baris.length ? o.baris.reduce(function (s, b) { return s + Number(b.jumlah || 0); }, 0) : 0);
+          if (n) isi += ' · ' + rp2(n);
+        }
+      } catch (e) { isi = ''; }
+      jadikanRiwayat[i] = x;
+      var bisa = (x.action === 'DELETE' || x.action === 'RESTORE');
+      var teksTombol = x.action === 'DELETE' ? ('↩️ ' + t('Pulihkan')) : t('Batalkan');
+      return '<div class="crow"><span class="cl"><b>' + esc(String(x.timestamp).slice(5, 16)) + '</b> · ' +
+        esc(t(nama[x.action] || x.action)) + '<br><small>' + esc(isi) + '</small></span>' +
+        (bisa ? '<button class="btn-kecil" data-riw="' + i + '">' + teksTombol + '</button>' : '') + '</div>';
+    }).join('') + '</div>';
+
+    kotak.querySelectorAll('[data-riw]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var x = jadikanRiwayat[+b.getAttribute('data-riw')];
+        if (!x) return;
+        var aksi = x.action === 'DELETE' ? 'pulihkan' : 'batalkan';
+        if (!confirm(t(aksi === 'pulihkan' ? 'Pulihkan transaksi ini?' : 'Batalkan transaksi ini?') + '\n' +
+            t('Saldo fund akan menyesuaikan sendiri.'))) return;
+        b.disabled = true;
+        panggilServer(aksi, { id: Number(x.record_id) }).then(function () {
+          return muatDariServer();
+        }).then(function () {
+          gbrRiwayat(); gbrDash();
+        }).catch(function (e) { b.disabled = false; alert(e.message); });
+      });
+    });
+  }).catch(function (e) {
+    var kotak = document.getElementById('riwayatDaftar');
+    if (kotak) kotak.innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+  });
+}
+var jadikanRiwayat = [];
+
 </script>
 </body>
 </html>

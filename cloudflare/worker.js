@@ -7,14 +7,31 @@
    • Perintah tetap saja — TIDAK ada SQL dari luar.
    • Setiap tulis WAJIB tercatat di audit_log (aturan C6 rollback).
 
-   BACA  : fund · tag · snapshot · transaksi · riwayat
-   TULIS : catat · ubah · batalkan · pulihkan
+   BACA  : bulan · dashboard · fund · tag · snapshot · transaksi · saldo
+           · ringkasan · riwayat
+   TULIS : catat (1 atau banyak jurnal) · ubah · batalkan · pulihkan
    ============================================================ */
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type"
+};
+
+/* 5 tag yang DIKECUALIKAN dari ringkasan bulanan (agents.md Bagian 9).
+   Pajak & Bunga TIDAK dikecualikan. */
+const TAG_KECUALI = ["Transfer", "Koreksi", "Pinjam", "Hutang", "Reimburse"];
+
+const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli",
+  "Agustus", "September", "Oktober", "November", "Desember"];
+
+/* Ikon fund & tag — sama seperti tools/siapkan-data.cjs (bukan data keuangan) */
+const IKON_FUND = {
+  Superbank: "🏦", SeaBank: "🌊", Celengan: "🐷", "Dana Sopir": "🧑‍✈️",
+  "Dana swn": "👥", Tunai: "💵", "Sopir pinjam uang": "🤝", "BCA tabungan": "🏧",
+  "BCA Saham": "📈", Deposito: "🔒", "Tabungan A": "🅰️", "Tabungan B": "🅱️",
+  ShopeePay: "🛒", OVO: "🟣", GoPay: "🟢", "Tabungan C": "🇨", "Tabungan D": "🇩",
+  "Tabungan E": "🇪"
 };
 
 function balas(data, status = 200) {
@@ -30,20 +47,17 @@ function balas(data, status = 200) {
    nilai mentah dari pengguna ke dalam SQL.
    ------------------------------------------------------------------ */
 
-/** Teks → kutip tunggal, kutip di dalam digandakan. */
 function teks(v) {
   if (v === null || v === undefined) return "NULL";
   return "'" + String(v).replace(/'/g, "''") + "'";
 }
 
-/** Angka pecahan — wajib angka sah. */
 function angka(v) {
   const n = Number(v);
   if (!Number.isFinite(n)) throw new Error("Angka tidak sah");
   return String(n);
 }
 
-/** Angka bulat — wajib bilangan bulat. */
 function bulat(v) {
   const n = Number(v);
   if (!Number.isInteger(n)) throw new Error("Angka bulat tidak sah");
@@ -54,6 +68,9 @@ function bulat(v) {
 function waktuSekarang() {
   return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 19).replace("T", " ");
 }
+
+/** Bulatkan 2 desimal — menghapus debu pembulatan SQLite vs PostgreSQL. */
+function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 
 /* ------------------------------------------------------------------
    JALUR KE LAYERBASE
@@ -90,7 +107,7 @@ function bulanValid(v) {
   const y = Number(m[1]), b = Number(m[2]);
   if (b < 1 || b > 12) return null;
   const akhir = new Date(Date.UTC(y, b, 0)).getUTCDate();
-  return { y, b, awal: `${m[1]}-${m[2]}-01`, akhir: `${m[1]}-${m[2]}-${String(akhir).padStart(2, "0")}` };
+  return { y, b, akhirHari: akhir, kunci: m[0], awal: `${m[1]}-${m[2]}-01`, akhir: `${m[1]}-${m[2]}-${String(akhir).padStart(2, "0")}` };
 }
 
 function tanggalValid(v) {
@@ -110,7 +127,6 @@ function skemaValid(env) {
    BANTUAN DATA
    ------------------------------------------------------------------ */
 
-/** Ambil tag dari database — sekaligus jadi DAFTAR PUTIH (anti suntikan). */
 async function ambilTag(env, skema, nama) {
   const r = await jalankanSQL(env,
     `SELECT id, name, journal_type, has_tax, is_system FROM ${skema}.tags ` +
@@ -118,7 +134,6 @@ async function ambilTag(env, skema, nama) {
   return r[0] || null;
 }
 
-/** Cari journal_id untuk fund + arah tertentu. */
 async function ambilJurnal(env, skema, fundId, arah) {
   const r = await jalankanSQL(env,
     `SELECT id FROM ${skema}.journals ` +
@@ -129,15 +144,14 @@ async function ambilJurnal(env, skema, fundId, arah) {
 
 async function fundAda(env, skema, fundId) {
   const r = await jalankanSQL(env,
-    `SELECT id FROM ${skema}.source_funds WHERE id = ${bulat(fundId)} AND deleted_at IS NULL LIMIT 1`);
+    `SELECT 1 AS ada FROM ${skema}.source_funds WHERE id = ${bulat(fundId)} AND deleted_at IS NULL LIMIT 1`);
   return r.length > 0;
 }
 
-/** Satu baris transaksi lengkap (untuk riwayat & pembatalan). */
 async function ambilTransaksi(env, skema, id) {
   const r = await jalankanSQL(env,
     `SELECT t.id, t.date, t.description, t.amount, t.source_fund_id, t.journal_id, ` +
-    `t.transfer_pair_id, t.tag, t.has_tax, t.deleted_at, t.created_at, t.updated_at, ` +
+    `t.transfer_pair_id, t.tag, t.has_tax, t.deleted_at, t.created_at, t.updated_at, t.notes, ` +
     `j.type AS arah, f.name AS fund ` +
     `FROM ${skema}.transactions t ` +
     `JOIN ${skema}.journals j ON j.id = t.journal_id ` +
@@ -146,7 +160,6 @@ async function ambilTransaksi(env, skema, id) {
   return r[0] || null;
 }
 
-/** Catat ke audit_log — WAJIB untuk setiap tulis (aturan C6). */
 function catatRiwayat(skema, aksi, id, lama, baru) {
   return `INSERT INTO ${skema}.audit_log (username, action, table_name, record_id, old_data, new_data, timestamp) ` +
     `VALUES ('hp', ${teks(aksi)}, 'transactions', ${bulat(id)}, ` +
@@ -154,84 +167,92 @@ function catatRiwayat(skema, aksi, id, lama, baru) {
     `${baru === null ? "NULL" : teks(JSON.stringify(baru))}, ${teks(waktuSekarang())})`;
 }
 
+/** Terjemahkan satu baris jurnal dari pengguna → siap tulis. */
+async function siapkanBaris(env, skema, b) {
+  const jumlah = Number(b.jumlah);
+  if (!Number.isFinite(jumlah) || jumlah <= 0) throw new Error("Jumlah harus lebih dari 0");
+  if (jumlah > 1000000000) throw new Error("Jumlah lebih dari 1 miliar — periksa lagi");
+
+  const fundId = Number(b.fundId);
+  if (!Number.isInteger(fundId)) throw new Error("Fund tidak sah");
+  if (!(await fundAda(env, skema, fundId))) throw new Error("Fund tidak ditemukan");
+
+  const tag = await ambilTag(env, skema, b.tag);
+  if (!tag) throw new Error(`Tag "${b.tag}" tidak dikenal`);
+
+  /* Arah: tag yang mengunci arah menang; tag dua arah pakai pilihan pengguna */
+  let arah = tag.journal_type;
+  if (arah !== "D" && arah !== "K") {
+    arah = b.arah === "D" || b.arah === "K" ? b.arah : null;
+    if (!arah) throw new Error(`Tag "${tag.name}" dua arah — pilih Debit atau Kredit`);
+  }
+
+  const journalId = await ambilJurnal(env, skema, fundId, arah);
+  if (!journalId) throw new Error(`Jurnal ${arah} untuk fund itu tidak ada`);
+
+  return { fundId, journalId, jumlah, arah, tag };
+}
+
 /* ------------------------------------------------------------------
-   AKSI TULIS
+   TULIS
    ------------------------------------------------------------------ */
 
-/** catat — buat 1 transaksi baru. */
+/**
+ * catat — buat 1 ATAU BANYAK jurnal sekaligus.
+ * Satu tindakan Bapak bisa berisi beberapa catatan bank (multi-jurnal).
+ * Semua baris dalam satu tindakan diberi tanda grup di kolom `notes`
+ * supaya bisa dibatalkan bersama-sama.
+ */
 async function aksiCatat(env, skema, isi) {
   const tanggal = tanggalValid(isi.tanggal);
   if (!tanggal) return balas({ ok: false, error: "Tanggal harus YYYY-MM-DD dan sah" }, 400);
-
-  const jumlah = Number(isi.jumlah);
-  if (!Number.isFinite(jumlah) || jumlah <= 0) {
-    return balas({ ok: false, error: "Jumlah harus lebih dari 0" }, 400);
-  }
-  if (jumlah > 1000000000) {
-    return balas({ ok: false, error: "Jumlah lebih dari 1 miliar — periksa lagi" }, 400);
-  }
 
   const keterangan = String(isi.keterangan || "").trim();
   if (!keterangan) return balas({ ok: false, error: "Keterangan wajib diisi" }, 400);
   if (keterangan.length > 300) return balas({ ok: false, error: "Keterangan terlalu panjang" }, 400);
 
-  const fundId = Number(isi.fundId);
-  if (!Number.isInteger(fundId)) return balas({ ok: false, error: "Fund tidak sah" }, 400);
-  if (!(await fundAda(env, skema, fundId))) {
-    return balas({ ok: false, error: "Fund tidak ditemukan" }, 400);
-  }
+  /* Dukung dua bentuk: {fundId, tag, jumlah} atau {baris:[...]} */
+  const daftar = Array.isArray(isi.baris) && isi.baris.length
+    ? isi.baris
+    : [{ fundId: isi.fundId, tag: isi.tag, arah: isi.arah, jumlah: isi.jumlah }];
 
-  const tag = await ambilTag(env, skema, isi.tag);
-  if (!tag) return balas({ ok: false, error: "Tag tidak dikenal" }, 400);
+  if (daftar.length > 12) return balas({ ok: false, error: "Terlalu banyak jurnal (maks 12)" }, 400);
 
-  /* Arah: tag yang mengunci arah menang; tag dua arah (journal_type kosong) pakai pilihan pengguna */
-  let arah = tag.journal_type;
-  if (arah !== "D" && arah !== "K") {
-    arah = isi.arah === "D" || isi.arah === "K" ? isi.arah : null;
-    if (!arah) {
-      return balas({ ok: false, error: `Tag "${tag.name}" dua arah — pilih Debit atau Kredit` }, 400);
-    }
-  }
-
-  const journalId = await ambilJurnal(env, skema, fundId, arah);
-  if (!journalId) {
-    return balas({ ok: false, error: `Jurnal ${arah} untuk fund itu tidak ada` }, 400);
-  }
+  const terpakai = await Promise.all(daftar.map((b) => siapkanBaris(env, skema, b)));
 
   const sekarang = waktuSekarang();
+  const grup = isi.grup ? String(isi.grup).slice(0, 60) : `grup:${Date.now()}`;
   const kolom =
     "date, description, amount, source_fund_id, journal_id, qty, tag, has_tax, " +
-    "is_historical, is_belanja, loan_lunas, created_at, created_by";
-  const nilai =
-    `${teks(tanggal)}, ${teks(keterangan)}, ${angka(jumlah)}, ${bulat(fundId)}, ${bulat(journalId)}, ` +
-    `1, ${teks(tag.name)}, ${bulat(tag.has_tax)}, 0, 0, 0, ${teks(sekarang)}, 'hp'`;
+    "is_historical, is_belanja, loan_lunas, notes, created_at, created_by";
 
-  const baru = {
-    date: tanggal, description: keterangan, amount: jumlah,
-    source_fund_id: fundId, journal_id: journalId, tag: tag.name, arah
-  };
+  const perintah = terpakai.map((t) =>
+    `INSERT INTO ${skema}.transactions (${kolom}) VALUES (` +
+    `${teks(tanggal)}, ${teks(keterangan)}, ${angka(t.jumlah)}, ${bulat(t.fundId)}, ` +
+    `${bulat(t.journalId)}, 1, ${teks(t.tag.name)}, ${bulat(t.tag.has_tax)}, 0, 0, 0, ` +
+    `${teks(grup)}, ${teks(sekarang)}, 'hp')`);
 
-  await jalankanSekaligus(env, [
-    `INSERT INTO ${skema}.transactions (${kolom}) VALUES (${nilai})`,
-    catatRiwayat(skema, "CREATE", 0, null, baru)
-  ]);
+  perintah.push(catatRiwayat(skema, "CREATE", 0,
+    null, { grup, tanggal, keterangan, baris: terpakai.map((t) => ({ fund: t.fundId, tag: t.tag.name, arah: t.arah, jumlah: t.jumlah })) }));
 
-  /* id asli diambil ulang — audit_log butuh record_id yang benar */
-  const baris = await jalankanSQL(env,
-    `SELECT id FROM ${skema}.transactions WHERE created_at = ${teks(sekarang)} AND created_by = 'hp' ` +
-    `ORDER BY id DESC LIMIT 1`);
-  const idBaru = baris[0] ? Number(baris[0].id) : null;
+  await jalankanSekaligus(env, perintah);
 
-  if (idBaru !== null) {
+  const barisBaru = await jalankanSQL(env,
+    `SELECT id FROM ${skema}.transactions WHERE notes = ${teks(grup)} ORDER BY id`);
+  const idBaru = barisBaru.map((x) => Number(x.id));
+
+  if (idBaru.length) {
     await jalankanSQL(env,
-      `UPDATE ${skema}.audit_log SET record_id = ${bulat(idBaru)} ` +
+      `UPDATE ${skema}.audit_log SET record_id = ${bulat(idBaru[0])} ` +
       `WHERE record_id = 0 AND action = 'CREATE' AND timestamp = ${teks(sekarang)}`);
   }
 
-  return balas({ ok: true, id: idBaru, arah, tag: tag.name, fundId, jumlah, tanggal });
+  return balas({
+    ok: true, grup, id: idBaru, jumlahBaris: idBaru.length,
+    baris: terpakai.map((t, i) => ({ id: idBaru[i] || null, fund: t.fundId, tag: t.tag.name, arah: t.arah, jumlah: t.jumlah }))
+  });
 }
 
-/** ubah — perbaiki transaksi yang sudah ada (nilai lama disimpan). */
 async function aksiUbah(env, skema, isi) {
   const id = Number(isi.id);
   if (!Number.isInteger(id)) return balas({ ok: false, error: "Id tidak sah" }, 400);
@@ -243,51 +264,45 @@ async function aksiUbah(env, skema, isi) {
   const tanggal = tanggalValid(isi.tanggal);
   if (!tanggal) return balas({ ok: false, error: "Tanggal harus YYYY-MM-DD dan sah" }, 400);
 
-  const jumlah = Number(isi.jumlah);
-  if (!Number.isFinite(jumlah) || jumlah <= 0) {
-    return balas({ ok: false, error: "Jumlah harus lebih dari 0" }, 400);
-  }
-
   const keterangan = String(isi.keterangan || "").trim();
   if (!keterangan) return balas({ ok: false, error: "Keterangan wajib diisi" }, 400);
 
-  const fundId = Number(isi.fundId);
-  if (!Number.isInteger(fundId)) return balas({ ok: false, error: "Fund tidak sah" }, 400);
-  if (!(await fundAda(env, skema, fundId))) {
-    return balas({ ok: false, error: "Fund tidak ditemukan" }, 400);
-  }
-
-  const tag = await ambilTag(env, skema, isi.tag);
-  if (!tag) return balas({ ok: false, error: "Tag tidak dikenal" }, 400);
-
-  let arah = tag.journal_type;
-  if (arah !== "D" && arah !== "K") {
-    arah = isi.arah === "D" || isi.arah === "K" ? isi.arah : lama.arah;
-  }
-
-  const journalId = await ambilJurnal(env, skema, fundId, arah);
-  if (!journalId) return balas({ ok: false, error: `Jurnal ${arah} untuk fund itu tidak ada` }, 400);
-
+  const t = await siapkanBaris(env, skema, isi);
   const sekarang = waktuSekarang();
-  const baru = {
-    date: tanggal, description: keterangan, amount: jumlah,
-    source_fund_id: fundId, journal_id: journalId, tag: tag.name, arah
-  };
 
   await jalankanSekaligus(env, [
     `UPDATE ${skema}.transactions SET ` +
-    `date = ${teks(tanggal)}, description = ${teks(keterangan)}, amount = ${angka(jumlah)}, ` +
-    `source_fund_id = ${bulat(fundId)}, journal_id = ${bulat(journalId)}, tag = ${teks(tag.name)}, ` +
-    `has_tax = ${bulat(tag.has_tax)}, updated_at = ${teks(sekarang)}, updated_by = 'hp' ` +
+    `date = ${teks(tanggal)}, description = ${teks(keterangan)}, amount = ${angka(t.jumlah)}, ` +
+    `source_fund_id = ${bulat(t.fundId)}, journal_id = ${bulat(t.journalId)}, tag = ${teks(t.tag.name)}, ` +
+    `has_tax = ${bulat(t.tag.has_tax)}, updated_at = ${teks(sekarang)}, updated_by = 'hp' ` +
     `WHERE id = ${bulat(id)}`,
-    catatRiwayat(skema, "UPDATE", id, lama, baru)
+    catatRiwayat(skema, "UPDATE", id, lama,
+      { date: tanggal, description: keterangan, amount: t.jumlah, source_fund_id: t.fundId, tag: t.tag.name, arah: t.arah })
   ]);
 
-  return balas({ ok: true, id, arah, tag: tag.name });
+  return balas({ ok: true, id, arah: t.arah, tag: t.tag.name });
 }
 
-/** batalkan — soft delete (tidak pernah hapus keras, aturan E2/E4). */
+/** batalkan — soft delete per id ATAU per grup (multi-jurnal sekaligus). */
 async function aksiBatalkan(env, skema, isi) {
+  const grup = isi.grup ? String(isi.grup) : null;
+  const sekarang = waktuSekarang();
+
+  if (grup) {
+    const baris = await jalankanSQL(env,
+      `SELECT id FROM ${skema}.transactions WHERE notes = ${teks(grup)} AND deleted_at IS NULL ORDER BY id`);
+    if (!baris.length) return balas({ ok: false, error: "Tidak ada transaksi aktif di grup itu" }, 400);
+
+    const perintah = baris.map((b) =>
+      `UPDATE ${skema}.transactions SET deleted_at = ${teks(sekarang)}, deleted_by = 'hp' ` +
+      `WHERE id = ${bulat(b.id)} AND deleted_at IS NULL`);
+    perintah.push(catatRiwayat(skema, "DELETE", Number(baris[0].id),
+      { grup, id: baris.map((b) => Number(b.id)) }, null));
+
+    await jalankanSekaligus(env, perintah);
+    return balas({ ok: true, grup, dibatalkan: baris.length, id: baris.map((b) => Number(b.id)) });
+  }
+
   const id = Number(isi.id);
   if (!Number.isInteger(id)) return balas({ ok: false, error: "Id tidak sah" }, 400);
 
@@ -295,7 +310,6 @@ async function aksiBatalkan(env, skema, isi) {
   if (!lama) return balas({ ok: false, error: "Transaksi tidak ditemukan" }, 404);
   if (lama.deleted_at) return balas({ ok: false, error: "Transaksi sudah dibatalkan" }, 400);
 
-  const sekarang = waktuSekarang();
   await jalankanSekaligus(env, [
     `UPDATE ${skema}.transactions SET deleted_at = ${teks(sekarang)}, deleted_by = 'hp' ` +
     `WHERE id = ${bulat(id)} AND deleted_at IS NULL`,
@@ -307,6 +321,23 @@ async function aksiBatalkan(env, skema, isi) {
 
 /** pulihkan — kembalikan transaksi yang dibatalkan (inti rollback). */
 async function aksiPulihkan(env, skema, isi) {
+  const grup = isi.grup ? String(isi.grup) : null;
+  const sekarang = waktuSekarang();
+
+  if (grup) {
+    const baris = await jalankanSQL(env,
+      `SELECT id FROM ${skema}.transactions WHERE notes = ${teks(grup)} AND deleted_at IS NOT NULL ORDER BY id`);
+    if (!baris.length) return balas({ ok: false, error: "Tidak ada transaksi terbatalkan di grup itu" }, 400);
+
+    const perintah = baris.map((b) =>
+      `UPDATE ${skema}.transactions SET deleted_at = NULL, deleted_by = NULL WHERE id = ${bulat(b.id)}`);
+    perintah.push(catatRiwayat(skema, "RESTORE", Number(baris[0].id),
+      null, { grup, id: baris.map((b) => Number(b.id)) }));
+
+    await jalankanSekaligus(env, perintah);
+    return balas({ ok: true, grup, dipulihkan: baris.length, id: baris.map((b) => Number(b.id)) });
+  }
+
   const id = Number(isi.id);
   if (!Number.isInteger(id)) return balas({ ok: false, error: "Id tidak sah" }, 400);
 
@@ -324,15 +355,195 @@ async function aksiPulihkan(env, skema, isi) {
 }
 
 /* ------------------------------------------------------------------
-   AKSI BACA
+   BACA
    ------------------------------------------------------------------ */
 
 /**
- * saldo — SALDO TIAP FUND untuk satu bulan.
- * 🔴 Rumus WAJIB sama dengan server/core/saldo.ts:
- *      Saldo = Saldo Awal + Debit − Kredit
- *    Jangan ubah salah satu tanpa yang lain.
+ * bulan — daftar bulan yang punya SNAPSHOT, terbaru dulu.
+ *
+ * 🔴 WAJIB dari monthly_snapshots saja — persis tools/siapkan-data.cjs.
+ *    Bulan tanpa snapshot tidak punya saldo awal, jadi angkanya tidak berarti.
+ *    Kalau memakai tanggal transaksi, bulan bertanggal salah ikut terbawa
+ *    (data Bapak punya 1 tx di 2027-09 dan 1 di 2026-12 → bug lama, lihat
+ *    agents.md Bagian 8) dan halaman membuka bulan yang salah.
  */
+async function aksiBulan(env, skema, isi) {
+  const batas = Math.min(Math.max(Number(isi.batas) || 6, 1), 36);
+  const r = await jalankanSQL(env, `
+    SELECT year::text || '-' || lpad(month::text, 2, '0') AS kunci
+    FROM ${skema}.monthly_snapshots
+    GROUP BY year, month
+    ORDER BY year DESC, month DESC
+    LIMIT ${bulat(batas)}`);
+  return balas({ ok: true, data: r.map((x) => x.kunci) });
+}
+
+/**
+ * dashboard — SELURUH data satu bulan (atau beberapa bulan sekaligus).
+ * Bentuk hasilnya SAMA dengan yang dipakai halaman UangKu
+ * (lihat tools/siapkan-data.cjs) supaya tampilan tidak perlu diubah.
+ */
+async function aksiDashboard(env, skema, isi) {
+  const daftarKunci = Array.isArray(isi.bulan) ? isi.bulan : [isi.bulan];
+  const bulan = [];
+  for (const k of daftarKunci) {
+    const b = bulanValid(k);
+    if (!b) return balas({ ok: false, error: `Format bulan harus YYYY-MM (dapat: ${k})` }, 400);
+    bulan.push(b);
+  }
+  if (bulan.length > 12) return balas({ ok: false, error: "Terlalu banyak bulan" }, 400);
+
+  bulan.sort((a, b) => b.kunci.localeCompare(a.kunci));
+
+  /* --- 1. fund & tag (sekali saja) --- */
+  const fund = await jalankanSQL(env,
+    `SELECT id, name, sort_order, is_blocked, is_titipan, minimum_saldo FROM ${skema}.source_funds ` +
+    `WHERE deleted_at IS NULL ORDER BY sort_order, id`);
+  const tag = await jalankanSQL(env,
+    `SELECT id, name, icon, sort_order, journal_type, has_tax, is_system FROM ${skema}.tags ` +
+    `WHERE deleted_at IS NULL ORDER BY sort_order, id`);
+  const snap = await jalankanSQL(env,
+    `SELECT source_fund_id, year, month, saldo_awal, is_locked FROM ${skema}.monthly_snapshots`);
+
+  /* --- 2. transaksi seluruh rentang (dipakai untuk semua bulan) --- */
+  const palingAwal = bulan[bulan.length - 1].awal;
+  const palingAkhir = bulan[0].akhir;
+  const tx = await jalankanSQL(env,
+    `SELECT t.id, t.date, t.description, t.amount, t.tag, t.has_tax, t.transfer_pair_id, ` +
+    `t.notes, t.source_fund_id, j.type AS arah ` +
+    `FROM ${skema}.transactions t JOIN ${skema}.journals j ON j.id = t.journal_id ` +
+    `WHERE t.date >= ${teks(palingAwal)} AND t.date <= ${teks(palingAkhir)} ` +
+    `AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0 ` +
+    `ORDER BY t.date DESC, t.id DESC`);
+
+  /* --- 3. susun per bulan (perhitungan di JS — tidak ada query per fund) --- */
+  const petaSnap = new Map(snap.map((s) => [`${s.source_fund_id}|${s.year}-${String(s.month).padStart(2, "0")}`, s]));
+  const petaFund = new Map(fund.map((f) => [Number(f.id), f.name]));
+
+  const hasil = bulan.map((b) => {
+    const txBulan = tx.filter((t) => t.date >= b.awal && t.date <= b.akhir);
+
+    /* aliran per fund */
+    const alir = new Map();
+    const perTag = new Map();
+    let masukRing = 0, keluarRing = 0, bunga = 0, nBunga = 0, pajak = 0, nPajak = 0;
+
+    for (const t of txBulan) {
+      const jumlah = Number(t.amount) || 0;
+      const fid = Number(t.source_fund_id);
+      const a = alir.get(fid) || { d: 0, k: 0, n: 0 };
+      a.n += 1;
+      if (t.arah === "D") a.d += jumlah; else a.k += jumlah;
+      alir.set(fid, a);
+
+      const pt = perTag.get(t.tag) || { masuk: 0, keluar: 0, n: 0 };
+      pt.n += 1;
+      if (t.arah === "D") pt.masuk += jumlah; else pt.keluar += jumlah;
+      perTag.set(t.tag, pt);
+
+      /* ringkasan: 5 tag dikecualikan — tag kosong TETAP dihitung (sama core/saldo.ts) */
+      if (t.tag === null || TAG_KECUALI.indexOf(t.tag) === -1) {
+        if (t.arah === "D") masukRing += jumlah; else keluarRing += jumlah;
+      }
+      if (t.tag === "Bunga" && t.arah === "D") { bunga += jumlah; nBunga++; }
+      if (t.tag === "Pajak" && t.arah === "K") { pajak += jumlah; nPajak++; }
+    }
+
+    const daftarFund = fund.map((f) => {
+      const s = petaSnap.get(`${f.id}|${b.kunci}`);
+      const a = alir.get(Number(f.id)) || { d: 0, k: 0, n: 0 };
+      const saldoAwal = s ? Number(s.saldo_awal) : 0;
+      return {
+        id: Number(f.id), nama: f.name, ikon: IKON_FUND[f.name] || "💰",
+        urut: Number(f.sort_order),
+        diblokir: Number(f.is_blocked) === 1, titipan: Number(f.is_titipan) === 1,
+        minSaldo: f.minimum_saldo === null ? null : Number(f.minimum_saldo),
+        saldoAwal: r2(saldoAwal), masuk: r2(a.d), keluar: r2(a.k),
+        saldo: r2(saldoAwal + a.d - a.k), n: a.n, adaSnap: !!s
+      };
+    });
+
+    const totSaldo = daftarFund.reduce((s, f) => s + f.saldo, 0);
+    const totAwal = daftarFund.reduce((s, f) => s + f.saldoAwal, 0);
+
+    return {
+      kunci: b.kunci,
+      label: `${NAMA_BULAN[b.b - 1]} ${b.y}`,
+      labelSingkat: `${NAMA_BULAN[b.b - 1].slice(0, 3)} ${b.y}`,
+      awal: b.awal, akhir: b.akhir,
+      terkunci: daftarFund.every((f) => {
+        const s = petaSnap.get(`${f.id}|${b.kunci}`);
+        return !!s && Number(s.is_locked) === 1;
+      }),
+      fund: daftarFund,
+      tag: tag.map((g) => {
+        const pt = perTag.get(g.name);
+        return {
+          id: Number(g.id), nama: g.name, ikon: g.icon || "🏷️", urut: Number(g.sort_order),
+          arah: g.journal_type || "bebas",
+          pajak: Number(g.has_tax) === 1, sistem: Number(g.is_system) === 1,
+          dikecualikan: TAG_KECUALI.indexOf(g.name) !== -1,
+          masuk: pt ? r2(pt.masuk) : 0, keluar: pt ? r2(pt.keluar) : 0, n: pt ? pt.n : 0
+        };
+      }),
+      tx: txBulan.map((t) => ({
+        id: Number(t.id), tanggal: t.date, ket: t.description,
+        jumlah: r2(t.amount), arah: t.arah,
+        tag: t.tag || "(kosong)", fund: petaFund.get(Number(t.source_fund_id)) || "?",
+        fid: Number(t.source_fund_id),
+        pasangan: t.transfer_pair_id ? Number(t.transfer_pair_id) : 0,
+        pajak: Number(t.has_tax) === 1,
+        catatan: t.notes || ""
+      })),
+      ringkas: {
+        total: r2(totSaldo), totalAwal: r2(totAwal),
+        tersedia: r2(daftarFund.filter((f) => !f.diblokir && !f.titipan).reduce((s, f) => s + f.saldo, 0)),
+        diblokir: r2(daftarFund.filter((f) => f.diblokir && !f.titipan).reduce((s, f) => s + f.saldo, 0)),
+        titipan: r2(daftarFund.filter((f) => f.titipan).reduce((s, f) => s + f.saldo, 0)),
+        masuk: r2(masukRing), keluar: r2(keluarRing), selisih: r2(masukRing - keluarRing),
+        bunga: r2(bunga), nBunga, pajak: r2(pajak), nPajak, bungaNeto: r2(bunga - pajak)
+      }
+    };
+  });
+
+  return balas({ ok: true, data: hasil });
+}
+
+/** fund & tag — daftar ringkas (dipakai halaman pengaturan / pilihan). */
+async function aksiFund(env, skema) {
+  return balas({ ok: true, data: await jalankanSQL(env,
+    `SELECT id, name, sort_order, is_blocked, is_titipan, minimum_saldo FROM ${skema}.source_funds ` +
+    `WHERE deleted_at IS NULL ORDER BY sort_order, id`) });
+}
+
+async function aksiTag(env, skema) {
+  return balas({ ok: true, data: await jalankanSQL(env,
+    `SELECT id, name, icon, sort_order, journal_type, has_tax, is_system FROM ${skema}.tags ` +
+    `WHERE deleted_at IS NULL ORDER BY sort_order, id`) });
+}
+
+async function aksiSnapshot(env, skema, isi) {
+  const b = bulanValid(isi.bulan);
+  if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
+  return balas({ ok: true, data: await jalankanSQL(env,
+    `SELECT source_fund_id, year, month, saldo_awal, saldo_akhir, is_locked FROM ${skema}.monthly_snapshots ` +
+    `WHERE year = ${bulat(b.y)} AND month = ${bulat(b.b)}`) });
+}
+
+async function aksiTransaksi(env, skema, isi) {
+  const b = bulanValid(isi.bulan);
+  if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
+  return balas({ ok: true, data: await jalankanSQL(env,
+    `SELECT t.id, t.date, t.description, t.amount, t.tag, t.source_fund_id, t.transfer_pair_id, ` +
+    `t.notes, j.type AS arah, f.name AS fund ` +
+    `FROM ${skema}.transactions t ` +
+    `JOIN ${skema}.journals j ON j.id = t.journal_id ` +
+    `JOIN ${skema}.source_funds f ON f.id = t.source_fund_id ` +
+    `WHERE t.date >= ${teks(b.awal)} AND t.date <= ${teks(b.akhir)} ` +
+    `AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0 ` +
+    `ORDER BY t.date DESC, t.id DESC`) });
+}
+
 async function aksiSaldo(env, skema, isi) {
   const b = bulanValid(isi.bulan);
   if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
@@ -363,8 +574,8 @@ async function aksiSaldo(env, skema, isi) {
       fundId: Number(x.fundId), nama: x.nama, sortOrder: Number(x.sortOrder),
       isBlocked: Number(x.isBlocked) === 1, isTitipan: Number(x.isTitipan) === 1,
       minimumSaldo: x.minimumSaldo === null ? null : Number(x.minimumSaldo),
-      saldoAwal, debit, kredit,
-      saldo: saldoAwal + debit - kredit, // ← rumus sama dengan core/saldo.ts
+      saldoAwal: r2(saldoAwal), debit: r2(debit), kredit: r2(kredit),
+      saldo: r2(saldoAwal + debit - kredit),   /* rumus sama core/saldo.ts */
       jumlahTransaksi: Number(x.jumlahTransaksi)
     };
   });
@@ -372,19 +583,11 @@ async function aksiSaldo(env, skema, isi) {
   return balas({ ok: true, bulan: isi.bulan, data });
 }
 
-/**
- * ringkasan — MASUK / KELUAR bulan ini.
- * 🔴 5 tag DIKECUALIKAN (agents.md Bagian 9):
- *      Transfer · Koreksi · Pinjam · Hutang · Reimburse
- *    Pajak & Bunga TIDAK dikecualikan.
- */
 async function aksiRingkasan(env, skema, isi) {
   const b = bulanValid(isi.bulan);
   if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
 
-  const kecuali = ["Transfer", "Koreksi", "Pinjam", "Hutang", "Reimburse"];
-  const daftar = kecuali.map((n) => teks(n)).join(",");
-
+  const daftar = TAG_KECUALI.map((n) => teks(n)).join(",");
   const r = await jalankanSQL(env, `
     SELECT
       COALESCE(SUM(CASE WHEN j.type = 'D' THEN t.amount ELSE 0 END), 0) AS masuk,
@@ -397,11 +600,8 @@ async function aksiRingkasan(env, skema, isi) {
       AND (t.tag IS NULL OR t.tag NOT IN (${daftar}))`);
 
   const x = r[0] || { masuk: 0, keluar: 0, jumlah: 0 };
-  const masuk = Number(x.masuk), keluar = Number(x.keluar);
-  return balas({
-    ok: true, bulan: isi.bulan,
-    data: { masuk, keluar, selisih: masuk - keluar, jumlah: Number(x.jumlah) }
-  });
+  const masuk = r2(x.masuk), keluar = r2(x.keluar);
+  return balas({ ok: true, bulan: isi.bulan, data: { masuk, keluar, selisih: r2(masuk - keluar), jumlah: Number(x.jumlah) } });
 }
 
 async function aksiRiwayat(env, skema, isi) {
@@ -420,7 +620,7 @@ export default {
     if (request.method !== "POST") return balas({ ok: false, error: "Gunakan POST" }, 405);
 
     const teksIsi = await request.text();
-    if (teksIsi.length > 4000) return balas({ ok: false, error: "Permintaan terlalu besar" }, 413);
+    if (teksIsi.length > 20000) return balas({ ok: false, error: "Permintaan terlalu besar" }, 413);
 
     let isi;
     try { isi = JSON.parse(teksIsi); } catch (e) { return balas({ ok: false, error: "Bukan JSON" }, 400); }
@@ -432,60 +632,20 @@ export default {
 
     try {
       switch (isi.aksi) {
-        /* ---------- BACA ---------- */
-        case "fund":
-          return balas({ ok: true, data: await jalankanSQL(env,
-            `SELECT id, name, sort_order, is_blocked, is_titipan, minimum_saldo FROM ${skema}.source_funds ` +
-            `WHERE deleted_at IS NULL ORDER BY sort_order, id`) });
+        case "bulan":      return await aksiBulan(env, skema, isi);
+        case "dashboard":  return await aksiDashboard(env, skema, isi);
+        case "fund":       return await aksiFund(env, skema);
+        case "tag":        return await aksiTag(env, skema);
+        case "snapshot":   return await aksiSnapshot(env, skema, isi);
+        case "transaksi":  return await aksiTransaksi(env, skema, isi);
+        case "saldo":      return await aksiSaldo(env, skema, isi);
+        case "ringkasan":  return await aksiRingkasan(env, skema, isi);
+        case "riwayat":    return await aksiRiwayat(env, skema, isi);
 
-        case "tag":
-          return balas({ ok: true, data: await jalankanSQL(env,
-            `SELECT id, name, icon, sort_order, journal_type, has_tax, is_system FROM ${skema}.tags ` +
-            `WHERE deleted_at IS NULL ORDER BY sort_order, id`) });
-
-        case "snapshot": {
-          const b = bulanValid(isi.bulan);
-          if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
-          return balas({ ok: true, data: await jalankanSQL(env,
-            `SELECT source_fund_id, year, month, saldo_awal, saldo_akhir FROM ${skema}.monthly_snapshots ` +
-            `WHERE year = ${bulat(b.y)} AND month = ${bulat(b.b)}`) });
-        }
-
-        case "transaksi": {
-          const b = bulanValid(isi.bulan);
-          if (!b) return balas({ ok: false, error: "Format bulan harus YYYY-MM" }, 400);
-          return balas({ ok: true, data: await jalankanSQL(env,
-            `SELECT t.id, t.date, t.description, t.amount, t.tag, t.source_fund_id, t.transfer_pair_id, ` +
-            `j.type AS arah, f.name AS fund ` +
-            `FROM ${skema}.transactions t ` +
-            `JOIN ${skema}.journals j ON j.id = t.journal_id ` +
-            `JOIN ${skema}.source_funds f ON f.id = t.source_fund_id ` +
-            `WHERE t.date >= ${teks(b.awal)} AND t.date <= ${teks(b.akhir)} ` +
-            `AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0 ` +
-            `ORDER BY t.date DESC, t.id DESC`) });
-        }
-
-        case "riwayat":
-          return await aksiRiwayat(env, skema, isi);
-
-        case "saldo":
-          return await aksiSaldo(env, skema, isi);
-
-        case "ringkasan":
-          return await aksiRingkasan(env, skema, isi);
-
-        /* ---------- TULIS ---------- */
-        case "catat":
-          return await aksiCatat(env, skema, isi);
-
-        case "ubah":
-          return await aksiUbah(env, skema, isi);
-
-        case "batalkan":
-          return await aksiBatalkan(env, skema, isi);
-
-        case "pulihkan":
-          return await aksiPulihkan(env, skema, isi);
+        case "catat":      return await aksiCatat(env, skema, isi);
+        case "ubah":       return await aksiUbah(env, skema, isi);
+        case "batalkan":   return await aksiBatalkan(env, skema, isi);
+        case "pulihkan":   return await aksiPulihkan(env, skema, isi);
 
         default:
           return balas({ ok: false, error: "Perintah tidak dikenal" }, 400);
