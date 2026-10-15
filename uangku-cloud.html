@@ -377,7 +377,7 @@ body{
     <div class="gerbang-judul">UangKu</div>
     <div class="gerbang-ket">Masukkan PIN untuk menyambung ke server.</div>
     <label class="gerbang-label">PIN</label>
-    <input id="gPin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN akses">
+    <input id="gPin" type="text" class="sandi" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="PIN akses">
     <label class="gerbang-label">Alamat server</label>
     <input id="gAlamat" type="text" autocomplete="off">
     <button id="gMasuk" class="gerbang-tombol">Simpan &amp; sambung</button>
@@ -2240,19 +2240,21 @@ function pesan(teks, jenis) {
   }, jenis === 'salah' ? 6000 : 2600);
 }
 
-/* Chrome menawarkan "Save password?" karena ada kolom type=password.
-   UangKu tidak punya akun/password — PIN hanya kunci lokal, jadi tawaran itu
-   mengganggu setiap kali menyimpan (keluhan Bapak 15 Okt 2026).
-   Solusi: kolom teks biasa yang hurufnya disamarkan CSS. Kalau peramban
-   tidak mendukung penyamaran itu, kolom tetap type=password (aman). */
+/* 🔴 Chrome menawarkan "Save password?" karena menemukan kolom type=password.
+   UangKu tidak punya akun/password — PIN hanya kunci lokal (keluhan Bapak
+   15 Okt 2026, muncul 2×). Percobaan pertama GAGAL: HTML masih type=password
+   lalu diubah oleh skrip — Chrome sudah terlanjur memindai lebih dulu.
+   Perbaikan: HTML LANGSUNG type=text + kelas .sandi (disamarkan CSS).
+   Skrip di bawah hanya CADANGAN: kalau peramban tidak mendukung penyamaran,
+   kolom dikembalikan ke type=password supaya PIN tidak terlihat. */
 (function () {
   var p = document.getElementById('gPin');
   if (!p) return;
   var uji = document.createElement('input');
   uji.style.webkitTextSecurity = 'disc';
-  if (uji.style.webkitTextSecurity === 'disc') {
-    p.type = 'text';
-    p.classList.add('sandi');
+  if (uji.style.webkitTextSecurity !== 'disc') {
+    p.type = 'password';
+    p.classList.remove('sandi');
   }
 })();
 
