@@ -410,10 +410,15 @@ body{
 /* ✎ Edit & ✕ Hapus — sejajar dengan Riwayat & ＋ (order Bapak 15 Okt 2026).
    ABU-ABU = belum ada baris dipanggil · HITAM = sudah ada baris dipanggil. */
 #btnEdit,#btnHapus{
-  border:1px solid #ddd; background:none; color:#aaa; font-size:13px;
-  padding:4px 8px; border-radius:6px;
+  border:1px solid #ddd; background:none; color:#aaa; font-size:15px;
+  line-height:1; padding:4px 9px; border-radius:6px;
 }
-#btnEdit.siap,#btnHapus.siap{border-color:#111; color:#111; font-weight:700}
+/* 🔴 HITAM 100% saat baris dipanggil (permintaan Bapak 15 Okt 2026:
+   *"seharusnya warna hitam 100%"*). Jangan pakai opacity — opacity membuat
+   tombol terlihat abu tipis walau warnanya sudah hitam. */
+#btnEdit.siap,#btnHapus.siap{
+  border-color:#000; color:#000; font-weight:700; opacity:1;
+}
 #btnEdit:disabled,#btnHapus:disabled{opacity:.45; cursor:default}
 /* baris transaksi yang sedang DIPANGGIL (diketuk) — tanda hitam-putih, bukan warna */
 .txt tbody tr[data-tx]{cursor:pointer}
@@ -449,9 +454,13 @@ body{
   .gerbang-pesan.salah{color:#ff6b6b}
   .gerbang-ket,.gerbang-label,.gerbang-kaki{color:#999}
   #btnRiwayat{border-color:#333}
-  #btnEdit,#btnHapus{border-color:#333; color:#666}
-  #btnEdit.siap,#btnHapus.siap{border-color:#eee; color:#eee}
 }
+/* ⚠️ Tema gelap aplikasi memakai kelas html.dark — BUKAN prefers-color-scheme.
+   Bug nyata 15 Okt 2026: aturan prefers-color-scheme membuat tombol ✎ ✕
+   menjadi PUTIH di atas latar PUTIH (komputer bertema gelap, aplikasi terang)
+   → tombol nyaris tak terlihat. Karena itu hanya html.dark yang dipakai. */
+html.dark #btnEdit,html.dark #btnHapus{border-color:#333; color:#666}
+html.dark #btnEdit.siap,html.dark #btnHapus.siap{border-color:#fff; color:#fff; opacity:1}
 </style>
 
 <script>
