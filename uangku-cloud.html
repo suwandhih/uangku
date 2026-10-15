@@ -323,6 +323,8 @@ body{
   <h1 class="h1" id="title">UangKu</h1>
   <button id="btnRiwayat" hidden title="Riwayat">Riwayat</button>
   <button id="btnAdd" hidden title="Tambah transaksi" class="plus">＋</button>
+  <button id="btnEdit" hidden title="Ubah transaksi" disabled>✎</button>
+  <button id="btnHapus" hidden title="Hapus transaksi" disabled>✕</button>
 </div>
 
 <!-- ---------------------------- DASHBOARD ---------------------------- -->
@@ -405,6 +407,18 @@ body{
   border:1px solid #ddd; background:none; color:inherit; font-size:12px;
   padding:4px 8px; border-radius:6px; margin-left:auto;
 }
+/* ✎ Edit & ✕ Hapus — sejajar dengan Riwayat & ＋ (order Bapak 15 Okt 2026).
+   ABU-ABU = belum ada baris dipanggil · HITAM = sudah ada baris dipanggil. */
+#btnEdit,#btnHapus{
+  border:1px solid #ddd; background:none; color:#aaa; font-size:13px;
+  padding:4px 8px; border-radius:6px;
+}
+#btnEdit.siap,#btnHapus.siap{border-color:#111; color:#111; font-weight:700}
+#btnEdit:disabled,#btnHapus:disabled{opacity:.45; cursor:default}
+/* baris transaksi yang sedang DIPANGGIL (diketuk) — tanda hitam-putih, bukan warna */
+.txt tbody tr[data-tx]{cursor:pointer}
+.txt tbody tr.dipanggil td{background:var(--soft)}
+.txt tbody tr.dipanggil td:first-child{box-shadow:inset 3px 0 0 var(--ink)}
 /* 🔴 ANGKA SALDO PANJANG — jangan terpotong (permintaan Bapak 13 Okt 2026).
    Angka penuh seperti 26.504.730,59 lebih panjang daripada "26,50 jt".
    Kartu fund: angka boleh PATAH di titik ribuan (bukan dipotong "…").
@@ -435,6 +449,8 @@ body{
   .gerbang-pesan.salah{color:#ff6b6b}
   .gerbang-ket,.gerbang-label,.gerbang-kaki{color:#999}
   #btnRiwayat{border-color:#333}
+  #btnEdit,#btnHapus{border-color:#333; color:#666}
+  #btnEdit.siap,#btnHapus.siap{border-color:#eee; color:#eee}
 }
 </style>
 
@@ -484,6 +500,17 @@ var KAMUS = {
   'Bulan ini belum dibuka':'This month is not open yet',
   'buka dulu supaya bisa mencatat':'open it first so you can record',
   'Buka sekarang':'Open now',
+  'Riwayat':'History','Ubah transaksi':'Edit transaction','Hapus transaksi':'Delete transaction',
+  'Simpan perubahan':'Save changes','Batal':'Cancel','Mengubah transaksi':'Editing transaction',
+  'tekan Simpan kalau sudah benar.':'press Save when it is correct.',
+  'Perubahan tersimpan.':'Changes saved.',
+  'Ketuk satu baris transaksi dulu, baru tekan Edit.':'Tap a transaction row first, then press Edit.',
+  'Ketuk satu baris transaksi dulu, baru tekan Hapus.':'Tap a transaction row first, then press Delete.',
+  'Hapus transaksi ini?':'Delete this transaction?',
+  'Bisa dipulihkan dari layar Riwayat.':'It can be restored from the History screen.',
+  'Sudah dihapus. Bisa dipulihkan dari Riwayat.':'Deleted. It can be restored from History.',
+  'Bulan ini terkunci — tidak bisa diubah.':'This month is locked — it cannot be edited.',
+  'Bulan ini terkunci — tidak bisa dihapus.':'This month is locked — it cannot be deleted.',
   'Saldo': 'Balance','jumlah transaksi':'transactions',
   'dari':'of','Terkunci':'Locked','Terbuka':'Open','tidak ada transaksi':'no transactions',
   'Belum ada data':'No data yet','Tidak ketemu':'Not found',
@@ -663,6 +690,11 @@ function panggilServer(aksi, tambahan) {
 /* keadaaan tampilan terkunci selama data dimuat */
 var SIAP = false;
 
+/* Baris transaksi yang sedang "dipanggil" (diketuk) di layar Transaksi.
+   0 = belum ada. Selama 0, tombol ✎ dan ✕ di kepala berwarna ABU-ABU.
+   Begitu ada baris dipanggil, keduanya menjadi HITAM (order Bapak 15 Okt 2026). */
+var barisDipilih = 0;
+
 var layar = 'dash';
 var subNama = '';
 var riwayatLayar = [];
@@ -694,6 +726,10 @@ function tampil(nama, sub) {
   document.getElementById('btnBack').hidden = (nama === 'dash');
   document.getElementById('btnAdd').hidden = (nama !== 'tx');
   document.getElementById('btnRiwayat').hidden = (nama !== 'tx');
+  document.getElementById('btnEdit').hidden = (nama !== 'tx');
+  document.getElementById('btnHapus').hidden = (nama !== 'tx');
+  if (nama !== 'tx') barisDipilih = 0;
+  siapkanTombolBaris();
   document.getElementById('title').textContent =
     (nama === 'sub' ? t(sub) : JUDUL[nama]()) + ' · ' + (B() ? B().labelSingkat : '');
   document.querySelectorAll('.tabs button').forEach(function (b) {
@@ -805,7 +841,8 @@ function gbrDash() {
 /* satu baris tabel. pr = bagian dari pasangan (transfer / bunga + pajak) */
 function barisTabel(x, pr) {
   var masuk = x.arah === 'D';
-  return '<tr' + (pr ? ' class="pr"' : '') + '>' +
+  var kelas = (pr ? 'pr' : '') + (x.id === barisDipilih ? ' dipanggil' : '');
+  return '<tr data-tx="' + x.id + '"' + (kelas ? ' class="' + kelas + '"' : '') + '>' +
     '<td class="c-tgl">' + tglRingkas(x.tanggal) + '</td>' +
     '<td><div class="ket" title="' + esc(x.ket) + '">' + esc(x.ket) +
       (x.pasangan ? ' <span class="bd">⇄</span>' : '') +
@@ -1055,6 +1092,15 @@ function gbrTx() {
   document.getElementById('txDaftar').innerHTML = h;
   pasangKlik(document.getElementById('txDaftar'));
 
+  /* ketuk satu baris = "panggil data lama" → tombol ✎ ✕ jadi hitam */
+  document.querySelectorAll('#txDaftar tbody tr[data-tx]').forEach(function (tr) {
+    tr.addEventListener('click', function () {
+      var id = Number(tr.getAttribute('data-tx'));
+      barisDipilih = (barisDipilih === id) ? 0 : id;   /* ketuk lagi = lepas */
+      gbrTx();
+    });
+  });
+
   /* klik kepala pemilih tag → buka/tutup daftar tag */
   var tglBuka = document.querySelector('#txDaftar .tagsum');
   if (tglBuka) {
@@ -1084,6 +1130,9 @@ function gbrTx() {
       gbrTx();
     });
   });
+
+  /* tombol ✎ ✕ di kepala ikut menyesuaikan setiap daftar digambar */
+  siapkanTombolBaris();
 }
 
 function bukaKosong(id) {
@@ -1452,6 +1501,9 @@ function gambarUlang() {
   document.getElementById('tbSet').textContent = t('Pengaturan');
 
   document.getElementById('btnRiwayat').textContent = t('Riwayat');
+  document.getElementById('btnEdit').title = t('Ubah transaksi');
+  document.getElementById('btnHapus').title = t('Hapus transaksi');
+  siapkanTombolBaris();
   document.getElementById('cari').placeholder = t('Cari keterangan…');
   gambarSegUrut();
   document.getElementById('title').textContent =
@@ -1506,6 +1558,8 @@ document.addEventListener('click', function (e) {
   if (b) bukaBulanBaru();
 });
 document.getElementById('btnAdd').addEventListener('click', function () {
+  formTes = null;          /* ＋ = transaksi BARU, bukan lanjutan yang diubah */
+  barisDipilih = 0;
   ke('input');
 });
 document.getElementById('cari').addEventListener('input', function (e) {
@@ -1700,16 +1754,6 @@ function terapkanTes() {
   });
 }
 
-/* Tag bawaan form: tag PERTAMA yang mengunci arah (bukan tag dua arah).
-   Kalau tidak ada, baru pakai 'Transfer'. */
-function tagBawaan(bln) {
-  if (!bln || !bln.tag || !bln.tag.length) return 'Transfer';
-  var tetap = bln.tag.filter(function (g) {
-    return DUA_ARAH_TES.indexOf(g.nama) === -1 && (g.arah === 'D' || g.arah === 'K');
-  });
-  return tetap.length ? tetap[0].nama : 'Transfer';
-}
-
 function gbrInput() {
   var wadah = document.getElementById('inputIsi');
   var bln = B();
@@ -1751,6 +1795,10 @@ function gbrInput() {
   }).join('');
   wadah.innerHTML =
     '<div class="tl-banner">' + t('Tersimpan di server') + ' · ' + esc(B() ? B().label : '') + '</div>' +
+    (formTes.mode === 'ubah'
+      ? '<div class="peringatan-tag">✎ ' + t('Mengubah transaksi') + ' #' + esc(formTes.id) + ' — ' +
+        t('tekan Simpan kalau sudah benar.') + '</div>'
+      : '') +
     '<div class="sec">TANGGAL & KETERANGAN</div>' +
     '<div class="tl-card"><input type="date" id="tlTgl" value="' + esc(formTes.tgl) + '">' +
     '<input type="text" id="tlKet" placeholder="Keterangan" value="' + esc(formTes.ket) + '" style="margin-top:6px"></div>' +
@@ -1758,7 +1806,12 @@ function gbrInput() {
     '<div class="tl-card">' + baris +
     '<button class="btn-kecil" id="tlTambah" style="width:100%;margin-top:8px"' + (formTes.baris.length >= KMAX_TES ? ' disabled' : '') + '>＋ Tambah baris jurnal</button></div>' +
     '<div class="sec">RINGKASAN</div><div class="tl-card" id="tlRing"></div>' +
-    '<div class="tl-card"><button class="btn-utama" id="tlSimpan" style="width:100%">' + t('Simpan') + '</button></div>' +
+    '<div class="tl-card"><button class="btn-utama" id="tlSimpan" style="width:100%">' +
+      (formTes.mode === 'ubah' ? t('Simpan perubahan') : t('Simpan')) + '</button>' +
+      (formTes.mode === 'ubah'
+        ? '<button class="btn-kecil" id="tlBatalUbah" style="width:100%;margin-top:6px">' +
+          t('Batal') + '</button>'
+        : '') + '</div>' +
     '<div class="sec">' + t('Tersimpan di server') + '</div>' +
     (daftarTes ? '<div class="tl-card">' + daftarTes + '</div>' : '<div class="empty">' + t('Belum ada transaksi') + '</div>');
   aturLebarBaris();
@@ -1807,21 +1860,45 @@ function simpanTesDariForm() {
   var tombol = document.getElementById('tlSimpan');
   if (tombol) { tombol.disabled = true; tombol.textContent = t('Menyimpan…'); }
 
-  panggilServer('catat', {
-    tanggal: tgl,
-    keterangan: ket,
-    baris: isi.map(function (b) {
-      var f = FUND().filter(function (x) { return x.nama === b.fund; })[0];
-      return { fundId: f ? f.id : 0, tag: b.tag, arah: arahTetapTag(b.tag) || b.arah, jumlah: numTes(b.jml) };
-    })
-  }).then(function (r) {
+  var ubah = (formTes.mode === 'ubah' && formTes.id);
+  var b0 = isi[0];
+  var f0 = FUND().filter(function (x) { return x.nama === b0.fund; })[0];
+  var arah0 = arahTetapTag(b0.tag) || b0.arah;
+
+  /* ✎ UBAH: Worker hanya mengubah SATU baris. Kalau Bapak menambah baris
+     saat mengubah, baris pertama diubah dan sisanya dicatat sebagai baru. */
+  var janji = ubah
+    ? panggilServer('ubah', {
+        id: Number(formTes.id), tanggal: tgl, keterangan: ket,
+        fundId: f0 ? f0.id : 0, tag: b0.tag, arah: arah0, jumlah: numTes(b0.jml)
+      }).then(function () {
+        var sisa = isi.slice(1);
+        if (!sisa.length) return null;
+        return panggilServer('catat', {
+          tanggal: tgl, keterangan: ket,
+          baris: sisa.map(function (b) {
+            var f = FUND().filter(function (x) { return x.nama === b.fund; })[0];
+            return { fundId: f ? f.id : 0, tag: b.tag, arah: arahTetapTag(b.tag) || b.arah, jumlah: numTes(b.jml) };
+          })
+        });
+      })
+    : panggilServer('catat', {
+        tanggal: tgl, keterangan: ket,
+        baris: isi.map(function (b) {
+          var f = FUND().filter(function (x) { return x.nama === b.fund; })[0];
+          return { fundId: f ? f.id : 0, tag: b.tag, arah: arahTetapTag(b.tag) || b.arah, jumlah: numTes(b.jml) };
+        })
+      });
+
+  janji.then(function () {
     formTes = null;
+    barisDipilih = 0;
     return muatDariServer();
   }).then(function () {
     gbrInput();
-    alert(t('Tersimpan ke server.'));
+    alert(t(ubah ? 'Perubahan tersimpan.' : 'Tersimpan ke server.'));
   }).catch(function (e) {
-    if (tombol) { tombol.disabled = false; tombol.textContent = t('Simpan'); }
+    if (tombol) { tombol.disabled = false; tombol.textContent = t(ubah ? 'Simpan perubahan' : 'Simpan'); }
     alert(e.message);
   });
 }
@@ -1896,6 +1973,7 @@ document.getElementById('inputIsi').addEventListener('click', function (e) {
   var b = e.target.closest('button');
   if (!b || b.disabled) return;
   if (b.id === 'tlSimpan') { simpanTesDariForm(); return; }
+  if (b.id === 'tlBatalUbah') { formTes = null; barisDipilih = 0; ke('tx'); return; }
   if (b.id === 'tlTambah') { formTes.baris.push({ fund: B().fund[0].nama, tag: tagBawaan(B()), arah: 'K', jml: '' }); gbrInput(); return; }
   if (b.dataset.arah) { formTes.baris[+b.dataset.i].arah = b.dataset.arah; gbrInput(); return; }
   if (b.dataset.del !== undefined && formTes.baris.length > 1) { formTes.baris.splice(+b.dataset.del, 1); gbrInput(); return; }
@@ -1916,6 +1994,87 @@ if (CLOUD.pin) {
     document.getElementById('gerbangPesan').textContent = e.message;
   });
 }
+
+/* ============================================================
+   14b. ✎ EDIT & ✕ HAPUS — tombol kepala (order Bapak 15 Okt 2026)
+   ============================================================ */
+
+/** Baris yang sedang dipanggil (0 = belum ada). */
+function barisTerpanggil() {
+  if (!barisDipilih) return null;
+  var arr = TX().filter(function (x) { return x.id === barisDipilih; });
+  return arr.length ? arr[0] : null;
+}
+
+/** Tombol ✎ ✕: ABU-ABU selama belum ada baris dipanggil, HITAM kalau sudah. */
+function siapkanTombolBaris() {
+  var e = document.getElementById('btnEdit');
+  var d = document.getElementById('btnHapus');
+  if (!e || !d) return;
+  var ada = !!barisTerpanggil();
+  e.disabled = !ada;
+  d.disabled = !ada;
+  e.classList.toggle('siap', ada);
+  d.classList.toggle('siap', ada);
+}
+
+/** Ketuk baris → panggil data lama (dipakai juga oleh tombol ✎ ✕). */
+function panggilBaris(id) {
+  barisDipilih = Number(id) || 0;
+  gbrTx();
+  siapkanTombolBaris();
+}
+
+/** ✎ — buka form Catat berisi data lama, siap diubah. */
+function editBaris() {
+  var x = barisTerpanggil();
+  if (!x) { alert(t('Ketuk satu baris transaksi dulu, baru tekan Edit.')); return; }
+  var bln = B();
+  if (!bln) return;
+  if (bln.terkunci) { alert(t('Bulan ini terkunci — tidak bisa diubah.')); return; }
+
+  formTes = {
+    mode: 'ubah',
+    id: x.id,
+    tgl: x.tanggal,
+    ket: x.ket,
+    baris: [{ fund: x.fund, tag: x.tag, arah: x.arah, jml: rp2(x.jumlah) }]
+  };
+  ke('input');
+}
+
+/** ✕ — batalkan transaksi (soft delete). Bisa dipulihkan dari layar Riwayat. */
+function hapusBaris() {
+  var x = barisTerpanggil();
+  if (!x) { alert(t('Ketuk satu baris transaksi dulu, baru tekan Hapus.')); return; }
+  var bln = B();
+  if (bln && bln.terkunci) { alert(t('Bulan ini terkunci — tidak bisa dihapus.')); return; }
+
+  var f = FUND().filter(function (y) { return y.nama === x.fund; })[0];
+  var sesudah = f ? f.saldo - (x.arah === 'D' ? x.jumlah : -x.jumlah) : null;
+  if (!confirm(t('Hapus transaksi ini?') + '\n\n' + x.tanggal + ' · ' + x.ket + '\n' +
+      (x.arah === 'D' ? '+' : '−') + rp2(x.jumlah) + ' · ' + x.fund + '\n\n' +
+      (sesudah === null ? '' :
+        t('Saldo') + ' ' + x.fund + ': ' + rp2(f.saldo) + ' → ' + rp2(sesudah) + '\n\n') +
+      t('Bisa dipulihkan dari layar Riwayat.'))) return;
+
+  var d = document.getElementById('btnHapus');
+  if (d) d.disabled = true;
+  panggilServer('batalkan', { id: x.id }).then(function () {
+    barisDipilih = 0;
+    return muatDariServer();
+  }).then(function () {
+    gbrTx();
+    alert(t('Sudah dihapus. Bisa dipulihkan dari Riwayat.'));
+  }).catch(function (e) {
+    if (d) d.disabled = false;
+    alert(e.message);
+  });
+}
+
+document.getElementById('btnEdit').addEventListener('click', editBaris);
+document.getElementById('btnHapus').addEventListener('click', hapusBaris);
+
 
 /* ============================================================
    14. CLOUD — pemuat data, gerbang PIN, layar Riwayat
