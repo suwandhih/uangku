@@ -325,7 +325,7 @@ function namaBulanKunci(kunci) {
  * karena bulan baru belum punya saldo awal.
  */
 function bukaBulanBaru() {
-  if (!BULAN.length) { alert(t('Belum ada data di server')); return; }
+  if (!BULAN.length) { pesan(t('Belum ada data di server'), 'salah'); return; }
   var terakhir = BULAN[0].kunci;
   var tujuan = bulanBerikut(terakhir);
   if (!confirm(t('Buka bulan baru?') + '\\n\\n' + namaBulanKunci(terakhir) +
@@ -335,11 +335,11 @@ function bukaBulanBaru() {
   panggilServer('bukaBulan', { bulan: tujuan }).then(function (r) {
     return muatDariServer().then(function () { return r; });
   }).then(function (r) {
-    alert(r.sudahAda
+    pesan(r.sudahAda
       ? t('Bulan itu sudah siap') + ': ' + namaBulanKunci(r.bulan)
-      : t('Bulan baru siap') + ': ' + namaBulanKunci(r.bulan) + '\\n' +
+      : t('Bulan baru siap') + ': ' + namaBulanKunci(r.bulan) + ' · ' +
         r.fund + ' fund · total ' + rp2(r.total) + ' Rp');
-  }).catch(function (e) { alert(e.message); });
+  }).catch(function (e) { pesan(e.message, 'salah'); });
 }
 
 /** Ambil seluruh data bulan dari server, lalu gambar ulang seperti biasa. */
@@ -456,7 +456,7 @@ function gbrRiwayat() {
           return muatDariServer();
         }).then(function () {
           gbrRiwayat(); gbrDash();
-        }).catch(function (e) { b.disabled = false; alert(e.message); });
+        }).catch(function (e) { b.disabled = false; pesan(e.message, 'salah'); });
       });
     });
   }).catch(function (e) {
@@ -932,6 +932,62 @@ skrip = skrip.replace(
 );
 catat.push('pajak bunga otomatis: tanda di baris');
 
+/* ================================================================== */
+/* 2b1m. 💬 PESAN SINGKAT — pengganti alert()                          */
+/* ------------------------------------------------------------------ */
+/* Keluhan Bapak 15 Okt 2026: *"setiap kali simpan selalu ada messege yg
+   harus di klik ok"* → pesan tidak lagi memblokir. Muncul sebentar di
+   bawah, lalu hilang sendiri. Tidak perlu klik apa pun. */
+
+const blokPesan = `
+/* ============================================================
+   14d. 💬 PESAN SINGKAT (toast) — pengganti alert()
+   ------------------------------------------------------------
+   Pesan muncul di bawah layar, hilang sendiri:
+     • berhasil  → 2,6 detik
+     • bermasalah → 6 detik (supaya sempat dibaca)
+   Tidak ada tombol OK, tidak memblokir pekerjaan.
+   ============================================================ */
+function pesan(teks, jenis) {
+  var w = document.getElementById('pesanWadah');
+  if (!w) return;
+  var d = document.createElement('div');
+  d.className = 'pesan' + (jenis ? ' ' + jenis : '');
+  d.textContent = teks;
+  w.appendChild(d);
+  setTimeout(function () { d.classList.add('tampil'); }, 10);
+  setTimeout(function () {
+    d.classList.remove('tampil');
+    setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 300);
+  }, jenis === 'salah' ? 6000 : 2600);
+}
+
+/* Chrome menawarkan "Save password?" karena ada kolom type=password.
+   UangKu tidak punya akun/password — PIN hanya kunci lokal, jadi tawaran itu
+   mengganggu setiap kali menyimpan (keluhan Bapak 15 Okt 2026).
+   Solusi: kolom teks biasa yang hurufnya disamarkan CSS. Kalau peramban
+   tidak mendukung penyamaran itu, kolom tetap type=password (aman). */
+(function () {
+  var p = document.getElementById('gPin');
+  if (!p) return;
+  var uji = document.createElement('input');
+  uji.style.webkitTextSecurity = 'disc';
+  if (uji.style.webkitTextSecurity === 'disc') {
+    p.type = 'text';
+    p.classList.add('sandi');
+  }
+})();
+`;
+skrip = skrip.replace('</script>', blokPesan + '\n</script>');
+catat.push('pesan singkat: pengganti alert');
+
+/* 2b1n. SEMUA alert() → pesan() — tidak ada lagi klik OK.
+   Dilakukan paling akhir supaya seluruh skrip (termasuk bawaan uangku.html)
+   ikut tergantikan. confirm() TIDAK diubah — konfirmasi hapus tetap perlu. */
+const jmlAlert = (skrip.match(/\balert\(/g) || []).length;
+skrip = skrip.replace(/\balert\(/g, 'pesan(');
+catat.push('alert → pesan singkat (' + jmlAlert + ' tempat)');
+
 /* 2b2. tombol "Buka Bulan Baru" di layar Pengaturan.
    Tanpa ini, mulai tanggal 1 bulan depan Bapak tidak bisa mencatat. */
 skrip = skrip.replace(
@@ -1136,6 +1192,9 @@ const HTML_TAMBAHAN = `
   <div id="riwayatIsi"></div>
 </main>
 
+<!-- ---------------------------- PESAN SINGKAT ---------------------------- -->
+<div id="pesanWadah"></div>
+
 <!-- ---------------------------- GERBANG PIN ---------------------------- -->
 <div id="gerbang">
   <div class="gerbang-kartu">
@@ -1190,6 +1249,23 @@ const HTML_TAMBAHAN = `
 #btnEdit:disabled,#btnHapus:disabled{opacity:.45; cursor:default}
 /* baris pajak otomatis — angka hitungan sistem, boleh dikoreksi Bapak */
 .tl-jml.auto{border-color:#111; font-weight:700}
+/* 💬 pesan singkat — muncul di bawah, hilang sendiri, tidak perlu diklik */
+#pesanWadah{
+  position:fixed; left:0; right:0; bottom:64px; z-index:60;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  pointer-events:none; padding:0 12px;
+}
+.pesan{
+  max-width:420px; padding:9px 14px; border-radius:8px; font-size:13px;
+  line-height:1.35; background:#111; color:#fff; border:1px solid #111;
+  opacity:0; transform:translateY(8px); transition:opacity .25s, transform .25s;
+  box-shadow:0 2px 10px rgba(0,0,0,.18);
+}
+.pesan.tampil{opacity:1; transform:translateY(0)}
+.pesan.salah{background:#fff; color:#c00; border-color:#c00; font-weight:600}
+/* kolom PIN disamarkan tanpa type=password — supaya Chrome tidak menawarkan
+   "Save password?" setiap kali menyimpan (keluhan Bapak 15 Okt 2026) */
+input.sandi{-webkit-text-security:disc; text-security:disc}
 /* baris transaksi yang sedang DIPANGGIL (diketuk) — tanda hitam-putih, bukan warna */
 .txt tbody tr[data-tx]{cursor:pointer}
 .txt tbody tr.dipanggil td{background:var(--soft)}
@@ -1231,6 +1307,8 @@ const HTML_TAMBAHAN = `
    → tombol nyaris tak terlihat. Karena itu hanya html.dark yang dipakai. */
 html.dark #btnEdit,html.dark #btnHapus{border-color:#333; color:#666}
 html.dark #btnEdit.siap,html.dark #btnHapus.siap{border-color:#fff; color:#fff; opacity:1}
+html.dark .pesan{background:#eee; color:#000; border-color:#eee}
+html.dark .pesan.salah{background:#000; color:#ff6b6b; border-color:#ff6b6b}
 </style>
 `;
 
