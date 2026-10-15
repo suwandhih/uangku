@@ -497,6 +497,15 @@ async function aksiDashboard(env, skema, isi) {
   const snap = await jalankanSQL(env,
     `SELECT source_fund_id, year, month, saldo_awal, is_locked FROM ${skema}.monthly_snapshots`);
 
+  /* --- 1b. rate pajak bunga (tax_config) ---
+     Dipakai halaman untuk MENGHITUNG PAJAK OTOMATIS saat Bapak memilih tag
+     "Bunga" di layar Catat (permintaan Bapak 15 Okt 2026).
+     Rumusnya tetap satu tempat: core/bunga.ts — halaman hanya memakai rate ini. */
+  const pajakCfg = await jalankanSQL(env,
+    `SELECT name, rate, minimum_amount FROM ${skema}.tax_config ORDER BY id LIMIT 1`);
+  const ratePajak = pajakCfg.length ? Number(pajakCfg[0].rate) : 20;
+  const minPajak = pajakCfg.length ? Number(pajakCfg[0].minimum_amount || 0) : 0;
+
   /* --- 2. transaksi seluruh rentang (dipakai untuk semua bulan) --- */
   const palingAwal = bulan[bulan.length - 1].awal;
   const palingAkhir = bulan[0].akhir;
@@ -594,7 +603,9 @@ async function aksiDashboard(env, skema, isi) {
         titipan: r2(daftarFund.filter((f) => f.titipan).reduce((s, f) => s + f.saldo, 0)),
         masuk: r2(masukRing), keluar: r2(keluarRing), selisih: r2(masukRing - keluarRing),
         bunga: r2(bunga), nBunga, pajak: r2(pajak), nPajak, bungaNeto: r2(bunga - pajak)
-      }
+      },
+      /* rate pajak bunga — dipakai layar Catat untuk hitung pajak otomatis */
+      pajak: { rate: ratePajak, minimum: minPajak }
     };
   });
 

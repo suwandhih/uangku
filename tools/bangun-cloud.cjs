@@ -752,6 +752,186 @@ skrip = skrip.replace(
   if (b.id === 'tlTambah') {`,
 );
 
+/* ================================================================== */
+/* 2b1h. 🧾 PAJAK BUNGA OTOMATIS (order Bapak 15 Okt 2026)             */
+/* ------------------------------------------------------------------ */
+/* Kalimat Bapak: *"kalau tag: bunga di saya isi .... seharusnya tag
+   pajak : bisa langsung dihitung berapa ........"*
+   → Begitu Bapak memilih tag Bunga dan mengisi jumlahnya, baris PAJAK
+     langsung muncul di bawahnya dengan angka 20% yang sudah terisi.
+     Bapak tinggal periksa (boleh dikoreksi) lalu Simpan.
+   Rate diambil dari tax_config di server (bukan angka tetap di halaman).
+   Rumus tetap satu tempat: core/bunga.ts. */
+
+const blokPajakOtomatis = `
+/* ============================================================
+   14c. 🧾 PAJAK BUNGA OTOMATIS
+   ------------------------------------------------------------
+   Tag "Bunga" kena pajak (has_tax=1). Begitu baris Bunga diisi,
+   baris Pajak muncul sendiri dengan angka rate dari server.
+   ============================================================ */
+
+/** Rate pajak bunga dari server (tax_config). Cadangan 20 kalau belum ada. */
+function ratePajak() {
+  var b = B();
+  if (b && b.pajak && typeof b.pajak.rate === 'number') return b.pajak.rate;
+  return 20;
+}
+
+/** Batas minimum bunga yang tidak dipotong pajak (0 = selalu dipotong). */
+function minPajak() {
+  var b = B();
+  if (b && b.pajak && typeof b.pajak.minimum === 'number') return b.pajak.minimum;
+  return 0;
+}
+
+/** Apakah baris ini tag Bunga yang masuk (D)? */
+function barisBunga(b) {
+  return b && b.tag === 'Bunga' && (arahTetapTag(b.tag) || b.arah) === 'D';
+}
+
+/** Apakah baris ini tag Pajak? */
+function barisPajak(b) {
+  return b && b.tag === 'Pajak';
+}
+
+/** Pajak = bunga × rate ÷ 100, dibulatkan 2 desimal (sen). */
+function hitungPajak(bunga) {
+  var n = Math.round(bunga * ratePajak()) / 100;
+  return Math.round(n * 100) / 100;
+}
+
+/** Angka → teks 2 desimal gaya Indonesia (12328.76 → "12.328,76"). */
+function jmlTeks(n) {
+  return rp2(n);
+}
+
+/**
+ * Selaraskan baris pajak dengan baris bunga.
+ * Dipanggil setiap kali form digambar / jumlah berubah.
+ *  • ada baris Bunga berisi  → pastikan ada baris Pajak tepat di bawahnya
+ *  • tidak ada baris Bunga   → buang baris Pajak yang dibuat otomatis
+ *  • Bapak sudah mengubah angka pajak sendiri → JANGAN ditimpa
+ */
+function selaraskanPajak() {
+  if (!formTes || !formTes.baris) return;
+  var arr = formTes.baris;
+
+  /* buang baris pajak otomatis yang bunganya sudah tidak ada / kosong */
+  for (var i = arr.length - 1; i >= 0; i--) {
+    if (arr[i].auto && barisPajak(arr[i])) {
+      var adaBunga = arr.some(function (x, j) {
+        return j !== i && barisBunga(x) && numTes(x.jml) > 0;
+      });
+      if (!adaBunga) arr.splice(i, 1);
+    }
+  }
+
+  /* tambahkan / perbarui baris pajak untuk tiap baris bunga */
+  for (var k = 0; k < arr.length; k++) {
+    var b = arr[k];
+    if (!barisBunga(b)) continue;
+    var bunga = numTes(b.jml);
+    if (!(bunga > 0)) continue;
+    if (bunga < minPajak()) continue;          /* bunga kecil → tidak dipotong */
+
+    var pajak = hitungPajak(bunga);
+    var sudah = arr[k + 1];
+    if (sudah && barisPajak(sudah)) {
+      /* Sudah ada baris pajak di bawahnya.
+         Hitung ulang HANYA kalau jumlah bunganya berubah — supaya koreksi
+         Bapak (mis. angka bank beda beberapa sen) tidak tertimpa saat form
+         digambar ulang. */
+      if (sudah.auto && sudah.dariBunga !== bunga) {
+        sudah.jml = jmlTeks(pajak);
+        sudah.fund = b.fund;
+        sudah.dariBunga = bunga;
+      }
+      continue;
+    }
+    /* sisipkan baris pajak tepat di bawah baris bunga */
+    arr.splice(k + 1, 0, {
+      fund: b.fund, tag: 'Pajak', arah: 'K', jml: jmlTeks(pajak),
+      auto: true, dariBunga: bunga
+    });
+    k++;
+  }
+}
+`;
+skrip = skrip.replace('</script>', blokPajakOtomatis + '\n</script>');
+catat.push('pajak bunga otomatis: logika');
+
+/* 2b1i. panggil penyelaras SEBELUM baris digambar — supaya baris pajak
+   langsung ikut tampil begitu baris bunga diisi. */
+skrip = skrip.replace(
+  `  var baris = formTes.baris.map(function (b, i) {`,
+  `  selaraskanPajak();
+  var baris = formTes.baris.map(function (b, i) {`,
+);
+catat.push('pajak bunga otomatis: dipanggil saat form digambar');
+
+/* 2b1j. saat jumlah / tag / fund berubah → selaraskan pajak lalu gambar ulang */
+skrip = skrip.replace(
+  `    formTes.baris[i].jml = rapi;
+    hitungRingTes();
+  }
+});`,
+  `    formTes.baris[i].jml = rapi;
+    if (barisBunga(formTes.baris[i])) { selaraskanPajak(); gbrInput(); return; }
+    hitungRingTes();
+  }
+});`,
+);
+skrip = skrip.replace(
+  `  if (e.target.dataset.k === 'fund') { formTes.baris[i].fund = e.target.value; hitungRingTes(); }
+  if (e.target.dataset.k === 'tag') {
+    formTes.baris[i].tag = e.target.value;
+    var tetap = arahTetapTag(e.target.value);
+    if (tetap) formTes.baris[i].arah = tetap;
+    gbrInput();
+  }`,
+  `  if (e.target.dataset.k === 'fund') {
+    formTes.baris[i].fund = e.target.value;
+    /* baris pajak otomatis ikut fund bunganya */
+    if (formTes.baris[i].auto) { /* biarkan */ }
+    hitungRingTes();
+  }
+  if (e.target.dataset.k === 'tag') {
+    formTes.baris[i].tag = e.target.value;
+    var tetap = arahTetapTag(e.target.value);
+    if (tetap) formTes.baris[i].arah = tetap;
+    /* Bapak memilih tag sendiri → baris ini bukan pajak otomatis lagi */
+    formTes.baris[i].auto = false;
+    formTes.baris[i].disentuh = true;
+    selaraskanPajak();
+    gbrInput();
+  }`,
+);
+catat.push('pajak bunga otomatis: ikut berubah saat diisi');
+
+/* 2b1k. saat Bapak mengetik angka pajak sendiri → jangan ditimpa lagi */
+skrip = skrip.replace(
+  `    formTes.baris[i].jml = rapi;
+    hitungRingTes();
+  }
+});
+document.getElementById('inputIsi').addEventListener('change', function (e) {`,
+  `      formTes.baris[i].jml = rapi;
+  hitungRingTes();
+  }
+});
+document.getElementById('inputIsi').addEventListener('change', function (e) {`,
+);
+
+/* 2b1l. baris pajak otomatis diberi tanda supaya Bapak tahu angkanya hitungan sistem */
+skrip = skrip.replace(
+  `      '<input class="tl-jml" type="text" inputmode="decimal" data-i="' + i + '" data-k="jml" value="' + esc(b.jml) + '" placeholder="0">' +`,
+  `      '<input class="tl-jml' + (b.auto ? ' auto' : '') + '" type="text" inputmode="decimal" data-i="' + i +
+        '" data-k="jml" value="' + esc(b.jml) + '" placeholder="0"' +
+        (b.auto ? ' title="' + esc(t('Pajak dihitung otomatis') + ' ' + ratePajak() + '%') + '"' : '') + '>' +`,
+);
+catat.push('pajak bunga otomatis: tanda di baris');
+
 /* 2b2. tombol "Buka Bulan Baru" di layar Pengaturan.
    Tanpa ini, mulai tanggal 1 bulan depan Bapak tidak bisa mencatat. */
 skrip = skrip.replace(
@@ -894,7 +1074,8 @@ skrip = skrip.replace(
   'Bisa dipulihkan dari layar Riwayat.':'It can be restored from the History screen.',
   'Sudah dihapus. Bisa dipulihkan dari Riwayat.':'Deleted. It can be restored from History.',
   'Bulan ini terkunci — tidak bisa diubah.':'This month is locked — it cannot be edited.',
-  'Bulan ini terkunci — tidak bisa dihapus.':'This month is locked — it cannot be deleted.',`,
+  'Bulan ini terkunci — tidak bisa dihapus.':'This month is locked — it cannot be deleted.',
+  'Pajak dihitung otomatis':'Tax calculated automatically',`,
 );
 
 /* pemuat awal: ganti blok "13. MULAI" agar menunggu server */
@@ -1007,6 +1188,8 @@ const HTML_TAMBAHAN = `
   border-color:#000; color:#000; font-weight:700; opacity:1;
 }
 #btnEdit:disabled,#btnHapus:disabled{opacity:.45; cursor:default}
+/* baris pajak otomatis — angka hitungan sistem, boleh dikoreksi Bapak */
+.tl-jml.auto{border-color:#111; font-weight:700}
 /* baris transaksi yang sedang DIPANGGIL (diketuk) — tanda hitam-putih, bukan warna */
 .txt tbody tr[data-tx]{cursor:pointer}
 .txt tbody tr.dipanggil td{background:var(--soft)}
