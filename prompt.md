@@ -730,6 +730,9 @@ flowchart LR
 | 11 | Belanja item pernah **ter-unbuy** → data hilang | Perlu rollback | 6 Agu |
 | 12 | Nama tag diubah → **32 titik kode** harus ikut | Butuh kolom `code` | 24 Sep |
 | 13 | Bunga **sama** tapi pajak **beda 1 sen** | tx #2894 vs #2981 | 24 Sep |
+| 14 | 🔴 **Jangan mencatat dari DUA tempat pada hari yang sama** | Pajak deposito Rp 123.287,67 tercatat **dua kali** (PC + HP) → saldo Superbank kurang | 16 Okt |
+| 15 | 🔴 **Nomor ID transaksi bisa BERTABRAKAN antara PC dan HP** | Server (HP) & `keuangan.db` (PC) sama-sama memakai ID **3212–3238** untuk transaksi **berbeda** → `siapkan-cloud.cjs --ulang` bisa **menimpa** catatan HP | 16 Okt |
+| 16 | ✅ **Edit transaksi TIDAK merusak angka** (sudah dibuktikan) | 221 riwayat edit diperiksa: sistem **mengganti** nilai (bukan menumpuk), nilai lama disimpan di `audit_log`, bisa dikembalikan | 16 Okt |
 
 ### Pola akar masalahnya (satu pola, tiga wujud)
 
@@ -1020,6 +1023,24 @@ flowchart LR
 | 8 | **Bulan baru harus dibuka dulu** (`bukaBulan`) sebelum bisa dicatat |
 | 9 | **`bulat()` pakai `Math.trunc`** — PostgreSQL mengembalikan BIGINT sebagai teks |
 | 10 | **Jangan taruh angka saldo / nama fund asli** di berkas yang masuk repo publik |
+| 11 | 🔴 **Jangan mencatat dari PC dan HP pada hari yang sama** — penyebab nyata pajak deposito tercatat **dua kali** (16 Okt 2026) |
+| 12 | 🔴 **Nomor ID bisa bertabrakan** antara server (HP) dan `keuangan.db` (PC). **Jangan** jalankan `siapkan-cloud.cjs --ulang` tanpa memeriksa tabrakan ID lebih dulu |
+| 13 | ✅ **Edit transaksi aman** — `aksiUbah` **mengganti** baris dengan nilai yang dikirim (tidak menumpuk, tidak menghitung ulang). Nilai lama disimpan di `audit_log` → bisa dikembalikan |
+
+### 🔴 Cara memeriksa selisih (16 Okt 2026) — untuk AI berikutnya
+
+Kalau Bapak mengeluh **"saldo beda"**, periksa **berurutan**:
+
+| # | Periksa | Cara |
+|---|---|---|
+| 1 | **Tag salah** | Cari tag `Transfer` pada belanja biasa, atau tag `Rumah` pada Celengan/Tabungan (aturan 8) |
+| 2 | **Catatan dobel** | Cari baris dengan **tanggal + jumlah + fund sama** (penyebab paling sering) |
+| 3 | **Baris belum masuk** | Bandingkan `keuangan.db` vs server per bulan |
+| 4 | **Tabrakan ID** | Bandingkan baris `id >= 3212` — kalau isinya berbeda, ID bertabrakan |
+| 5 | **Baru terakhir** | Periksa **rumus** — biasanya **bukan** ini penyebabnya |
+
+> 📌 **Bukti 16 Okt 2026:** selisih Rp 243.844,67 — **rumusnya benar** (5 bulan lain identik sejak awal).
+> Penyebabnya **salah input**. Jangan langsung menuduh rumus.
 
 ---
 

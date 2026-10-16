@@ -17,6 +17,9 @@ uangku-credentials.env
 data/
 !data/.gitkeep
 
+# cadangan (memuat data keuangan asli + salinan server)
+backups/
+
 # berkas HTML yang memuat data asli (dibuat oleh tools/siapkan-data.cjs)
 uangku.html
 lab-uang2.html

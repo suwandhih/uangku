@@ -6,6 +6,69 @@
 
 ---
 
+## 16 Oktober 2026 — 🔴 SELISIH Rp 243.844,67 **DIPERBAIKI** — sekarang IDENTIK 100%
+
+> **Keluhan Bapak:** *"saya sudah mengisi data benar di uangku.. tapi selisih.."*
+> **Hasil:** ✅ **selesai** — seluruh 13 bulan sekarang **IDENTIK 100%** dengan `keuangan`.
+
+### 🔍 Penyebabnya (bukan bug rumus)
+
+| # | Sebab | Dampak |
+|---|---|---|
+| 1 | **Pajak deposito dicatat DUA KALI** — sekali dari PC, sekali lagi dari HP | −123.287,67 |
+| 2 | **Tag salah "Rumah"** pada Celengan & Tabungan A (seharusnya **Transfer**) | Ringkasan kelebihan Rp 60.000 |
+| 3 | **12 transaksi** ada di keuangan, belum masuk UangKu | −120.551,00 |
+| 4 | **Nomor ID bertabrakan** — server (HP) & keuangan (PC) sama-sama memakai 3212–3238 untuk transaksi **berbeda** | 🔴 paling berbahaya |
+
+### ✅ Yang dikerjakan
+
+1. **Backup dulu** (aturan E1) → `backups/server-uangku-20261016-145923.json` + `backups/uangku-20261016-145923.db`
+2. **27 baris server disamakan** dengan keuangan (ID 3212–3245)
+3. **7 baris disisipkan** (yang belum ada di server)
+4. **0 baris dihapus** — tidak ada catatan Bapak yang hilang
+5. **`uangku.db` disegarkan** dari keuangan (1.926 transaksi)
+6. Semua perubahan **tercatat di `audit_log`** (username `perbaikan`) — bisa dibatalkan
+
+### 📊 Bukti (sidik jari saldo)
+
+| Bulan | keuangan | UangKu | |
+|---|---:|---:|---|
+| 2025-10 … 2026-09 | — | — | ✅ 12 bulan identik |
+| **2026-10** | **293.499.103,60** | **293.499.103,60** | ✅ |
+
+```
+Seluruh tabel transaksi : keuangan 1.926 = server 1.926
+beda isi : 0 · hilang : 0 · lebih : 0
+```
+
+### 🧪 Uji lewat Worker (jalur HP)
+
+```
+POST aksi=dashboard bulan=2026-10
+  total saldo : 293.499.103,60   ✅ sama
+  jumlah tx   : 170              ✅ sama
+  Superbank   : 26.455.660,55    ✅ sama
+```
+
+### 📌 Catatan penting untuk Bapak
+
+- **Edit transaksi TIDAK merusak angka.** Sudah diperiksa **221 riwayat edit** — sistem
+  mengganti nilai (bukan menumpuk), nilai lama disimpan, dan bisa dikembalikan.
+- **Rumus saldo benar.** 5 bulan lain (Jun–Sep) sudah identik sejak awal.
+- 🔴 **Hati-hati mencatat dari DUA tempat (PC + HP) pada hari yang sama** — inilah
+  penyebab pajak deposito tercatat dua kali. Sebaiknya catat dari **satu tempat saja**.
+
+### 📚 Dokumen yang diperbarui
+
+| Dokumen | Yang ditambahkan |
+|---|---|
+| `agents.md` | Aturan baru **17** (jangan catat dari dua tempat) & **18** (ID bisa bertabrakan) + baris status selisih |
+| `rencanakerja.md` | Kasus **K38** di papan order + status di kepala dokumen |
+| `prompt.md` | Pelajaran bug **14–16** + **cara memeriksa selisih** (5 langkah berurutan) + aturan cloud **11–13** |
+| `CHANGELOG.md` | Bagian ini |
+
+---
+
 ## 13 Oktober 2026 (malam) — 🔁 RANCANGAN PLUGIN RUTIN **DICATAT**
 
 > **Order Bapak:** 4 butir tentang plugin **Rutin** (klik = langsung transaksi ·
