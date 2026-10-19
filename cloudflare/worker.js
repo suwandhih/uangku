@@ -181,11 +181,24 @@ async function siapkanBaris(env, skema, b) {
   const tag = await ambilTag(env, skema, b.tag);
   if (!tag) throw new Error(`Tag "${b.tag}" tidak dikenal`);
 
-  /* Arah: tag yang mengunci arah menang; tag dua arah pakai pilihan pengguna */
-  let arah = tag.journal_type;
-  if (arah !== "D" && arah !== "K") {
+  /* 🔴 ARAH — DIPELAJARI DARI SISTEM LAMA `c:\data\keuangan` (19 Okt 2026).
+     Di sistem lama `tags.journal_type` hanya ARAH BAWAAN; Bapak masih boleh
+     menggantinya lewat daftar Jurnal. Bukti data nyata (1.926 tx):
+       Koreksi   → D=6  K=1   (walau journal_type='K')
+       Pinjam    → D=4  K=5   (journal_type=NULL)
+       Reimburse → D=3  K=1   (walau journal_type='D')
+       Transfer  → D=362 K=323 (journal_type=NULL)
+     → HANYA 4 tag rumah tangga yang DIKUNCI (keputusan Bapak 19 Okt:
+       *"tag: rumah, pribadi dll pasti Kredit tidak bisa diklik debit"*).
+       Tag lain: pakai arah pilihan Bapak; kalau tidak dikirim, pakai
+       arah bawaan tag (journal_type), lalu 'K'. */
+  const TAG_KUNCI = ["Rumah", "Pribadi", "Pet", "Mobil"];
+  let arah;
+  if (TAG_KUNCI.indexOf(tag.name) !== -1) {
+    arah = tag.journal_type === "D" ? "D" : "K";
+  } else {
     arah = b.arah === "D" || b.arah === "K" ? b.arah : null;
-    if (!arah) throw new Error(`Tag "${tag.name}" dua arah — pilih Debit atau Kredit`);
+    if (!arah) arah = tag.journal_type === "D" || tag.journal_type === "K" ? tag.journal_type : "K";
   }
 
   const journalId = await ambilJurnal(env, skema, fundId, arah);

@@ -6,6 +6,77 @@
 
 ---
 
+## 19 Oktober 2026 — 🏷️ ARAH TAG dipelajari dari `c:\data\keuangan` + lebar kolom PC dikoreksi
+
+> **Arahan Bapak:** *"pembagian sumber dan tag masih terlalu lebar di PC sedang di HP sudah ok coba di koreksi lagi"* · *"hubungan tag dengan debit atau kredit km harus pelajari di c:\data\keuangan sistem ini sudah bekerja benar.. karena saya coba tag: koreksi posisi kredit padahal bisa kredit atau debit"*
+> **Hasil:** ✅ **selesai** — aturan arah tag sekarang **sama dengan sistem lama**, dan lebar kolom PC sudah dikoreksi.
+
+### 1️⃣ Lebar kolom PC dikoreksi
+
+| Layar | Sumber | Tag | Harga |
+|---|---|---|---|
+| **960 px (PC Bapak)** | 266 → **150 px** | 266 → **150 px** | 90 → **180 px** |
+| 1280 px | 266 → **150 px** | 266 → **150 px** | 90 → **180 px** |
+| 560 px | 106 | 106 | 90 |
+| 430 px | 72 | 72 | 78 |
+| 390 px (HP) | 56 | 56 | 78 |
+| 360 px | 44 | 44 | 78 |
+
+> Sumber & tag dibatasi **150 px** (cukup untuk nama terpanjang + panah). Sisa ruang dipakai harga supaya angka lebih enak dibaca. HP **tidak berubah** (sudah pas).
+
+### 2️⃣ Arah tag — DIPELAJARI dari sistem lama
+
+**Sumber kebenaran:** kolom `tags.journal_type` di `c:\data\keuangan` — `D` = Debit · `K` = Kredit · `NULL` = bebas.
+
+**Bukti data nyata (1.926 transaksi):**
+
+| Tag | `journal_type` | Dipakai D | Dipakai K | Kesimpulan |
+|---|---|---|---|---|
+| Koreksi | `K` | **6** | **1** | 🔴 **bebas** — walau tertulis K |
+| Pinjam | `NULL` | 4 | 5 | bebas |
+| Reimburse | `D` | **3** | **1** | 🔴 **bebas** — walau tertulis D |
+| Transfer | `NULL` | 362 | 323 | bebas |
+| Hutang | `K` | 0 | 3 | selalu K |
+| Rumah · Pribadi · Pet · Mobil | `K` | 0 | 291 | **selalu K** |
+| Bunga · Bonus · Pendapatan | `D` | 345 | 0 | selalu D |
+| Pajak · Hilang · biaya | `K` | 0 | 58 | selalu K |
+
+**Kesimpulan penting:** di sistem lama `journal_type` hanya **arah bawaan** — Bapak masih boleh menggantinya. Jadi:
+
+| Kelompok | Tombol D/K |
+|---|---|
+| 🏠 Rumah · 👤 Pribadi · 🐕 Pet · 🚗 Mobil | **DIKUNCI Kredit** (tombol mati) — sesuai keputusan Bapak |
+| Semua tag lain | **BISA DIKLIK** — mulai dari arah bawaan tag |
+
+### 🔴 Bug yang ditemukan & diperbaiki
+
+| # | Bug | Akibat |
+|---|---|---|
+| 1 | Halaman mengunci **semua** tag yang punya `journal_type` | Koreksi/Reimburse/Pajak tidak bisa diubah arahnya |
+| 2 | **Server (`worker.js`) memaksa** arah dari `journal_type` | Walau Bapak pilih Debit, tersimpan tetap Kredit |
+
+> ✅ Keduanya diperbaiki. Sekarang pilihan Bapak **dihormati** untuk semua tag kecuali 4 tag rumah tangga.
+
+### 🧪 Uji yang dijalankan (browser nyata, data tag asli)
+
+| Tag | Tombol | Bisa diklik? |
+|---|---|---|
+| Rumah · Pribadi · Pet · Mobil | `Kredit` | 🔒 **tidak** |
+| Bunga · Bonus · Pendapatan | `Debit` | ✋ ya |
+| Pajak · Hilang · biaya · Hutang | `Kredit` | ✋ ya |
+| **Koreksi** | `Kredit` | ✋ **ya** — klik → `Debit` → klik → `Kredit` ✅ |
+| Pinjam · Transfer | `Kredit` | ✋ ya |
+| Reimburse | `Debit` | ✋ ya |
+
+| Uji lain | Hasil |
+|---|---|
+| Lebar 6 layar (360–1280 px) | ✅ 0 meluber |
+| Pajak otomatis masih jalan | ✅ `1,20` → `12.328,77`, 1× gambar ulang |
+| Galat JS | ✅ **0** |
+| Sintaks `worker.js` | ✅ OK |
+
+---
+
 ## 19 Oktober 2026 — 📐 Baris jurnal: nama PENUH, harga dikunci, tombol Kredit/Debit jadi satu
 
 > **Arahan Bapak:** *"space nilai di kecilkan sampai 100.000.000,99 karena saya mau space sumber dan tag lebih lebar.. SPB < superbank dan tag RMH < rumah setelah pakai kurang nyaman saya sering coba liat ini apa ya (lupa) jadi lebih nyaman di full saja"*

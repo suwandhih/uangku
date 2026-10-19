@@ -1669,6 +1669,16 @@ function aturLebarBaris() {
   var w1 = Math.floor(sisa / 2);
   var w2 = sisa - w1;
 
+  /* 🔴 19 Okt 2026 (koreksi Bapak): di PC sumber & tag jadi TERLALU LEBAR
+     (266 px) sehingga baris terlihat kosong. Dibatasi: cukup untuk nama
+     terpanjang + panah pulldown. Sisa ruang dipakai harga (angka lebih
+     enak dibaca lebar) — tapi harga tetap tidak lebih dari 2× lebar dasar. */
+  var W_MAKS = 150;   /* batas lebar sumber & tag */
+  if (w1 > W_MAKS) { w1 = W_MAKS; }
+  if (w2 > W_MAKS) { w2 = W_MAKS; }
+  var sisaHarga = sisa - w1 - w2;
+  if (sisaHarga > 0) { W_HARGA += Math.min(sisaHarga, W_HARGA); }
+
   /* jangan pernah melebihi lebar baris (dulu bisa meluber 2 px di layar 360) */
   var total = w1 + w2 + W_DK + W_HARGA + W_HAPUS + JARAK * 4;
   if (total > lebar) { w2 -= (total - lebar); if (w2 < 24) w2 = 24; }
@@ -1715,15 +1725,26 @@ var TES_KEY = 'uangku-tes-v1';
 var BULAN_ASLI = null;
 var formTes = null;
 var KMAX_TES = 6;
-/* 4 tag dua arah — arah WAJIB dipilih manual (agents.md Bagian 9) */
-var DUA_ARAH_TES = ['Transfer', 'Pinjam', 'Hutang', 'Reimburse'];
+/* 🔴 ARAH TAG — DIPELAJARI DARI SISTEM LAMA `c:\data\keuangan` (19 Okt 2026).
+   Sumber kebenaran = kolom `tags.journal_type`:
+     'D' = selalu Debit · 'K' = selalu Kredit · NULL = bebas (boleh D atau K)
+   Di sistem lama `journal_type` hanya ARAH BAWAAN — Bapak masih boleh
+   menggantinya lewat daftar Jurnal. Bukti data nyata (1.926 tx):
+     Koreksi   → D=6  K=1   (bebas, walau journal_type='K')
+     Pinjam    → D=4  K=5   (bebas, journal_type=NULL)
+     Reimburse → D=3  K=1   (bebas, walau journal_type='D')
+     Transfer  → D=362 K=323 (bebas, journal_type=NULL)
+   → Jadi HANYA 4 tag rumah tangga yang DIKUNCI (keputusan Bapak 19 Okt:
+     *"tag: rumah, pribadi dll pasti Kredit tidak bisa diklik debit"*).
+     Tag lain: arah bawaan dari server, tapi Bapak BOLEH mengubahnya. */
+var TAG_KUNCI = ['Rumah', 'Pribadi', 'Pet', 'Mobil'];
 
 /* Tag bawaan form: tag PERTAMA yang mengunci arah (bukan tag dua arah).
    Kalau tidak ada, baru pakai 'Transfer'. */
 function tagBawaan(bln) {
   if (!bln || !bln.tag || !bln.tag.length) return 'Transfer';
   var tetap = bln.tag.filter(function (g) {
-    return DUA_ARAH_TES.indexOf(g.nama) === -1 && (g.arah === 'D' || g.arah === 'K');
+    return TAG_KUNCI.indexOf(g.nama) !== -1;
   });
   return tetap.length ? tetap[0].nama : 'Transfer';
 }
@@ -1734,10 +1755,22 @@ function bulanDariTgl(tgl) {
   for (var i = 0; i < BULAN.length; i++) if (tgl >= BULAN[i].awal && tgl <= BULAN[i].akhir) return BULAN[i];
   return null;
 }
+/* Arah yang DIKUNCI tag (tombol mati). Hanya 4 tag rumah tangga.
+   Tag lain → null (bebas diklik), walau server punya arah bawaan. */
 function arahTetapTag(nama) {
+  if (TAG_KUNCI.indexOf(nama) === -1) return null;
   var tg = (B() ? B().tag : []).filter(function (x) { return x.nama === nama; })[0];
-  if (!tg || DUA_ARAH_TES.indexOf(nama) !== -1) return null;
-  return (tg.arah === 'D' || tg.arah === 'K') ? tg.arah : null;
+  return (tg && (tg.arah === 'D' || tg.arah === 'K')) ? tg.arah : 'K';
+}
+
+/* Arah BAWAAN tag (dipakai saat Bapak memilih tag).
+   Tag kunci → arahnya sendiri. Tag bebas → arah bawaan dari server
+   (`journal_type`), kalau tidak ada → 'K'. */
+function arahBawaanTag(nama) {
+  var kunci = arahTetapTag(nama);
+  if (kunci) return kunci;
+  var tg = (B() ? B().tag : []).filter(function (x) { return x.nama === nama; })[0];
+  return (tg && (tg.arah === 'D' || tg.arah === 'K')) ? tg.arah : 'K';
 }
 
 /* tidak dipakai lagi — data datang utuh dari server */
@@ -1990,11 +2023,11 @@ document.getElementById('inputIsi').addEventListener('change', function (e) {
   if (e.target.dataset.k === 'fund') { formTes.baris[i].fund = e.target.value; hitungRingTes(); }
   if (e.target.dataset.k === 'tag') {
     formTes.baris[i].tag = e.target.value;
-    var tetap = arahTetapTag(e.target.value);
-    /* 🔴 19 Okt 2026 (keputusan Bapak): tag yang mengunci → ikut tag.
-       Tag bebas (Transfer/Pinjam/Hutang/Reimburse) → KEMBALI ke Kredit
-       (mulai baru), bukan meneruskan arah tag sebelumnya. */
-    formTes.baris[i].arah = tetap || 'K';
+    /* 🔴 19 Okt 2026 — dipelajari dari `c:\data\keuangan`:
+       arah mengikuti ARAH BAWAAN tag itu (kolom `journal_type`).
+       Tag kunci (Rumah/Pribadi/Pet/Mobil) → Kredit, tombol mati.
+       Tag bebas → arah bawaan tag, Bapak masih boleh mengubahnya. */
+    formTes.baris[i].arah = arahBawaanTag(e.target.value);
     gbrInput();
   }
 });
