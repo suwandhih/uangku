@@ -812,10 +812,12 @@ function jmlTeks(n) {
  *  • ada baris Bunga berisi  → pastikan ada baris Pajak tepat di bawahnya
  *  • tidak ada baris Bunga   → buang baris Pajak yang dibuat otomatis
  *  • Bapak sudah mengubah angka pajak sendiri → JANGAN ditimpa
+ * Kembalian: true kalau JUMLAH BARIS berubah (perlu gambar ulang form).
  */
 function selaraskanPajak() {
-  if (!formTes || !formTes.baris) return;
+  if (!formTes || !formTes.baris) return false;
   var arr = formTes.baris;
+  var berubah = false;
 
   /* buang baris pajak otomatis yang bunganya sudah tidak ada / kosong */
   for (var i = arr.length - 1; i >= 0; i--) {
@@ -823,7 +825,7 @@ function selaraskanPajak() {
       var adaBunga = arr.some(function (x, j) {
         return j !== i && barisBunga(x) && numTes(x.jml) > 0;
       });
-      if (!adaBunga) arr.splice(i, 1);
+      if (!adaBunga) { arr.splice(i, 1); berubah = true; }
     }
   }
 
@@ -854,8 +856,47 @@ function selaraskanPajak() {
       fund: b.fund, tag: 'Pajak', arah: 'K', jml: jmlTeks(pajak),
       auto: true, dariBunga: bunga
     });
+    berubah = true;
     k++;
   }
+  return berubah;
+}
+
+/**
+ * Perbarui HANYA kotak angka baris pajak otomatis — tanpa menggambar ulang
+ * seluruh form. Dipakai saat Bapak masih MENGETIK angka bunga.
+ * 🔴 Bug nyata 19 Okt 2026: dulu tiap ketikan memanggil gbrInput() sehingga
+ *    kotak input hilang & fokus lompat ke baris pajak.
+ */
+function segarkanPajak() {
+  if (!formTes || !formTes.baris) return;
+  var wadah = document.getElementById('inputIsi');
+  if (!wadah) return;
+  formTes.baris.forEach(function (b, i) {
+    if (!b.auto) return;
+    var kotak = wadah.querySelector('input.tl-jml[data-i="' + i + '"]');
+    if (kotak && kotak.value !== b.jml) kotak.value = b.jml;
+  });
+}
+
+/**
+ * Gambar ulang form TAPI kembalikan fokus + posisi kursor ke kotak yang
+ * sedang diisi. Dipakai kalau jumlah baris berubah (baris pajak muncul/hilang)
+ * saat Bapak masih mengetik — supaya kursor tidak melompat.
+ */
+function gbrInputJagaFokus(i) {
+  var wadah = document.getElementById('inputIsi');
+  var kotak = wadah ? wadah.querySelector('input.tl-jml[data-i="' + i + '"]') : null;
+  var pos = kotak ? kotak.selectionStart : null;
+  gbrInput();
+  if (!kotak) return;
+  var baru = document.getElementById('inputIsi').querySelector('input.tl-jml[data-i="' + i + '"]');
+  if (!baru) return;
+  baru.focus();
+  try {
+    var p = (pos === null || pos > baru.value.length) ? baru.value.length : pos;
+    baru.setSelectionRange(p, p);
+  } catch (err) { /* diam */ }
 }
 `;
 skrip = skrip.replace('</script>', blokPajakOtomatis + '\n</script>');
@@ -870,18 +911,26 @@ skrip = skrip.replace(
 );
 catat.push('pajak bunga otomatis: dipanggil saat form digambar');
 
-/* 2b1j. saat jumlah / tag / fund berubah → selaraskan pajak lalu gambar ulang */
+/* 2b1j. saat jumlah / tag / fund berubah → selaraskan pajak.
+   🔴 Saat MENGETIK angka bunga: JANGAN gambar ulang form (kotak input hilang
+   & fokus lompat ke baris pajak — bug nyata 19 Okt 2026). Cukup:
+     • baris pajak belum ada → gambar ulang sekali (supaya barisnya muncul)
+     • baris pajak sudah ada → perbarui angkanya saja, fokus tetap di tempat */
 skrip = skrip.replace(
   `    formTes.baris[i].jml = rapi;
     hitungRingTes();
   }
 });`,
   `    formTes.baris[i].jml = rapi;
-    if (barisBunga(formTes.baris[i])) { selaraskanPajak(); gbrInput(); return; }
+    if (barisBunga(formTes.baris[i])) {
+      if (selaraskanPajak()) { gbrInputJagaFokus(i); return; }
+      segarkanPajak();
+    }
     hitungRingTes();
   }
 });`,
 );
+catat.push('pajak bunga otomatis: fokus tidak lompat saat mengetik');
 skrip = skrip.replace(
   `  if (e.target.dataset.k === 'fund') { formTes.baris[i].fund = e.target.value; hitungRingTes(); }
   if (e.target.dataset.k === 'tag') {
@@ -908,6 +957,25 @@ skrip = skrip.replace(
   }`,
 );
 catat.push('pajak bunga otomatis: ikut berubah saat diisi');
+
+/* 2b1j2. saat SELESAI mengetik (change) → angka dilengkapi ",00" sehingga
+   pajak harus dihitung ulang dari angka final. Fokus sudah pindah, jadi
+   menggambar ulang di sini aman. */
+skrip = skrip.replace(
+  `    e.target.value = rapi;
+    formTes.baris[i].jml = rapi;
+    hitungRingTes();
+    return;`,
+  `    e.target.value = rapi;
+    formTes.baris[i].jml = rapi;
+    if (barisBunga(formTes.baris[i])) {
+      if (selaraskanPajak()) { gbrInput(); return; }
+      segarkanPajak();
+    }
+    hitungRingTes();
+    return;`,
+);
+catat.push('pajak bunga otomatis: dihitung ulang saat selesai mengetik');
 
 /* 2b1k. saat Bapak mengetik angka pajak sendiri → jangan ditimpa lagi */
 skrip = skrip.replace(

@@ -1,9 +1,10 @@
 # 🧠 AGENTS.md — Otak UangKu
 
 > **Untuk siapa:** **AI** yang mengerjakan UangKu. **WAJIB dibaca setiap sesi sebelum kerja.**
-> **Dibuat:** 25 September 2026 · **Diperbarui:** 13 Oktober 2026
+> **Dibuat:** 25 September 2026 · **Diperbarui:** 19 Oktober 2026
 > **Status:** 🎉 **SIAP DIPAKAI SETIAP HARI** — https://suwandhih.github.io/uangku/uangku-cloud.html (PIN ada di berkas `PIN-UangKu.txt`)
 > Data server **IDENTIK 100%** dengan `c:\data\keuangan` · 99 uji lolos · bisa dibaca **dan dicatat** dari PC maupun HP
+> ✅ **16 Okt 2026:** selisih **Rp 243.844,67** sudah **diperbaiki** — seluruh **13 bulan identik 100%** (1.926 tx = 1.926 tx · beda isi 0)
 > **Pasangan dokumen ini:** `rencanakerja.md` (papan order + rencana + konsep detail Bapak)
 > **Asal konsep:** sistem lama `c:\data\keuangan` — **hanya konsep & metode yang dibawa**, bukan kodenya
 
@@ -13,7 +14,8 @@
 
 > Disalin **8 Oktober 2026** dari C:\data\Peta dunia\agents.md.
 > Bagian **F** (khusus peta) dan **I** (khusus MapLibre) **TIDAK** disalin — tidak berlaku untuk UangKu.
-> Di proyek ini papan order ada di encanakerja.md **bagian 1**.
+> Di proyek ini papan order ada di 
+encanakerja.md **bagian 1**.
 ## 🔴 3 ATURAN PALING PENTING (ingat ini dulu, selalu)
 
 > ⚡ **1. JANGAN mulai apa pun tanpa aba-aba dari Bapak.**
@@ -435,9 +437,9 @@ akar semua bug. Di UangKu: **satu logika = satu berkas**. Yang lama **dihapus**.
 
 ---
 
-## 2. 📍 Posisi Pekerjaan Sekarang (25 Sep 2026)
+## 2. 📍 Posisi Pekerjaan Sekarang (19 Okt 2026)
 
-> 🔴 **Diperbarui 13 Okt 2026.** Keadaan sebelumnya (25 Sep) sudah tidak berlaku.
+> 🔴 **Diperbarui 19 Okt 2026.** Keadaan sebelumnya (13 Okt) sudah tidak berlaku.
 
 | Hal | Keadaan |
 |---|---|

@@ -6,6 +6,85 @@
 
 ---
 
+## 19 Oktober 2026 — 🔴 BUG: kursor LOMPAT ke baris Pajak saat mengetik angka Bunga (DIPERBAIKI)
+
+> **Keluhan Bapak:** *"saat input angka bunga bank ketik 6 karena pajak otomatis hitung sedang bunga bank masih dalam ketik angka. lompat terus ke pajak.. perbaiki"*
+> **Hasil:** ✅ **selesai** — kursor sekarang **tetap di kotak Bunga** sampai Bapak selesai mengetik.
+
+### 🔍 Penyebabnya
+
+| Hal | Sebelum | Sesudah |
+|---|---|---|
+| **Setiap ketikan** pada baris Bunga memanggil `gbrInput()` | seluruh form **digambar ulang** → kotak input dibuat baru → **fokus hilang & lompat** ke baris Pajak | form **tidak** digambar ulang; hanya **angka pajak** yang diperbarui |
+| **Baris pajak belum ada** | — | digambar ulang **sekali saja** (supaya barisnya muncul), lalu **fokus + posisi kursor dikembalikan** |
+| **Selesai mengetik** (angka dilengkapi `,00`) | pajak tidak ikut dihitung ulang | pajak **dihitung ulang** dari angka final |
+
+### ✅ Yang dikerjakan
+
+1. `selaraskanPajak()` sekarang **memberi tahu** apakah jumlah baris berubah (kembalian `true`/`false`)
+2. Fungsi baru **`segarkanPajak()`** — perbarui **hanya** kotak angka pajak, tanpa menggambar ulang form
+3. Fungsi baru **`gbrInputJagaFokus(i)`** — kalau form memang harus digambar ulang, **fokus & posisi kursor dikembalikan** ke kotak yang sedang diisi
+4. Diperbaiki di **sumbernya** (`tools/bangun-cloud.cjs`), lalu `uangku-cloud.html` **dibangun ulang**
+
+### 🧪 Uji yang dijalankan (browser nyata)
+
+| Uji | Hasil |
+|---|---|
+| Mengetik `6` → `61` → `616` → `6.164` → `61.643` → `61.643,8` → `61.643,83` | ✅ kotak input **tetap elemen yang sama** (tidak dibuat ulang) |
+| Berapa kali form digambar ulang selama 7 ketikan | ✅ **1×** (hanya saat baris Pajak pertama muncul) |
+| Angka pajak ikut berubah tiap ketikan | ✅ `1,20` → `12,20` → `123,20` → `1.232,80` → `12.328,60` → `12.328,76` → **`12.328,77`** |
+| Selesai mengetik (`change`) | ✅ bunga `61.643,83` → pajak **`12.328,77`** |
+| Bapak **koreksi** angka pajak sendiri (`12.328,76`) | ✅ **tidak ditimpa** |
+| Bunga diubah lagi → pajak dihitung ulang | ✅ `100.000` → pajak `20.000,00` |
+| Bunga dikosongkan | ✅ baris Pajak otomatis **dibuang** |
+| Galat JS di halaman | ✅ **0** |
+
+> 📌 **Catatan:** fitur pajak otomatis hanya ada di **halaman cloud** (`uangku-cloud.html`). Versi HP lama (`uangku.html`) tidak punya fitur ini, jadi tidak perlu diubah.
+
+---
+
+## 19 Oktober 2026 — 🧹 PAPAN ORDER DIRAPIKAN (dokumen saja, tidak ada kode yang diubah)
+
+> **Perintah Bapak:** *"rapikan papan"* — papan order dirapikan supaya sesuai aturannya sendiri.
+> **Hasil:** ✅ **selesai** — tidak ada kode, data, atau saldo yang disentuh.
+
+### ✅ Yang dikerjakan
+
+| # | Hal | Sebelum | Sesudah |
+|---|---|---|---|
+| 1 | **Kasus selesai masih di tabel A** | 6 kasus sudah ✅ semua tapi masih di "BELUM SELESAI" | dipindah ke **D. SELESAI** (K34 · K35 · K36 · K28 · K19 · K25) |
+| 2 | **K38 (selisih 16 Okt)** | masih di tabel A | dipindah ke **D. SELESAI** |
+| 3 | **Tabel D terputus-putus** | 6 baris kosong memutus tabel jadi beberapa bagian | dirapikan jadi **satu tabel utuh** (48 baris) |
+| 4 | **2 baris tabel cacat** | K30 (tabel A) & T1 (tabel B) kelebihan kolom → tampilan tabel rusak | diperbaiki jadi jumlah kolom yang benar |
+| 5 | **Tanggal dokumen** | `agents.md` & `rencanakerja.md` masih "13/16 Okt" | diperbarui ke **19 Okt 2026** |
+| 6 | **PENUTUP `rencanakerja.md`** | masih keadaan **25 Sep** ("langkah berikutnya T2") | keadaan **19 Okt** + 3 pilihan perintah |
+
+### 📊 Keadaan papan sekarang
+
+| Tabel | Isi | Jumlah |
+|---|---|---|
+| **A. KASUS BELUM SELESAI** | kasus yang masih ada butir ⬜/⚠️ | **31** |
+| **B. ANTREAN KERJA** | sudah disetujui, belum mulai | 27 |
+| **C. IDE** | 🟡 / ⏸️ / ❌ | 12 |
+| **D. SELESAI** | arsip, terbaru di atas | **48** |
+
+> 🔴 **K37 (Plugin Rutin) TETAP di tabel A** — memang belum dikerjakan, menunggu aba-aba **"proses"** dari Bapak.
+
+### 🔍 Cara memeriksa (tanpa membuka kode)
+
+```
+1. Buka rencanakerja.md bagian 1 (paling atas)
+2. Tabel A sekarang 31 kasus (dulu 37)
+3. Tabel D paling atas: K34 · K36 · K35 (13 Okt) lalu K28 · K19 · K25 (8 Okt)
+4. Semua baris tabel rata — tidak ada yang meleset kolomnya
+```
+
+### 💾 Backup
+
+`backups/rencanakerja-20261019-pra-rapikan.md` — salinan papan **sebelum** dirapikan.
+
+---
+
 ## 16 Oktober 2026 — 🔴 SELISIH Rp 243.844,67 **DIPERBAIKI** — sekarang IDENTIK 100%
 
 > **Keluhan Bapak:** *"saya sudah mengisi data benar di uangku.. tapi selisih.."*
