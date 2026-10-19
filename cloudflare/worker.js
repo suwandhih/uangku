@@ -23,6 +23,11 @@ const CORS = {
    Pajak & Bunga TIDAK dikecualikan. */
 const TAG_KECUALI = ["Transfer", "Koreksi", "Pinjam", "Hutang", "Reimburse"];
 
+/* 🔴 4 tag DUA ARAH — arahnya BEBAS dipilih Bapak (boleh Debit, boleh Kredit).
+   Semua tag lain DIKUNCI ke arahnya: keluar = Kredit, masuk = Debit.
+   Bukti data nyata `keuangan.db` (1.926 tx) — lihat catatan di siapkanBaris(). */
+const TAG_BEBAS = ["Transfer", "Pinjam", "Koreksi", "Reimburse"];
+
 const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli",
   "Agustus", "September", "Oktober", "November", "Desember"];
 
@@ -182,23 +187,21 @@ async function siapkanBaris(env, skema, b) {
   if (!tag) throw new Error(`Tag "${b.tag}" tidak dikenal`);
 
   /* 🔴 ARAH — DIPELAJARI DARI SISTEM LAMA `c:\data\keuangan` (19 Okt 2026).
-     Di sistem lama `tags.journal_type` hanya ARAH BAWAAN; Bapak masih boleh
-     menggantinya lewat daftar Jurnal. Bukti data nyata (1.926 tx):
-       Koreksi   → D=6  K=1   (walau journal_type='K')
-       Pinjam    → D=4  K=5   (journal_type=NULL)
-       Reimburse → D=3  K=1   (walau journal_type='D')
-       Transfer  → D=362 K=323 (journal_type=NULL)
-     → HANYA 4 tag rumah tangga yang DIKUNCI (keputusan Bapak 19 Okt:
-       *"tag: rumah, pribadi dll pasti Kredit tidak bisa diklik debit"*).
-       Tag lain: pakai arah pilihan Bapak; kalau tidak dikirim, pakai
-       arah bawaan tag (journal_type), lalu 'K'. */
-  const TAG_KUNCI = ["Rumah", "Pribadi", "Pet", "Mobil"];
+     Aturan Bapak: *"keluar > kredit dan masuk > debit .. sudah pasti"*.
+     Bukti data nyata `keuangan.db` (1.926 tx) — arah yang BENAR-BENAR dipakai:
+       Rumah/Pribadi/Pet/Mobil  D=0   K=280/296/83/2  → SATU arah (keluar)
+       Bunga/Bonus/Pendapatan   D=210/140/39  K=0     → SATU arah (masuk)
+       Pajak/Hilang/biaya/Hutang D=0  K=46/2/10/3     → SATU arah (keluar)
+       ─────────────────────────────────────────────────────────────
+       Transfer  D=369 K=324 · Pinjam D=4 K=5
+       Koreksi   D=6   K=2   · Reimburse D=3 K=1      → DUA arah (bebas)
+     → HANYA 4 tag itu yang BEBAS. Semua tag lain DIKUNCI ke arahnya. */
   let arah;
-  if (TAG_KUNCI.indexOf(tag.name) !== -1) {
-    arah = tag.journal_type === "D" ? "D" : "K";
-  } else {
+  if (TAG_BEBAS.indexOf(tag.name) !== -1) {
     arah = b.arah === "D" || b.arah === "K" ? b.arah : null;
     if (!arah) arah = tag.journal_type === "D" || tag.journal_type === "K" ? tag.journal_type : "K";
+  } else {
+    arah = tag.journal_type === "D" ? "D" : "K";
   }
 
   const journalId = await ambilJurnal(env, skema, fundId, arah);
@@ -505,8 +508,8 @@ async function aksiDashboard(env, skema, isi) {
     `SELECT id, name, sort_order, is_blocked, is_titipan, minimum_saldo FROM ${skema}.source_funds ` +
     `WHERE deleted_at IS NULL ORDER BY sort_order, id`);
   const tag = await jalankanSQL(env,
-    `SELECT id, name, icon, sort_order, journal_type, has_tax, is_system FROM ${skema}.tags ` +
-    `WHERE deleted_at IS NULL ORDER BY sort_order, id`);
+    `SELECT id, name, icon, sort_order, journal_type, has_tax, is_system, show_in_shopping ` +
+    `FROM ${skema}.tags WHERE deleted_at IS NULL ORDER BY sort_order, id`);
   const snap = await jalankanSQL(env,
     `SELECT source_fund_id, year, month, saldo_awal, is_locked FROM ${skema}.monthly_snapshots`);
 
@@ -596,6 +599,7 @@ async function aksiDashboard(env, skema, isi) {
           id: Number(g.id), nama: g.name, ikon: g.icon || "🏷️", urut: Number(g.sort_order),
           arah: g.journal_type || "bebas",
           pajak: Number(g.has_tax) === 1, sistem: Number(g.is_system) === 1,
+          belanja: Number(g.show_in_shopping) === 1,
           dikecualikan: TAG_KECUALI.indexOf(g.name) !== -1,
           masuk: pt ? r2(pt.masuk) : 0, keluar: pt ? r2(pt.keluar) : 0, n: pt ? pt.n : 0
         };
@@ -634,8 +638,142 @@ async function aksiFund(env, skema) {
 
 async function aksiTag(env, skema) {
   return balas({ ok: true, data: await jalankanSQL(env,
-    `SELECT id, name, icon, sort_order, journal_type, has_tax, is_system FROM ${skema}.tags ` +
-    `WHERE deleted_at IS NULL ORDER BY sort_order, id`) });
+    `SELECT id, name, icon, sort_order, journal_type, has_tax, is_system, show_in_shopping ` +
+    `FROM ${skema}.tags WHERE deleted_at IS NULL ORDER BY sort_order, id`) });
+}
+
+/* ------------------------------------------------------------------
+   TAG — TULIS (tambah · ubah · hapus)
+   Aturan Bapak 19 Okt 2026: *"di pengaturan > tag harus ada penambahan
+   tag baru .. ada yg default dari sistem"*.
+   🔴 Setiap tulis WAJIB masuk audit_log (aturan C6 rollback).
+   🔴 Hapus tag DICEGAH kalau masih dipakai transaksi (aturan 9.7).
+   ------------------------------------------------------------------ */
+
+/** Nama tag: 1–30 huruf, boleh spasi. Tidak boleh sama dengan tag lain. */
+function namaTagValid(v) {
+  const n = String(v || "").trim().replace(/\s+/g, " ");
+  if (n.length < 1 || n.length > 30) return null;
+  return n;
+}
+
+/** Arah jurnal dari isian: 'D' / 'K' / null (bebas). */
+function arahTagValid(v) {
+  if (v === "D" || v === "K") return v;
+  return null;
+}
+
+async function tagAda(env, skema, nama, kecualiId) {
+  const r = await jalankanSQL(env,
+    `SELECT id FROM ${skema}.tags WHERE LOWER(name) = LOWER(${teks(nama)}) ` +
+    `AND deleted_at IS NULL` + (kecualiId ? ` AND id <> ${bulat(kecualiId)}` : "") + ` LIMIT 1`);
+  return r.length > 0;
+}
+
+async function aksiTambahTag(env, skema, isi) {
+  const nama = namaTagValid(isi.nama);
+  if (!nama) return balas({ ok: false, error: "Nama tag harus 1–30 huruf" }, 400);
+  if (await tagAda(env, skema, nama, 0)) return balas({ ok: false, error: `Tag "${nama}" sudah ada` }, 400);
+
+  const ikon = String(isi.ikon || "🏷️").slice(0, 8);
+  const arah = arahTagValid(isi.arah);
+  const pajak = isi.pajak ? 1 : 0;
+  const belanja = isi.belanja ? 1 : 0;
+
+  const urut = await jalankanSQL(env,
+    `SELECT COALESCE(MAX(sort_order), 0) + 1 AS n FROM ${skema}.tags`);
+  const sortOrder = Number(urut[0] ? urut[0].n : 1) || 1;
+  const sekarang = waktuSekarang();
+
+  const baru = { name: nama, icon: ikon, journal_type: arah, has_tax: pajak, show_in_shopping: belanja, sort_order: sortOrder };
+  await jalankanSekaligus(env, [
+    `INSERT INTO ${skema}.tags (name, icon, sort_order, created_at, journal_type, has_tax, is_system, show_in_shopping) ` +
+    `VALUES (${teks(nama)}, ${teks(ikon)}, ${bulat(sortOrder)}, ${teks(sekarang)}, ` +
+    `${arah === null ? "NULL" : teks(arah)}, ${bulat(pajak)}, 0, ${bulat(belanja)})`,
+    `INSERT INTO ${skema}.audit_log (username, action, table_name, record_id, old_data, new_data, timestamp) ` +
+    `VALUES ('hp', 'INSERT', 'tags', 0, NULL, ${teks(JSON.stringify(baru))}, ${teks(sekarang)})`
+  ]);
+
+  return balas({ ok: true, nama, arah, pajak: !!pajak, belanja: !!belanja });
+}
+
+async function aksiUbahTag(env, skema, isi) {
+  const id = Number(isi.id);
+  if (!Number.isInteger(id)) return balas({ ok: false, error: "Id tidak sah" }, 400);
+
+  const lamaR = await jalankanSQL(env,
+    `SELECT id, name, icon, journal_type, has_tax, is_system, show_in_shopping, sort_order ` +
+    `FROM ${skema}.tags WHERE id = ${bulat(id)} AND deleted_at IS NULL LIMIT 1`);
+  if (!lamaR.length) return balas({ ok: false, error: "Tag tidak ditemukan" }, 404);
+  const lama = lamaR[0];
+
+  const nama = namaTagValid(isi.nama);
+  if (!nama) return balas({ ok: false, error: "Nama tag harus 1–30 huruf" }, 400);
+  if (await tagAda(env, skema, nama, id)) return balas({ ok: false, error: `Tag "${nama}" sudah ada` }, 400);
+
+  const ikon = String(isi.ikon || lama.icon || "🏷️").slice(0, 8);
+  const arah = arahTagValid(isi.arah);
+  const pajak = isi.pajak ? 1 : 0;
+  const belanja = isi.belanja ? 1 : 0;
+  const sekarang = waktuSekarang();
+  const namaLama = String(lama.name);
+
+  const perintah = [
+    `UPDATE ${skema}.tags SET name = ${teks(nama)}, icon = ${teks(ikon)}, ` +
+    `journal_type = ${arah === null ? "NULL" : teks(arah)}, has_tax = ${bulat(pajak)}, ` +
+    `show_in_shopping = ${bulat(belanja)} WHERE id = ${bulat(id)}`
+  ];
+
+  /* 🔴 Ganti nama tag → SELURUH catatan yang memakai nama lama ikut diganti.
+     Kalau tidak, transaksi lama kehilangan tag (bug nyata sistem lama, 9 Jul). */
+  if (nama !== namaLama) {
+    for (const tb of ["transactions", "wishlist", "shopping_list", "recurring"]) {
+      perintah.push(`UPDATE ${skema}.${tb} SET tag = ${teks(nama)} WHERE tag = ${teks(namaLama)}`);
+    }
+  }
+
+  perintah.push(
+    `INSERT INTO ${skema}.audit_log (username, action, table_name, record_id, old_data, new_data, timestamp) ` +
+    `VALUES ('hp', 'UPDATE', 'tags', ${bulat(id)}, ${teks(JSON.stringify(lama))}, ` +
+    `${teks(JSON.stringify({ name: nama, icon: ikon, journal_type: arah, has_tax: pajak, show_in_shopping: belanja }))}, ` +
+    `${teks(sekarang)})`
+  );
+
+  await jalankanSekaligus(env, perintah);
+  return balas({ ok: true, id, nama, arah, gantiNama: nama !== namaLama });
+}
+
+async function aksiHapusTag(env, skema, isi) {
+  const id = Number(isi.id);
+  if (!Number.isInteger(id)) return balas({ ok: false, error: "Id tidak sah" }, 400);
+
+  const lamaR = await jalankanSQL(env,
+    `SELECT id, name, icon, journal_type, has_tax, is_system, show_in_shopping, sort_order ` +
+    `FROM ${skema}.tags WHERE id = ${bulat(id)} AND deleted_at IS NULL LIMIT 1`);
+  if (!lamaR.length) return balas({ ok: false, error: "Tag tidak ditemukan" }, 404);
+  const lama = lamaR[0];
+
+  if (Number(lama.is_system) === 1) {
+    return balas({ ok: false, error: `Tag "${lama.name}" adalah tag SISTEM — tidak boleh dihapus` }, 400);
+  }
+
+  /* 🔴 Aturan 9.7: hapus tag DICEGAH kalau masih dipakai transaksi. */
+  const pakai = await jalankanSQL(env,
+    `SELECT COUNT(*) AS n FROM ${skema}.transactions ` +
+    `WHERE tag = ${teks(lama.name)} AND deleted_at IS NULL`);
+  const n = Number(pakai[0] ? pakai[0].n : 0);
+  if (n > 0) {
+    return balas({ ok: false, error: `Tag "${lama.name}" masih dipakai ${n} transaksi — tidak bisa dihapus` }, 400);
+  }
+
+  const sekarang = waktuSekarang();
+  await jalankanSekaligus(env, [
+    `UPDATE ${skema}.tags SET deleted_at = ${teks(sekarang)} WHERE id = ${bulat(id)} AND deleted_at IS NULL`,
+    `INSERT INTO ${skema}.audit_log (username, action, table_name, record_id, old_data, new_data, timestamp) ` +
+    `VALUES ('hp', 'DELETE', 'tags', ${bulat(id)}, ${teks(JSON.stringify(lama))}, NULL, ${teks(sekarang)})`
+  ]);
+
+  return balas({ ok: true, id, dihapus: true });
 }
 
 async function aksiSnapshot(env, skema, isi) {
@@ -753,6 +891,9 @@ export default {
         case "dashboard":  return await aksiDashboard(env, skema, isi);
         case "fund":       return await aksiFund(env, skema);
         case "tag":        return await aksiTag(env, skema);
+    case "tambahTag":  return await aksiTambahTag(env, skema, isi);
+    case "ubahTag":    return await aksiUbahTag(env, skema, isi);
+    case "hapusTag":   return await aksiHapusTag(env, skema, isi);
         case "snapshot":   return await aksiSnapshot(env, skema, isi);
         case "transaksi":  return await aksiTransaksi(env, skema, isi);
         case "saldo":      return await aksiSaldo(env, skema, isi);

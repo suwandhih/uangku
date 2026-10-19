@@ -1204,6 +1204,14 @@ skrip = skrip.replace(
   'Pajak dihitung otomatis':'Tax calculated automatically',`,
 );
 
+/* 2b1m. TAG — halaman cloud BOLEH menulis tag (tambah · ubah · hapus).
+   `uangku.html` (versi HP mandiri) tetap BACA SAJA (aturan C18). */
+skrip = skrip.replace(
+  `var BISA_TULIS = false;`,
+  `var BISA_TULIS = true;`,
+);
+catat.push('tag: halaman cloud boleh menulis');
+
 /* pemuat awal: ganti blok "13. MULAI" agar menunggu server */
 skrip = skrip.replace(
   `terapkanTes();

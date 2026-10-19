@@ -281,6 +281,26 @@ body{
 .tl-tes:last-child{border-bottom:0}
 .tl-tes b{font-size:13px;overflow-wrap:anywhere}
 .tl-tes small{display:block;color:var(--text2);font-size:11px}
+/* TAG — borang tambah/ubah (konsep sama dengan keuangan Settings → TagsTab,
+   permintaan Bapak 19 Okt 2026). Hitam-putih, rapat, muat layar 50%. */
+.tf{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tf .tfk{flex:0 0 78px;font-size:11.5px;color:var(--text2)}
+.tf input[type=text],.tf select{flex:1 1 auto;min-width:0;font:inherit;font-size:12px;
+  border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--text)}
+.tfl{font-size:11.5px;color:var(--text2);margin-bottom:4px}
+.emj{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:3px;margin-bottom:8px}
+.emj button{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:3px 0;
+  font-size:14px;line-height:1.25;cursor:pointer}
+.emj button.on{background:var(--ink);border-color:var(--ink)}
+.tfcek{display:flex;align-items:center;gap:7px;font-size:12px;margin-bottom:8px;cursor:pointer}
+.tfcek input{width:16px;height:16px;flex:0 0 auto;margin:0}
+.trow{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.trow:last-child{border-bottom:0}
+.trow .ic{flex:0 0 auto;font-size:14px}
+.trow .nm{flex:1 1 auto;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .ar{flex:0 0 auto;font-size:10.5px;color:var(--text2);white-space:nowrap}
+.trow .btn-kecil{padding:5px 8px;font-size:11px}
+.item.kunci{background:var(--soft)}
 .btn-kecil{border:1px solid var(--text);background:var(--bg);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
 .btn-kecil:disabled{opacity:.35;cursor:default}
 .btn-utama{border:1px solid var(--ink);background:var(--ink);color:var(--onink);border-radius:8px;padding:10px;font:inherit;font-weight:700;cursor:pointer}
@@ -560,6 +580,18 @@ var KAMUS = {
   'Simpan ke layar utama':'Save to home screen','sudah dipasang':'already installed',
   'Kembali':'Back','Tambah':'Add','pajak':'tax','dikecualikan':'excluded',
 'Debit':'Debit','Kredit':'Credit',
+  'Tambah Tag Baru':'Add new tag','Ubah Tag':'Edit tag','Nama tag':'Tag name',
+  'Ikon':'Icon','Jurnal':'Journal','Kena pajak otomatis':'Tax automatically',
+  'Muncul di Belanja':'Show in Shopping','Simpan perubahan':'Save changes',
+  'Tag baru sudah ditambahkan.':'New tag added.','Tag sudah diubah.':'Tag updated.',
+  'Tag sudah dihapus.':'Tag deleted.','Tag sistem tidak bisa diubah.':'System tags cannot be edited.',
+  'Tag sistem tidak bisa dihapus.':'System tags cannot be deleted.',
+  'Nama tag belum diisi.':'Tag name is empty.','Nama tag paling banyak 30 huruf.':'Tag name is at most 30 characters.',
+  'Tag yang masih dipakai transaksi tidak bisa dihapus.':'A tag still used by transactions cannot be deleted.',
+  'Versi HP ini hanya untuk MELIHAT.':'This mobile version is for VIEWING only.',
+  'Versi HP ini hanya untuk MELIHAT. Menambah atau mengubah tag dilakukan di halaman cloud (yang bisa mencatat).':'This mobile version is for VIEWING only. Add or edit tags on the cloud page (the one that can record).',
+  'Arah tag: keluar = Kredit · masuk = Debit. Hanya 4 tag yang bebas dua arah: Transfer · Pinjam · Koreksi · Reimburse.':'Tag direction: out = Credit · in = Debit. Only 4 tags are free two-way: Transfer · Lend · Correction · Reimburse.',
+  'mis. Sekolah':'e.g. School','Ubah / hapus tag':'Edit / delete tag',
   'Pilih sumber dana':'Choose source fund','Semua Fund':'All funds',
   'Sumber dana':'Source fund',
   'kotak uang':'money boxes','penentu makna':'decides the meaning',
@@ -1378,7 +1410,8 @@ function gbrSub() {
       t('Keluar') + ' −' + rpRingkas(keluarT) + '</b></div></div></div>';
     h += '<div class="hint">' + t('Tag = penanda proses. Arah jurnal dan perlakuan di laporan ' +
       'ditentukan dari tag.') + '</div>';
-    h += tombolKolom('tag', document.getElementById('subIsi'));
+
+    /* ---- KISI TAG (tanpa pilihan 3/4/5 — permintaan Bapak 19 Okt 2026) ---- */
     h += '<div class="grid4"' + gayaGrid('tag', document.getElementById('subIsi')) + '>';
     b.tag.forEach(function (g) {
       var arah = g.arah === 'D' ? t('Masuk') + ' ＋' : g.arah === 'K' ? t('Keluar') + ' −' : t('Bebas');
@@ -1389,7 +1422,7 @@ function gbrSub() {
       var nilai = g.masuk ? '+' + rpRingkas(g.masuk) : g.keluar ? '−' + rpRingkas(g.keluar) : '—';
       var ket = arah + ' · ' + g.n + ' tx';
       if (g.dikecualikan) ket += ' · ' + t('Tidak dihitung');
-      h += '<div class="item">' +
+      h += '<div class="item' + (g.sistem ? ' kunci' : '') + '">' +
         '<span class="baris"><span class="ic">' + g.ikon + '</span>' +
           '<span class="nm">' + esc(t(g.nama)) + '</span></span>' +
         '<span class="val mono">' + pecahAngka(nilai) + '</span>' +
@@ -1398,8 +1431,66 @@ function gbrSub() {
         '</div>';
     });
     h += '</div>';
-    h += '<div class="hint"><b>🔧</b> = tag sistem (jangan dihapus) · <b>✕</b> = ' +
-      t('Tidak dihitung') + ' di ringkasan bulanan (' + t('Transfer · Pinjam · Reimburse · Koreksi · Hutang') + ').</div>';
+    h += '<div class="hint"><b>🔧</b> = tag sistem (tidak bisa dihapus) · <b>✕</b> = ' +
+      t('Tidak dihitung') + ' di ringkasan bulanan (' + t('Transfer · Pinjam · Reimburse · Koreksi · Hutang') + ').<br>' +
+      t('Arah tag: keluar = Kredit · masuk = Debit. Hanya 4 tag yang bebas dua arah: ' +
+        'Transfer · Pinjam · Koreksi · Reimburse.') + '</div>';
+
+    /* ---- BORANG TAMBAH / UBAH TAG (konsep sama dengan keuangan) ---- */
+    var ubah = tagForm && tagForm.mode === 'ubah';
+    h += '<div class="sec">' + (ubah ? '✎ ' + t('Ubah Tag') : '＋ ' + t('Tambah Tag Baru')) + '</div>';
+    if (!BISA_TULIS) {
+      h += '<div class="hint">' + t('Versi HP ini hanya untuk MELIHAT. ' +
+        'Menambah atau mengubah tag dilakukan di halaman cloud (yang bisa mencatat).') + '</div>';
+    }
+    h += '<div class="tl-card">' +
+      '<div class="tf"><span class="tfk">' + t('Nama tag') + '</span>' +
+        '<input type="text" id="tfNama" maxlength="30" value="' + esc(tagForm ? tagForm.nama : '') +
+        '" placeholder="' + esc(t('mis. Sekolah')) + '"></div>' +
+      '<div class="tfl">' + t('Ikon') + '</div>' +
+      '<div class="emj" id="tfEmj">' +
+        EMOJI_TAG.map(function (e) {
+          return '<button data-emj="' + e + '"' +
+            (tagForm && tagForm.ikon === e ? ' class="on"' : '') + '>' + e + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div class="tf"><span class="tfk">' + t('Jurnal') + '</span>' +
+        '<select id="tfArah">' +
+          '<option value=""' + (!tagForm || !tagForm.arah ? ' selected' : '') + '>— ' + t('Bebas') + ' —</option>' +
+          '<option value="D"' + (tagForm && tagForm.arah === 'D' ? ' selected' : '') + '>' +
+            t('Debit') + ' (' + t('masuk') + ')</option>' +
+          '<option value="K"' + (tagForm && tagForm.arah === 'K' ? ' selected' : '') + '>' +
+            t('Kredit') + ' (' + t('keluar') + ')</option>' +
+        '</select></div>' +
+      '<label class="tfcek"><input type="checkbox" id="tfPajak"' +
+        (tagForm && tagForm.pajak ? ' checked' : '') + '> 🧾 ' + t('Kena pajak otomatis') + '</label>' +
+      '<label class="tfcek"><input type="checkbox" id="tfBelanja"' +
+        (tagForm && tagForm.belanja ? ' checked' : '') + '> 🛒 ' + t('Muncul di Belanja') + '</label>' +
+      '<button class="btn-utama" id="tfSimpan" style="width:100%"' +
+        (BISA_TULIS ? '' : ' disabled') + '>' +
+        (ubah ? t('Simpan perubahan') : t('Tambah')) + '</button>' +
+      (ubah ? '<button class="btn-kecil" id="tfBatal" style="width:100%;margin-top:6px">' +
+        t('Batal') + '</button>' : '') +
+      '</div>';
+
+    /* ---- DAFTAR TAG (ubah / hapus) ---- */
+    h += '<div class="sec">' + t('Ubah / hapus tag') + '</div>';
+    h += '<div class="tl-card">';
+    b.tag.forEach(function (g) {
+      var ar = g.arah === 'D' ? '＋ ' + t('Debit') : g.arah === 'K' ? '− ' + t('Kredit') : t('Bebas');
+      h += '<div class="trow">' +
+        '<span class="ic">' + g.ikon + '</span>' +
+        '<span class="nm">' + esc(t(g.nama)) + '</span>' +
+        '<span class="ar">' + esc(ar) + (g.sistem ? ' · 🔧' : '') + '</span>' +
+        (g.sistem
+          ? '<span class="ar">' + t('Sistem') + '</span>'
+          : (BISA_TULIS
+              ? '<button class="btn-kecil" data-tagubah="' + g.id + '">✎</button>' +
+                '<button class="btn-kecil" data-taghapus="' + g.id + '">✕</button>'
+              : '')) +
+        '</div>';
+    });
+    h += '</div>';
   }
 
   else if (subNama === 'Pajak & Bunga') {
@@ -1527,6 +1618,96 @@ function gbrSub() {
       gbrSub();
     });
   });
+
+  /* ---- borang tag: pilih ikon, simpan, batal, ubah, hapus ---- */
+  wadahSub.querySelectorAll('[data-emj]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      if (!tagForm) tagForm = { mode: 'tambah', nama: '', ikon: '🏷️', arah: '', pajak: false, belanja: false };
+      tagForm.ikon = el.getAttribute('data-emj');
+      wadahSub.querySelectorAll('[data-emj]').forEach(function (x) { x.classList.remove('on'); });
+      el.classList.add('on');
+    });
+  });
+  var tfSimpan = document.getElementById('tfSimpan');
+  if (tfSimpan) tfSimpan.addEventListener('click', simpanTag);
+  var tfBatal = document.getElementById('tfBatal');
+  if (tfBatal) tfBatal.addEventListener('click', function () { tagForm = null; gbrSub(); });
+  wadahSub.querySelectorAll('[data-tagubah]').forEach(function (el) {
+    el.addEventListener('click', function () { mulaiUbahTag(Number(el.getAttribute('data-tagubah'))); });
+  });
+  wadahSub.querySelectorAll('[data-taghapus]').forEach(function (el) {
+    el.addEventListener('click', function () { hapusTag(Number(el.getAttribute('data-taghapus'))); });
+  });
+}
+
+/* ============================================================
+   TAG — TAMBAH · UBAH · HAPUS (Pengaturan → Daftar Tag)
+   Konsep sama dengan sistem lama `keuangan` Settings → TagsTab.
+   🔴 Setiap tulis masuk audit_log di server (aturan C6 rollback).
+   ============================================================ */
+
+/** Buka borang dalam mode UBAH, isi dengan data tag yang dipilih. */
+function mulaiUbahTag(id) {
+  var g = TAG().filter(function (x) { return x.id === id; })[0];
+  if (!g) return;
+  if (g.sistem) { pesan(t('Tag sistem tidak bisa diubah.')); return; }
+  tagForm = {
+    mode: 'ubah', id: g.id, nama: g.nama, ikon: g.ikon,
+    arah: (g.arah === 'D' || g.arah === 'K') ? g.arah : '',
+    pajak: !!g.pajak, belanja: !!g.belanja
+  };
+  gbrSub();
+  var el = document.getElementById('tfNama');
+  if (el) { el.focus(); el.scrollIntoView({ block: 'center' }); }
+}
+
+/** Simpan tag (tambah atau ubah) ke server. */
+function simpanTag() {
+  if (!BISA_TULIS) { pesan(t('Versi HP ini hanya untuk MELIHAT.')); return; }
+  var nama = (document.getElementById('tfNama').value || '').trim();
+  var arah = document.getElementById('tfArah').value;
+  var pajak = document.getElementById('tfPajak').checked;
+  var belanja = document.getElementById('tfBelanja').checked;
+  var ikon = (tagForm && tagForm.ikon) || '🏷️';
+
+  if (!nama) { pesan(t('Nama tag belum diisi.')); return; }
+  if (nama.length > 30) { pesan(t('Nama tag paling banyak 30 huruf.')); return; }
+
+  var ubah = tagForm && tagForm.mode === 'ubah';
+  var tombol = document.getElementById('tfSimpan');
+  if (tombol) { tombol.disabled = true; tombol.textContent = t('Menyimpan…'); }
+
+  var isi = { nama: nama, ikon: ikon, arah: arah || null, pajak: pajak, belanja: belanja };
+  if (ubah) isi.id = tagForm.id;
+
+  panggilServer(ubah ? 'ubahTag' : 'tambahTag', isi).then(function () {
+    tagForm = null;
+    return muatDariServer();
+  }).then(function () {
+    gbrSub();
+    pesan(ubah ? t('Tag sudah diubah.') : t('Tag baru sudah ditambahkan.'));
+  }).catch(function (e) {
+    if (tombol) { tombol.disabled = false; tombol.textContent = ubah ? t('Simpan perubahan') : t('Tambah'); }
+    pesan(e.message);
+  });
+}
+
+/** Hapus tag (soft delete). Ditolak server kalau masih dipakai transaksi. */
+function hapusTag(id) {
+  if (!BISA_TULIS) { pesan(t('Versi HP ini hanya untuk MELIHAT.')); return; }
+  var g = TAG().filter(function (x) { return x.id === id; })[0];
+  if (!g) return;
+  if (g.sistem) { pesan(t('Tag sistem tidak bisa dihapus.')); return; }
+  if (!confirm(t('Hapus tag') + ' "' + g.nama + '"?' + '\n\n' +
+      t('Tag yang masih dipakai transaksi tidak bisa dihapus.'))) return;
+
+  panggilServer('hapusTag', { id: id }).then(function () {
+    if (tagForm && tagForm.id === id) tagForm = null;
+    return muatDariServer();
+  }).then(function () {
+    gbrSub();
+    pesan(t('Tag sudah dihapus.'));
+  }).catch(function (e) { pesan(e.message); });
 }
 /* ============================================================
    11. GAMBAR — PUSAT
@@ -1671,13 +1852,14 @@ function aturLebarBaris() {
 
   /* 🔴 19 Okt 2026 (koreksi Bapak): di PC sumber & tag jadi TERLALU LEBAR
      (266 px) sehingga baris terlihat kosong. Dibatasi: cukup untuk nama
-     terpanjang + panah pulldown. Sisa ruang dipakai harga (angka lebih
-     enak dibaca lebar) — tapi harga tetap tidak lebih dari 2× lebar dasar. */
+     terpanjang + panah pulldown.
+     🔴 SELURUH sisa ruang diberikan ke HARGA — kalau tidak, baris menyisakan
+     ruang kosong 158 px di layar 960 px (bug nyata 19 Okt 2026). */
   var W_MAKS = 150;   /* batas lebar sumber & tag */
   if (w1 > W_MAKS) { w1 = W_MAKS; }
   if (w2 > W_MAKS) { w2 = W_MAKS; }
   var sisaHarga = sisa - w1 - w2;
-  if (sisaHarga > 0) { W_HARGA += Math.min(sisaHarga, W_HARGA); }
+  if (sisaHarga > 0) { W_HARGA += sisaHarga; }
 
   /* jangan pernah melebihi lebar baris (dulu bisa meluber 2 px di layar 360) */
   var total = w1 + w2 + W_DK + W_HARGA + W_HAPUS + JARAK * 4;
@@ -1726,25 +1908,57 @@ var BULAN_ASLI = null;
 var formTes = null;
 var KMAX_TES = 6;
 /* 🔴 ARAH TAG — DIPELAJARI DARI SISTEM LAMA `c:\data\keuangan` (19 Okt 2026).
-   Sumber kebenaran = kolom `tags.journal_type`:
-     'D' = selalu Debit · 'K' = selalu Kredit · NULL = bebas (boleh D atau K)
-   Di sistem lama `journal_type` hanya ARAH BAWAAN — Bapak masih boleh
-   menggantinya lewat daftar Jurnal. Bukti data nyata (1.926 tx):
-     Koreksi   → D=6  K=1   (bebas, walau journal_type='K')
-     Pinjam    → D=4  K=5   (bebas, journal_type=NULL)
-     Reimburse → D=3  K=1   (bebas, walau journal_type='D')
-     Transfer  → D=362 K=323 (bebas, journal_type=NULL)
-   → Jadi HANYA 4 tag rumah tangga yang DIKUNCI (keputusan Bapak 19 Okt:
-     *"tag: rumah, pribadi dll pasti Kredit tidak bisa diklik debit"*).
-     Tag lain: arah bawaan dari server, tapi Bapak BOLEH mengubahnya. */
-var TAG_KUNCI = ['Rumah', 'Pribadi', 'Pet', 'Mobil'];
+   Aturan Bapak: *"rumah > keluar, bunga > masuk, bonus > masuk, hilang > keluar,
+   transfer > bebas, hutang > keluar. keluar > kredit dan masuk > debit .. sudah pasti"*
 
-/* Tag bawaan form: tag PERTAMA yang mengunci arah (bukan tag dua arah).
+   Bukti data nyata `keuangan.db` (1.926 tx) — arah yang BENAR-BENAR dipakai:
+     Rumah      D=0   K=99    → SATU arah (keluar)
+     Pribadi    D=0   K=155   → SATU arah (keluar)
+     Pet        D=0   K=35    → SATU arah (keluar)
+     Mobil      D=0   K=2     → SATU arah (keluar)
+     Bunga      D=189 K=0     → SATU arah (masuk)
+     Bonus      D=140 K=0     → SATU arah (masuk)
+     Pendapatan D=16  K=0     → SATU arah (masuk)
+     Pajak      D=0   K=46    → SATU arah (keluar)
+     Hilang     D=0   K=2     → SATU arah (keluar)
+     Hutang     D=0   K=3     → SATU arah (keluar)
+     biaya      D=0   K=10    → SATU arah (keluar)
+     Tabungan   D=0   K=36    → SATU arah (keluar)
+     ─────────────────────────────────────────────────────────────
+     Transfer   D=362 K=323   → DUA arah (bebas)
+     Pinjam     D=4   K=5     → DUA arah (bebas)
+     Koreksi    D=6   K=1     → DUA arah (bebas)
+     Reimburse  D=3   K=1     → DUA arah (bebas)
+
+   → Jadi HANYA 4 tag ini yang BEBAS. Semua tag lain DIKUNCI ke arahnya:
+     keluar = Kredit · masuk = Debit. */
+var TAG_BEBAS = ['Transfer', 'Pinjam', 'Koreksi', 'Reimburse'];
+
+/* Keadaan borang tag di Pengaturan → Daftar Tag.
+   null = borang kosong (mode TAMBAH). Diisi = mode UBAH. */
+var tagForm = null;
+
+/* 🔴 Boleh menulis tag atau tidak.
+   `uangku.html` = versi HP MANDIRI → BACA SAJA (aturan C18), jadi false.
+   `tools/bangun-cloud.cjs` menggantinya menjadi true untuk halaman cloud
+   (di sana ada `panggilServer`). Jangan diubah manual. */
+var BISA_TULIS = true;
+
+/* Pilihan ikon tag — sama dengan daftar di sistem lama
+   (`c:\data\keuangan\src\components\Settings.tsx` EMOJI_LIST). */
+var EMOJI_TAG = [
+  '🏠', '👤', '👧', '🚗', '🚕', '🌸', '💵', '🔄', '🧾', '🛒',
+  '💰', '⚡', '📦', '🐾', '🐱', '🐕', '🎯', '📱', '💻', '🎮',
+  '✈️', '🏖️', '🎓', '💊', '🏥', '🍽️', '☕', '🍺', '🎵', '📚',
+  '🎁', '💳', '🏦', '📈', '📉', '🔧', '✂️', '🧹', '🏋️', '🎬'
+];
+
+/* Tag bawaan form: tag PERTAMA yang arahnya terkunci (bukan tag dua arah).
    Kalau tidak ada, baru pakai 'Transfer'. */
 function tagBawaan(bln) {
   if (!bln || !bln.tag || !bln.tag.length) return 'Transfer';
   var tetap = bln.tag.filter(function (g) {
-    return TAG_KUNCI.indexOf(g.nama) !== -1;
+    return TAG_BEBAS.indexOf(g.nama) === -1;
   });
   return tetap.length ? tetap[0].nama : 'Transfer';
 }
@@ -1755,16 +1969,16 @@ function bulanDariTgl(tgl) {
   for (var i = 0; i < BULAN.length; i++) if (tgl >= BULAN[i].awal && tgl <= BULAN[i].akhir) return BULAN[i];
   return null;
 }
-/* Arah yang DIKUNCI tag (tombol mati). Hanya 4 tag rumah tangga.
-   Tag lain → null (bebas diklik), walau server punya arah bawaan. */
+/* Arah yang DIKUNCI tag (tombol mati). Semua tag KECUALI 4 tag bebas.
+   Tag bebas → null (boleh diklik). */
 function arahTetapTag(nama) {
-  if (TAG_KUNCI.indexOf(nama) === -1) return null;
+  if (TAG_BEBAS.indexOf(nama) !== -1) return null;
   var tg = (B() ? B().tag : []).filter(function (x) { return x.nama === nama; })[0];
   return (tg && (tg.arah === 'D' || tg.arah === 'K')) ? tg.arah : 'K';
 }
 
 /* Arah BAWAAN tag (dipakai saat Bapak memilih tag).
-   Tag kunci → arahnya sendiri. Tag bebas → arah bawaan dari server
+   Tag terkunci → arahnya sendiri. Tag bebas → arah bawaan dari server
    (`journal_type`), kalau tidak ada → 'K'. */
 function arahBawaanTag(nama) {
   var kunci = arahTetapTag(nama);
