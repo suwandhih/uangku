@@ -6,6 +6,58 @@
 
 ---
 
+## 19 Oktober 2026 — 🏷️ PENGATURAN › TAG: bisa TAMBAH / UBAH / HAPUS tag
+
+> **Arahan Bapak:** *"di pengaturan > tag harus ada penambahan tag baru .. ada yg default dari sistem. konsep sama seperti di keuangan pengaturan atau setting > tag. konsep sekarang boleh dipertahankan tapi ada tambahan dibawah grid sama dengan keuangan dan grid tidak perlu ada pilihan 3/4/5"*
+> **Hasil:** ✅ **selesai** — halaman Tag sekarang punya borang tambah tag di bawah grid, dan tag bisa diubah/dihapus.
+
+### 🆕 Yang baru di Pengaturan › Daftar Tag
+
+| # | Hal baru | Keterangan |
+|---|---|---|
+| 1 | **Borang "＋ Tambah Tag Baru"** di bawah grid | Isi: **nama tag** · **ikon** (40 pilihan, sama dengan keuangan) · **Jurnal** (— Bebas — / Debit (masuk) / Kredit (keluar)) · **🧾 Kena pajak otomatis** · **🛒 Muncul di Belanja** · tombol **Tambah** |
+| 2 | **Daftar tag dengan tombol ✎ dan ✕** | Tag bisa **diubah** (nama, ikon, arah, pajak, belanja) dan **dihapus** |
+| 3 | **Tag sistem ditandai 🔧 dan tidak bisa diubah/dihapus** | Bunga · Koreksi · Pinjam · Pendapatan · Reimburse · Hutang |
+| 4 | **Pemilih kolom 3/4/5 DIHAPUS dari halaman Tag** | Sesuai permintaan Bapak. Di **Daftar Fund** pemilih itu **tetap ada** |
+| 5 | **Keterangan arah tag** di halaman | *"keluar = Kredit · masuk = Debit. Hanya 4 tag yang bebas dua arah: Transfer · Pinjam · Koreksi · Reimburse."* |
+
+### 🔒 Pengaman (supaya data tidak rusak)
+
+| # | Pengaman | Akibat kalau dilanggar |
+|---|---|---|
+| 1 | **Tag sistem tidak bisa dihapus** | Ditolak dengan pesan jelas |
+| 2 | **Tag yang masih dipakai transaksi tidak bisa dihapus** | Ditolak + disebutkan berapa transaksi memakainya |
+| 3 | **Nama tag tidak boleh kembar** | Ditolak |
+| 4 | **Ganti nama tag → seluruh catatan ikut berganti** | Transaksi, wishlist, belanja, rutin — semuanya ikut (kalau tidak, tag lama hilang dari laporan) |
+| 5 | **Setiap tambah/ubah/hapus tag dicatat di Riwayat** | Bisa ditelusuri |
+
+### 🔴 Arah tag — sekarang DIKUNCI sesuai maknanya
+
+> **Arahan Bapak:** *"rumah > keluar, bunga > masuk, bonus > masuk, hilang > keluar, transfer > bebas, hutang > keluar. keluar > kredit dan masuk > debit .. sudah pasti"*
+
+| Tag | Arah | Bisa diklik? |
+|---|---|---|
+| Rumah · Pribadi · Pet · Mobil | **Kredit** (keluar) | ❌ tidak |
+| Bunga · Bonus · Pendapatan | **Debit** (masuk) | ❌ tidak |
+| Pajak · Hilang · biaya · Hutang | **Kredit** (keluar) | ❌ tidak |
+| **Transfer · Pinjam · Koreksi · Reimburse** | **bebas** | ✅ ya (Kredit ⇄ Debit) |
+
+> 🔴 **Ini juga dijaga di server** — kalau arah yang dikirim salah, server **membetulkan sendiri**. Sudah diuji: Rumah dikirim Debit → tersimpan Kredit; Bunga dikirim Kredit → tersimpan Debit; Koreksi & Transfer tetap sesuai pilihan.
+
+### 🖥️ Lebar baris jurnal di PC
+
+| Sebelum | Sesudah |
+|---|---|
+| Sumber 150 px · Tag 150 px · **Harga 180 px** · **sisa kosong 158 px** | Sumber 150 px · Tag 150 px · **Harga 322 px** · sisa kosong 16 px (hanya jarak antar kolom) |
+
+> Diukur di 7 lebar layar (320–960 px): **0 meluber**, angka `100.000.000,99` tetap utuh.
+
+### 📱 Versi HP (`uangku.html`)
+
+Tetap **BACA SAJA** — borang tag terlihat tapi tombolnya mati, dan ada tulisan *"Versi HP ini hanya untuk MELIHAT"*. Menambah tag dilakukan di halaman cloud.
+
+---
+
 ## 19 Oktober 2026 — 🏷️ ARAH TAG dipelajari dari `c:\data\keuangan` + lebar kolom PC dikoreksi
 
 > **Arahan Bapak:** *"pembagian sumber dan tag masih terlalu lebar di PC sedang di HP sudah ok coba di koreksi lagi"* · *"hubungan tag dengan debit atau kredit km harus pelajari di c:\data\keuangan sistem ini sudah bekerja benar.. karena saya coba tag: koreksi posisi kredit padahal bisa kredit atau debit"*

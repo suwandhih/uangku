@@ -58,9 +58,9 @@ Transaksi  →  tekan tombol ＋ (kanan atas)  →  isi  →  Simpan
 |---|---|
 | **Tanggal** | Sudah terisi hari ini. Bisa diganti |
 | **Keterangan** | Mis. "makan siang", "biaya admin" |
-| **Fund** | Kotak uangnya — ditulis **3 huruf** (`SPB` = Superbank, `SEA` = SeaBank, …) |
+| **Fund** | Kotak uangnya — ditulis **penuh** (`Superbank`, `SeaBank`, …) |
 | **Tag** | Untuk apa — ini yang menentukan artinya. 🔴 **WAJIB diganti** — jangan dibiarkan |
-| **D / K** | Masuk (D) atau keluar (K). **Untuk sebagian besar tag, ini terisi sendiri** |
+| **Debit / Kredit** | Masuk (Debit) atau keluar (Kredit). **Untuk sebagian besar tag, ini terisi sendiri dan tidak bisa ditekan** |
 | **Jumlah** | Angkanya saja, mis. `30000` — titik ribuan muncul sendiri saat mengetik, dan `,00` ditambahkan otomatis saat pindah kotak |
 
 > 💰 **Angka selalu 2 desimal.** `30000` → **`30.000,00`** · `30000,5` → **`30.000,50`** ·
@@ -75,38 +75,32 @@ Transaksi  →  tekan tombol ＋ (kanan atas)  →  isi  →  Simpan
 Sejak 13 Okt 2026, **satu catatan bank = satu baris**:
 
 ```
-[ SPB ▾ ] [ 🏠RMH ▾ ] [ D | K ] [        30.000 ] [ ✕ ]
-   fund        tag       arah         harga        hapus
+[ Superbank ▾ ] [ 🏠Rumah ▾ ] [ Kredit ] [        30.000 ] [ ✕ ]
+     fund            tag         arah          harga        hapus
 ```
 
-| Bagian | Lebar | Catatan |
-|---|---|---|
-| **Fund** | sedang (3 huruf) | Panah **▾** terlihat jelas — tekan untuk memilih fund lain. Arahkan kursor / tekan lama → muncul **nama lengkap** |
-| **Tag** | sedang | emoji + 3 huruf, panah **▾** terlihat |
-| **D / K** | kecil | 1 huruf saja |
-| **Harga** | **paling besar** | mengambil seluruh sisa lebar — cukup untuk **100.000.000,00** |
-| **✕** | kecil | hapus baris ini |
+| Bagian | Catatan |
+|---|---|
+| **Fund** | Nama **penuh**. Panah **▾** terlihat jelas — tekan untuk memilih fund lain. Nama kepanjangan dipotong `…` |
+| **Tag** | emoji + nama penuh, panah **▾** terlihat |
+| **Debit / Kredit** | **Satu tombol.** Tekan sekali → berganti. Kalau tag sudah pasti arahnya, tombol **abu-abu** (tidak bisa ditekan) |
+| **Harga** | mengambil seluruh sisa lebar — cukup untuk **100.000.000,99** |
+| **✕** | hapus baris ini |
 
 > 💡 **Kenapa fund & tag dapat ruang lebih?** Karena Bapak perlu **melihat panah ▾** supaya tahu
 > kotak itu bisa dibuka. Angka transaksi harian tidak pernah sebesar 100 juta, jadi sisanya
 > cukup untuk harga.
 
-> 🔑 **Singkatan fund hanya untuk tampilan.** Yang tersimpan di server **tetap nama lengkap**
-> ("Superbank"), jadi laporan dan saldo tidak terpengaruh sama sekali.
+> 🔑 **Nama penuh, bukan singkatan.** Sejak 19 Okt 2026 singkatan 3 huruf (`SPB`, `RMH`)
+> **dihapus** karena mudah lupa artinya. Yang tersimpan di server tetap nama lengkap.
 
-### 🔤 Daftar singkatan fund
+### 🔤 Nama fund ditulis PENUH
 
-| Fund | Singkat | Fund | Singkat |
-|---|---|---|---|
-| Superbank | `SPB` | BCA tabungan | `BCA` |
-| SeaBank | `SEA` | BCA Saham | `SHM` |
-| Celengan | `CEL` | Deposito | `DEP` |
-| Dana Sopir | `SOP` | Tabungan A | `TBA` |
-| Dana swn | `SWN` | Tabungan B | `TBB` |
-| Tunai | `TUN` | Tabungan C | `TBC` |
-| Sopir pinjam uang | `SPJ` | Tabungan D | `TBD` |
-| ShopeePay | `SHP` | Tabungan E | `TBE` |
-| OVO | `OVO` | GoPay | `GOP` |
+Sejak **19 Oktober 2026** nama fund di kotak pilihan ditulis **penuh** (`Superbank`, bukan `SPB`)
+— karena singkatan mudah lupa artinya. Nama yang kepanjangan **dipotong dengan `…`**,
+tapi nama utuhnya tetap terbaca saat daftar pilihan dibuka.
+
+> Dulu ada daftar singkatan 3 huruf. Daftar itu **sudah dihapus** karena tidak dipakai lagi.
 
 ### 🔴 PENTING — jangan lupa ganti TAG
 
@@ -265,14 +259,49 @@ Kotak **🔎 Cari keterangan…** — bisa mencari dari **keterangan**, **tag**,
 | Menu | Isi |
 |---|---|
 | 💰 **Daftar Fund** | Semua kotak uang + saldo akhirnya, dalam **kartu grid** |
-| 🏷️ **Daftar Tag** | 15 tag + arahnya (masuk/keluar) + jumlah catatan |
+| 🏷️ **Daftar Tag** | 15 tag + arahnya (masuk/keluar) + jumlah catatan + **borang tambah tag** |
 | 🧾 **Pajak & Bunga** | Rate pajak & bunga bank |
 | 🌐 **Bahasa** | Indonesia ↔ English |
 | 📖 **Daftar Istilah** | Padanan istilah keuangan Indonesia–Inggris |
 | ℹ️ **Tentang** | Keterangan berkas ini |
 
-**Tombol pilih jumlah kolom** (di Daftar Fund & Daftar Tag): **Otomatis (n) · 3 · 4 · 5**.
+**Tombol pilih jumlah kolom** (hanya di **Daftar Fund**): **Otomatis (n) · 3 · 4 · 5**.
 Jumlah kolom itu berlaku **di tiga tempat sekaligus** — Dashboard, Daftar Fund, dan daftar kotak uang di Transaksi.
+Di halaman **Daftar Tag** tombol itu **tidak ada** (memang dihilangkan atas permintaan Bapak).
+
+### 🏷️ Menambah / mengubah tag
+
+Di **Pengaturan → 🏷️ Daftar Tag**, di bawah kisi tag ada borang **＋ Tambah Tag Baru**:
+
+| Isian | Artinya |
+|---|---|
+| **Nama tag** | Nama yang Bapak mau (paling banyak 30 huruf) |
+| **Ikon** | Pilih satu dari 40 gambar |
+| **Jurnal** | **— Bebas —** (boleh masuk & keluar) · **Debit (masuk)** · **Kredit (keluar)** |
+| **🧾 Kena pajak otomatis** | Centang kalau tag ini kena pajak (mis. Bunga) |
+| **🛒 Muncul di Belanja** | Centang kalau tag ini dipakai di daftar belanja |
+
+Tekan **Tambah** → tag langsung muncul di kisi dan di pilihan tag saat mencatat.
+
+Di bawahnya ada **Ubah / hapus tag** — tiap tag punya tombol **✎** (ubah) dan **✕** (hapus).
+
+> 🔒 **Tag bertanda 🔧 = tag SISTEM** — tidak bisa diubah atau dihapus. Itu tag yang dipakai
+> perhitungan otomatis (Bunga · Koreksi · Pinjam · Pendapatan · Reimburse · Hutang).
+>
+> ⚠️ **Tag yang masih dipakai transaksi tidak bisa dihapus.** Sistem akan menolak dan
+> menyebutkan berapa transaksi yang memakainya. Ini sengaja — supaya laporan lama tidak rusak.
+
+### 🔴 Arah tag — keluar = Kredit, masuk = Debit
+
+| Tag | Arah | Bisa diganti? |
+|---|---|---|
+| Rumah · Pribadi · Pet · Mobil | **Kredit** (keluar) | ❌ tidak |
+| Bunga · Bonus · Pendapatan | **Debit** (masuk) | ❌ tidak |
+| Pajak · Hilang · biaya · Hutang | **Kredit** (keluar) | ❌ tidak |
+| **Transfer · Pinjam · Koreksi · Reimburse** | **bebas** | ✅ ya (tekan tombolnya) |
+
+> Kalau tombol Debit/Kredit **abu-abu dan tidak bisa ditekan**, itu tandanya tag itu
+> **sudah pasti arahnya**. Bapak tidak perlu mengubahnya.
 
 ---
 
