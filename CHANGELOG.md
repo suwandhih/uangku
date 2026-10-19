@@ -56,6 +56,14 @@
 
 Tetap **BACA SAJA** — borang tag terlihat tapi tombolnya mati, dan ada tulisan *"Versi HP ini hanya untuk MELIHAT"*. Menambah tag dilakukan di halaman cloud.
 
+### 🔴 Celah yang ketemu saat uji — sudah diperbaiki
+
+| Masalah | Akibat | Perbaikan |
+|---|---|---|
+| Tag **baru** yang dibuat dengan pilihan **"— Bebas —"** langsung **terkunci Kredit** | Bapak memilih Bebas, tapi tombol Debit/Kredit mati — tidak sesuai pilihan | Tag yang **tidak punya arah tetap** sekarang **dianggap bebas** (bisa diklik), di halaman **dan** di server |
+
+> ✅ Diuji: tag `ZZ Bebas` dibuat → catat arah **Debit** tersimpan **Debit**, catat arah **Kredit** tersimpan **Kredit**. Di layar Catat tombolnya **bisa diklik** (Kredit → Debit). Data uji sudah dibersihkan.
+
 ---
 
 ## 19 Oktober 2026 — 🏷️ ARAH TAG dipelajari dari `c:\data\keuangan` + lebar kolom PC dikoreksi
