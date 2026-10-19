@@ -196,8 +196,13 @@ async function siapkanBaris(env, skema, b) {
        Transfer  D=369 K=324 · Pinjam D=4 K=5
        Koreksi   D=6   K=2   · Reimburse D=3 K=1      → DUA arah (bebas)
      → HANYA 4 tag itu yang BEBAS. Semua tag lain DIKUNCI ke arahnya. */
+  /* BEBAS kalau: ① termasuk 4 tag bawaan bebas, ATAU ② tag itu sendiri tidak
+     punya arah tetap (`journal_type` kosong) — mis. tag BARU yang dibuat
+     dengan pilihan "— Bebas —". Tanpa ②, tag baru langsung terkunci Kredit. */
+  const bebas = TAG_BEBAS.indexOf(tag.name) !== -1 ||
+    (tag.journal_type !== "D" && tag.journal_type !== "K");
   let arah;
-  if (TAG_BEBAS.indexOf(tag.name) !== -1) {
+  if (bebas) {
     arah = b.arah === "D" || b.arah === "K" ? b.arah : null;
     if (!arah) arah = tag.journal_type === "D" || tag.journal_type === "K" ? tag.journal_type : "K";
   } else {

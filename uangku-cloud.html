@@ -1969,12 +1969,16 @@ function bulanDariTgl(tgl) {
   for (var i = 0; i < BULAN.length; i++) if (tgl >= BULAN[i].awal && tgl <= BULAN[i].akhir) return BULAN[i];
   return null;
 }
-/* Arah yang DIKUNCI tag (tombol mati). Semua tag KECUALI 4 tag bebas.
-   Tag bebas → null (boleh diklik). */
+/* Arah yang DIKUNCI tag (tombol mati). Tag bebas → null (boleh diklik).
+   🔴 BEBAS kalau: ① termasuk 4 tag bawaan bebas, ATAU ② tag itu sendiri
+      tidak punya arah tetap (`journal_type` kosong) — mis. tag BARU yang
+      dibuat dengan pilihan "— Bebas —" di Pengaturan › Daftar Tag.
+      Tanpa ②, tag baru langsung terkunci Kredit padahal Bapak memilih Bebas. */
 function arahTetapTag(nama) {
   if (TAG_BEBAS.indexOf(nama) !== -1) return null;
   var tg = (B() ? B().tag : []).filter(function (x) { return x.nama === nama; })[0];
-  return (tg && (tg.arah === 'D' || tg.arah === 'K')) ? tg.arah : 'K';
+  if (!tg) return 'K';
+  return (tg.arah === 'D' || tg.arah === 'K') ? tg.arah : null;
 }
 
 /* Arah BAWAAN tag (dipakai saat Bapak memilih tag).
