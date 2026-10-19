@@ -249,27 +249,29 @@ body{
 .tl-row:first-child{padding-top:0}
 .tl-row:last-child{border-bottom:0;padding-bottom:0}
 /* 🔴 SATU BARIS: fund · tag · D/K · harga · ✕ (permintaan Bapak 13 Okt 2026).
-   Lebar kolom diatur lewat --w1..--w4 supaya bisa menyesuaikan lebar layar. */
+   Lebar kolom diatur lewat --w1..--w5 supaya bisa menyesuaikan lebar layar.
+   🔴 19 Okt 2026: harga DIKUNCI (--w4) supaya sumber & tag dapat ruang lebih. */
 .tl-row{display:grid;gap:4px;align-items:center;
-  grid-template-columns:var(--w1,46px) var(--w2,58px) var(--w3,38px) minmax(0,1fr) var(--w5,26px)}
+  grid-template-columns:var(--w1,46px) var(--w2,58px) var(--w3,46px) var(--w4,90px) var(--w5,26px)}
 .tl-row select,.tl-row input{padding:7px 3px;font-size:var(--fs,11px)}
 .tl-sempit .tl-row{gap:3px}
 .tl-sempit .tl-row select,.tl-sempit .tl-row input{padding:7px 1px}
 .tl-sempit .tl-fund,.tl-sempit .tl-tag{padding-right:10px !important}
 /* fund & tag: teks di tengah, tapi sisakan ruang untuk panah pulldown di kanan
    supaya panahnya TIDAK terpotong (keluhan Bapak 13 Okt 2026) */
+/* 🔴 19 Okt 2026: nama fund & tag ditulis PENUH (bukan SPB/RMH) — Bapak lupa
+   arti singkatannya. Nama kepanjangan dipotong "…" oleh CSS (text-overflow). */
 .tl-fund{font-weight:700;text-align:center;text-align-last:center;letter-spacing:-.3px;
-  padding-right:14px !important}
+  padding-right:14px !important;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
 .tl-tag{text-align:center;text-align-last:center;letter-spacing:-.4px;
-  padding-right:14px !important}
+  padding-right:14px !important;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
 .tl-jml{text-align:right;font-weight:700;letter-spacing:-.4px}
-.tl-dk{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.tl-dk button{padding:7px 0;font-size:12px;border-radius:0}
-.tl-dk button:first-child{border-radius:8px 0 0 8px}
-.tl-dk button:last-child{border-radius:0 8px 8px 0}
-.tl-dk button:disabled{cursor:default}
-.tl-dk.auto button:not(.on){color:#bbb}
-.tl-dk.auto button.on{color:var(--onink)}
+/* 🔴 19 Okt 2026: D/K jadi SATU tombol berganti (Kredit ⇄ Debit).
+   Tag yang mengunci arah → tombol mati (abu-abu, tidak bisa diklik). */
+.tl-dk{display:block}
+.tl-dk button{width:100%;padding:7px 0;font-size:11px;border-radius:8px;letter-spacing:-.2px}
+.tl-dk button:disabled{cursor:default;opacity:.55}
+.tl-dk.auto button{color:var(--text2)}
 .tl-del{height:30px;padding:0;font-size:13px;line-height:1}
 .tl-del{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:8px;height:36px;cursor:pointer;font:inherit}
 .tl-r{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
@@ -557,6 +559,7 @@ var KAMUS = {
   'Versi HP — dibuat':'Mobile version — built','Angka memakai aturan yang sama dengan':'Numbers use the same rules as',
   'Simpan ke layar utama':'Save to home screen','sudah dipasang':'already installed',
   'Kembali':'Back','Tambah':'Add','pajak':'tax','dikecualikan':'excluded',
+'Debit':'Debit','Kredit':'Credit',
   'Pilih sumber dana':'Choose source fund','Semua Fund':'All funds',
   'Sumber dana':'Source fund',
   'kotak uang':'money boxes','penentu makna':'decides the meaning',
@@ -1634,55 +1637,50 @@ function aturLebarBaris() {
   var lebar = kartu ? kartu.clientWidth - 20 : akar.clientWidth - 20;
   if (lebar < 120) lebar = 120;
 
-  /* 🔴 USULAN BAPAK 13 Okt 2026: *"ruang isi angka itu terlalu besar.. transaksi saya
-     tidak pernah sebesar itu.. jadi sumber sampai terlihat pulldown bisa terlihat dan
-     tag juga dapat ruang yg cukup 3 digit terlihat.. untuk isi angka tidak harus
-     sebenar itu.. minimal 100.000.000,00 bisa isi"*
-     → fund & tag dapat ruang CUKUP (panah pulldown terlihat, tag 3 huruf utuh),
-       harga cukup untuk 100.000.000,00, sisanya baru untuk harga. */
+  /* 🔴 ARAHAN BAPAK 19 Okt 2026: *"space nilai di kecilkan sampai 100.000.000,99
+     karena saya mau space sumber dan tag lebih lebar.. sisanya dibagi 3.. untuk
+     sumber tag dan debit / kredit"*
+     → HARGA DIKUNCI (cukup untuk 100.000.000,99), sisanya dibagi 2 untuk
+       sumber & tag. D/K cukup sekecil yang perlu (isinya 1 kata). */
 
-  /* lebar minimum tiap kolom (px) — diukur dari isi sebenarnya */
-  var MIN_FUND = 46;   /* "SPB" + panah pulldown */
-  var MIN_TAG  = 58;   /* "🏠RMH" + panah pulldown */
-  var MIN_DK   = 38;   /* "D" "K" */
-  var MIN_HAPUS = 26;
-  var MIN_HARGA = 78;  /* "100.000.000,00" pada font 11px */
+  /* lebar tetap (px) — diukur dari isi sebenarnya */
+  var W_HARGA = 90;    /* "100.000.000,99" pada font 11px tebal */
+  var W_HAPUS = 26;
+  var W_DK    = 46;    /* "Kredit" / "Debit" */
+  var MIN_FUND = 34;   /* batas paling sempit supaya panah pulldown tetap terlihat */
+  var MIN_TAG  = 40;
 
   var JARAK = 4;
-  var sisa = lebar - JARAK * 4;   /* 5 kolom → 4 jarak */
-
-  var w1 = MIN_FUND, w2 = MIN_TAG, w3 = MIN_DK, hapus = MIN_HAPUS;
-  var w4 = sisa - w1 - w2 - w3 - hapus;
-
-  /* layar sempit → rapatkan jarak dulu, baru kecilkan D/K & tombol hapus */
   var sempit = lebar < 340;
-  if (sempit) {
-    JARAK = 3;
-    sisa = lebar - JARAK * 4;
-    w4 = sisa - w1 - w2 - w3 - hapus;
-  }
-  if (w4 < MIN_HARGA) { w3 = 34; hapus = 24; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < MIN_HARGA) { w3 = 30; hapus = 22; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < MIN_HARGA) { w2 = 52; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < MIN_HARGA) { w1 = 40; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < MIN_HARGA) { w2 = 46; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < MIN_HARGA) { w1 = 36; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < MIN_HARGA) { w2 = 42; w4 = sisa - w1 - w2 - w3 - hapus; }
-  if (w4 < MIN_HARGA) { w1 = 32; w4 = sisa - w1 - w2 - w3 - hapus; }
-  akar.classList.toggle('tl-sempit', sempit);
+  if (sempit) { JARAK = 3; W_DK = 30; W_HAPUS = 22; W_HARGA = 78; }
 
-  /* harga masih lega → kembalikan ruang ke fund & tag supaya panah pulldown lega */
-  if (w4 > MIN_HARGA + 24) {
-    var tambah = Math.min(8, Math.floor((w4 - MIN_HARGA) / 3));
-    w1 += tambah; w2 += tambah; w4 -= tambah * 2;
+  var sisa = lebar - JARAK * 4 - W_HARGA - W_HAPUS - W_DK;
+
+  /* layar sempit → kecilkan harga dulu supaya sumber & tag tetap dapat ruang
+     (harga tetap cukup untuk 100.000.000,99 karena hurufnya ikut mengecil) */
+  if (sisa < MIN_FUND + MIN_TAG) {
+    var kurang = (MIN_FUND + MIN_TAG) - sisa;
+    W_HARGA = Math.max(64, W_HARGA - kurang);
+    sisa = lebar - JARAK * 4 - W_HARGA - W_HAPUS - W_DK;
   }
+  if (sisa < 0) sisa = 0;
+
+  /* sisa dibagi 2 → sumber & tag sama lebar */
+  var w1 = Math.floor(sisa / 2);
+  var w2 = sisa - w1;
+
+  /* jangan pernah melebihi lebar baris (dulu bisa meluber 2 px di layar 360) */
+  var total = w1 + w2 + W_DK + W_HARGA + W_HAPUS + JARAK * 4;
+  if (total > lebar) { w2 -= (total - lebar); if (w2 < 24) w2 = 24; }
+  akar.classList.toggle('tl-sempit', sempit);
 
   /* layar sangat sempit → huruf dikecilkan supaya tetap 1 baris */
   akar.style.setProperty('--fs', (lebar < 230 ? 9 : 11) + 'px');
-  akar.style.setProperty('--w5', hapus + 'px');
+  akar.style.setProperty('--w5', W_HAPUS + 'px');
   akar.style.setProperty('--w1', w1 + 'px');
   akar.style.setProperty('--w2', w2 + 'px');
-  akar.style.setProperty('--w3', w3 + 'px');
+  akar.style.setProperty('--w3', W_DK + 'px');
+  akar.style.setProperty('--w4', W_HARGA + 'px');
 }
 
 /* Hitung ulang jumlah kolom saat layar diputar / ukuran berubah,
@@ -1719,28 +1717,6 @@ var formTes = null;
 var KMAX_TES = 6;
 /* 4 tag dua arah — arah WAJIB dipilih manual (agents.md Bagian 9) */
 var DUA_ARAH_TES = ['Transfer', 'Pinjam', 'Hutang', 'Reimburse'];
-var SINGKAT_TAG = { Rumah:'RMH', Pribadi:'PRB', Pet:'PET', Mobil:'MBL', Bunga:'BNG', Pajak:'PJK',
-  Koreksi:'KRK', Bonus:'BNS', Hilang:'HLG', biaya:'BYA', Pinjam:'PNJ', Pendapatan:'PDP',
-  Reimburse:'RMB', Transfer:'TRF', Hutang:'HTG' };
-
-function singkatTag(n) { return SINGKAT_TAG[n] || String(n || '-').slice(0, 3).toUpperCase(); }
-
-/* 🔴 SINGKATAN NAMA FUND (permintaan Bapak 13 Okt 2026):
-   *"apakah bisa sumber fund < di buat seringkas mungkin kalau bisa disingkat 3 digit"*
-   Dipakai di layar Catat supaya SATU BARIS muat: fund · tag · D/K · harga · ✕.
-   Nama LENGKAP tetap terlihat saat daftar dibuka (SPB · Superbank). */
-var SINGKAT_FUND = {
-  'Superbank':'SPB', 'SeaBank':'SEA', 'Celengan':'CEL', 'Dana Sopir':'SOP',
-  'Dana swn':'SWN', 'Tunai':'TUN', 'Sopir pinjam uang':'SPJ', 'BCA tabungan':'BCA',
-  'BCA Saham':'SHM', 'Deposito':'DEP', 'Tabungan A':'TBA', 'Tabungan B':'TBB',
-  'ShopeePay':'SHP', 'OVO':'OVO', 'GoPay':'GOP', 'Tabungan C':'TBC',
-  'Tabungan D':'TBD', 'Tabungan E':'TBE'
-};
-function singkatFund(n) {
-  if (SINGKAT_FUND[n]) return SINGKAT_FUND[n];
-  /* fund baru yang belum terdaftar → 3 huruf pertama */
-  return String(n || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || '?';
-}
 
 /* Tag bawaan form: tag PERTAMA yang mengunci arah (bukan tag dua arah).
    Kalau tidak ada, baru pakai 'Transfer'. */
@@ -1796,15 +1772,18 @@ function gbrInput() {
     { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' },
     { fund: bln.fund[0] ? bln.fund[0].nama : '', tag: tagBawaan(bln), arah: 'K', jml: '' } ] };
   /* nilai option = nama LENGKAP (dipakai saat menyimpan), tulisan = singkatan 3 huruf */
+  /* 🔴 19 Okt 2026: nama ditulis PENUH (bukan SPB/RMH) — Bapak lupa arti
+     singkatannya. Nama kepanjangan dipotong "…" oleh CSS, nama penuh tetap
+     terbaca saat daftar dibuka. */
   var pilihFund = function (sel) {
     return bln.fund.map(function (f) {
       return '<option value="' + esc(f.nama) + '"' + (f.nama === sel ? ' selected' : '') + '>' +
-        esc(singkatFund(f.nama)) + '</option>';
+        esc(f.nama) + '</option>';
     }).join('');
   };
   var pilihTag = function (sel) {
     return bln.tag.map(function (g) {
-      return '<option value="' + esc(g.nama) + '"' + (g.nama === sel ? ' selected' : '') + '>' + g.ikon + singkatTag(g.nama) + '</option>';
+      return '<option value="' + esc(g.nama) + '"' + (g.nama === sel ? ' selected' : '') + '>' + g.ikon + esc(g.nama) + '</option>';
     }).join('');
   };
   selaraskanPajak();
@@ -1817,9 +1796,11 @@ function gbrInput() {
     return '<div class="tl-row">' +
       '<select class="tl-fund" data-i="' + i + '" data-k="fund" title="' + esc(b.fund) + '">' + pilihFund(b.fund) + '</select>' +
       '<select class="tl-tag" data-i="' + i + '" data-k="tag" title="' + esc(b.tag) + '">' + pilihTag(b.tag) + '</select>' +
-      '<div class="seg tl-dk' + (tetap ? ' auto' : '') + '">' +
-      '<button data-arah="D" data-i="' + i + '" class="' + (arah === 'D' ? 'on' : '') + '"' + (tetap ? ' disabled' : '') + '>D</button>' +
-      '<button data-arah="K" data-i="' + i + '" class="' + (arah === 'K' ? 'on' : '') + '"' + (tetap ? ' disabled' : '') + '>K</button></div>' +
+      /* 🔴 19 Okt 2026: SATU tombol berganti Kredit ⇄ Debit (arahan Bapak).
+         Tag yang mengunci arah → tombol mati, tulisannya tetap arah tag itu. */
+      '<div class="tl-dk' + (tetap ? ' auto' : '') + '">' +
+      '<button data-arah="' + arah + '" data-i="' + i + '" class="on"' + (tetap ? ' disabled' : '') + '>' +
+        (arah === 'D' ? t('Debit') : t('Kredit')) + '</button></div>' +
       '<input class="tl-jml' + (b.auto ? ' auto' : '') + '" type="text" inputmode="decimal" data-i="' + i +
         '" data-k="jml" value="' + esc(b.jml) + '" placeholder="0"' +
         (b.auto ? ' title="' + esc(t('Pajak dihitung otomatis') + ' ' + ratePajak() + '%') + '"' : '') + '>' +
@@ -2006,20 +1987,14 @@ document.getElementById('inputIsi').addEventListener('change', function (e) {
     hitungRingTes();
     return;
   }
-  if (e.target.dataset.k === 'fund') {
-    formTes.baris[i].fund = e.target.value;
-    /* baris pajak otomatis ikut fund bunganya */
-    if (formTes.baris[i].auto) { /* biarkan */ }
-    hitungRingTes();
-  }
+  if (e.target.dataset.k === 'fund') { formTes.baris[i].fund = e.target.value; hitungRingTes(); }
   if (e.target.dataset.k === 'tag') {
     formTes.baris[i].tag = e.target.value;
     var tetap = arahTetapTag(e.target.value);
-    if (tetap) formTes.baris[i].arah = tetap;
-    /* Bapak memilih tag sendiri → baris ini bukan pajak otomatis lagi */
-    formTes.baris[i].auto = false;
-    formTes.baris[i].disentuh = true;
-    selaraskanPajak();
+    /* 🔴 19 Okt 2026 (keputusan Bapak): tag yang mengunci → ikut tag.
+       Tag bebas (Transfer/Pinjam/Hutang/Reimburse) → KEMBALI ke Kredit
+       (mulai baru), bukan meneruskan arah tag sebelumnya. */
+    formTes.baris[i].arah = tetap || 'K';
     gbrInput();
   }
 });
@@ -2029,7 +2004,13 @@ document.getElementById('inputIsi').addEventListener('click', function (e) {
   if (b.id === 'tlSimpan') { simpanTesDariForm(); return; }
   if (b.id === 'tlBatalUbah') { formTes = null; barisDipilih = 0; ke('tx'); return; }
   if (b.id === 'tlTambah') { formTes.baris.push({ fund: B().fund[0].nama, tag: tagBawaan(B()), arah: 'K', jml: '' }); gbrInput(); return; }
-  if (b.dataset.arah) { formTes.baris[+b.dataset.i].arah = b.dataset.arah; gbrInput(); return; }
+  /* 🔴 19 Okt 2026: satu tombol berganti Kredit ⇄ Debit (arahan Bapak). */
+  if (b.dataset.arah) {
+    var br = formTes.baris[+b.dataset.i];
+    br.arah = (br.arah === 'D') ? 'K' : 'D';
+    gbrInput();
+    return;
+  }
   if (b.dataset.del !== undefined && formTes.baris.length > 1) { formTes.baris.splice(+b.dataset.del, 1); gbrInput(); return; }
   if (b.dataset.batal) { if (confirm('Batalkan data tes ini?')) batalkanTes(b.dataset.batal); }
 });

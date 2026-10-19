@@ -6,6 +6,73 @@
 
 ---
 
+## 19 Oktober 2026 — 📐 Baris jurnal: nama PENUH, harga dikunci, tombol Kredit/Debit jadi satu
+
+> **Arahan Bapak:** *"space nilai di kecilkan sampai 100.000.000,99 karena saya mau space sumber dan tag lebih lebar.. SPB < superbank dan tag RMH < rumah setelah pakai kurang nyaman saya sering coba liat ini apa ya (lupa) jadi lebih nyaman di full saja"*
+> **Hasil:** ✅ **selesai** — sumber & tag sekarang menulis **nama penuh**, kotak harga **dikunci**, tombol D/K jadi **satu tombol**.
+
+### 1️⃣ Lebar kolom — harga dikunci, sisa dibagi 2
+
+| Layar | Sumber | Tag | D/K | Harga |
+|---|---|---|---|---|
+| **960 px (layar Bapak)** | 54 → **266 px** | 66 → **266 px** | 38 → 46 | 510 → **90** |
+| 560 px | 54 → 106 | 66 → 106 | 46 | 90 |
+| 430 px | 54 → 72 | 66 → 72 | 30 | 78 |
+| 390 px (HP) | 46 → 56 | 58 → 56 | 30 | 78 |
+| 360 px | 40 → 44 | 46 → 44 | 30 | 78 |
+| 320 px | 35 | 35 | 30 | 64 |
+
+> ✅ Diukur di 6 lebar layar: **0 meluber** (dulu meluber 2 px di 360 px).
+
+### 2️⃣ Nama penuh (bukan singkatan)
+
+| Sebelum | Sesudah |
+|---|---|
+| `SPB` | **`Superbank`** |
+| `🏠RMH` | **`🏠Rumah`** |
+| `💵PDP` | **`💵Pendapatan`** |
+
+- Nama kepanjangan dipotong **`…`** (mis. `Sopir pinjam…`) — nama penuh tetap terbaca saat daftar dibuka
+- Di layar Bapak (960 px): ruang **247 px**, teks terpanjang **89 px** → **selalu muat penuh**
+- Di HP kecil (≤ 430 px) nama panjang masih terpotong — ruangnya memang tidak cukup
+- 🔴 Kode singkatan (`SINGKAT_FUND`, `SINGKAT_TAG`, `singkatFund()`, `singkatTag()`) **DIHAPUS** (aturan C12 — jangan tinggalkan kode mati)
+
+### 3️⃣ Tombol Kredit/Debit jadi SATU tombol
+
+| Keadaan | Tombol |
+|---|---|
+| Bawaan | **`Kredit`** |
+| Klik 1× | **`Debit`** |
+| Klik lagi | **`Kredit`** |
+
+**Tag yang mengunci** (tombol mati, tidak bisa diklik):
+
+| Tag | Terkunci jadi |
+|---|---|
+| 🏠 Rumah · 👤 Pribadi · 🐕 Pet · 🚗 Mobil | **Kredit** |
+| 🌸 Bunga · 💵 Pendapatan · 🎁 Bonus | **Debit** |
+| 🧾 Pajak · 🧹 Koreksi · ✂️ Hilang · ✂️ biaya | **Kredit** |
+
+**Tag bebas** (bisa diklik): 🔄 Transfer · 💸 Pinjam · 💸 Hutang · 💵 Reimburse → **mulai dari Kredit**
+
+> 🔴 **Keputusan Bapak:** ganti tag ke tag bebas → tombol **kembali ke Kredit** (mulai baru), bukan meneruskan arah tag sebelumnya.
+
+### 🧪 Uji yang dijalankan (browser nyata)
+
+| Uji | Hasil |
+|---|---|
+| Rumah → tombol `Kredit` mati | ✅ |
+| Bunga → tombol `Debit` mati | ✅ |
+| Transfer → tombol `Kredit` hidup | ✅ |
+| Klik 1× → `Debit` · klik lagi → `Kredit` | ✅ |
+| Debit lalu ganti ke Reimburse → kembali `Kredit` | ✅ |
+| Ganti ke Rumah → `Kredit` mati | ✅ |
+| Lebar 6 layar (320–960 px) | ✅ 0 meluber |
+| Pajak otomatis masih jalan (7 ketikan) | ✅ `1,20` → `12.328,77`, form digambar ulang **1×** |
+| Galat JS | ✅ **0** |
+
+---
+
 ## 19 Oktober 2026 — 🔴 BUG: kursor LOMPAT ke baris Pajak saat mengetik angka Bunga (DIPERBAIKI)
 
 > **Keluhan Bapak:** *"saat input angka bunga bank ketik 6 karena pajak otomatis hitung sedang bunga bank masih dalam ketik angka. lompat terus ke pajak.. perbaiki"*
