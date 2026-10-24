@@ -6,6 +6,41 @@
 
 ---
 
+## 24 Oktober 2026 — 💵 REIMBURSE = BAYAR HUTANG (K43)
+
+> **Arahan Bapak:** *"uangku > transaksi > tambah transaksi dengan tag: Reimburse artinya bayar hutang — sistem mengeluarkan daftar transaksi tag Hutang mana yang mau dibayar. Konsep bisa dipelajari di keuangan, konsep disamakan di UangKu."*
+> **Hasil:** ✅ **selesai dan sudah aktif** di halaman cloud PC/HP.
+
+### Cara pakai
+
+1. **Transaksi → ＋ → pilih tag Reimburse → Debit**.
+2. Bagian **🔗 Bayar Hutang** muncul. Pilih hutang yang akan dibayar.
+3. Keterangan dan jumlah sisa terisi otomatis bila masih kosong; boleh dikoreksi.
+4. **Simpan**. Pembayaran dihubungkan ke hutang melalui `loan_id`.
+
+### Yang berubah
+
+| Hal | Perilaku |
+|---|---|
+| **Daftar hutang** | Hanya tag **Hutang** yang belum lunas, dari seluruh bulan. Bukan daftar Pinjam |
+| **Cicilan** | Satu hutang bisa menerima beberapa Reimburse. Sisa dihitung dari seluruh pembayaran aktif |
+| **Status** | 🔴 **Belum Diganti** → 🟡 **Dicicil** → 🟢 **Lunas**. Lunas hilang dari pilihan |
+| **Pengaman server** | Reimburse Debit tanpa pilihan ditolak; pembayaran lebih dari sisa ditolak |
+| **Koreksi** | Jumlah pembayaran dan hutang tujuan bisa diubah; pelunasan bisa dikoreksi tanpa salah menolak hutang yang sudah lunas |
+| **Batal / pulih** | Sisa dan status ikut berubah otomatis; tetap tercatat di audit_log |
+| **Riwayat** | Tombol Batalkan/Pulihkan hanya mengarah ke transaksi pada catatan yang benar, bukan riwayat sebelumnya |
+
+### Uji yang dilakukan
+
+- **8/8 uji unit** status dan sisa: belum dibayar, dicicil, lunas, lunas manual, Reimburse Kredit tidak dihitung, dan Pinjam tidak ikut daftar.
+- **Skema uji terpisah** (bukan skema produksi): catat cicilan → pelunasan → daftar tertutup → batalkan → pulihkan → ubah jumlah → pindah hutang. Penolakan tanpa pilihan dan lebih dari sisa juga diuji.
+- **Worker live (baca saja):** 2 hutang terbuka terbaca; histori lama Reimburse bertautan dan status Lunas terbaca.
+- **Browser live 390 px (HP) dan 960 px (PC):** dropdown aktif, 0 luapan, 0 galat JavaScript, dan **0 aksi tulis** selama pengujian.
+- Data keuangan produksi **tidak diubah untuk pengujian**. Skema dan secret uji lokal sudah dibersihkan.
+- Backup berkas dan cadangan transaksi/riwayat server disimpan di `backups/` sebelum perubahan.
+
+---
+
 ## 19 Oktober 2026 — 🏷️ PENGATURAN › TAG: bisa TAMBAH / UBAH / HAPUS tag
 
 > **Arahan Bapak:** *"di pengaturan > tag harus ada penambahan tag baru .. ada yg default dari sistem. konsep sama seperti di keuangan pengaturan atau setting > tag. konsep sekarang boleh dipertahankan tapi ada tambahan dibawah grid sama dengan keuangan dan grid tidak perlu ada pilihan 3/4/5"*

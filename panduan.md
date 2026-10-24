@@ -134,6 +134,30 @@ Saldo langsung kembali seperti sebelum transaksi itu.
 Transaksi  →  Riwayat  →  cari barisnya  →  ↩️ Pulihkan
 ```
 
+### 💵 Menerima penggantian hutang (Reimburse)
+
+Dipakai saat Bapak sebelumnya mengeluarkan uang dengan tag **Hutang**, lalu menerima penggantinya.
+
+```
+Transaksi → ＋ → pilih tag Reimburse → arah Debit
+           → pilih hutang di bagian "Bayar Hutang" → periksa → Simpan
+```
+
+| Hal | Cara kerjanya |
+|---|---|
+| **Daftar hutang** | Hanya hutang yang **belum lunas**. Terlihat keterangan, fund, dan sisa |
+| **Isi otomatis** | Setelah dipilih, keterangan dan jumlah sisa terisi jika masih kosong. Boleh Bapak ubah |
+| **Bayar sebagian** | Isi jumlah yang lebih kecil dari sisa → status **🟡 Dicicil** |
+| **Bayar sampai habis** | Total pembayaran mencapai hutang → status **🟢 Lunas** dan hilang dari pilihan berikutnya |
+| **Belum dibayar** | Pada daftar transaksi terlihat **🔴 Belum Diganti** |
+| **Tautan** | Pada baris Reimburse terlihat **🔗 #nomor hutang** |
+
+> 🔴 **Jumlah tidak boleh melebihi sisa hutang.** Server menolaknya.
+> Kalau hutang tidak muncul, periksa apakah transaksi awal memang memakai tag **Hutang** dan arah **Kredit**.
+>
+> **Salah mencatat pembayaran?** Batalkan lewat Riwayat. Sisa dan status hutang akan berubah sendiri.
+> Pulihkan lagi untuk mengembalikan pembayaran tersebut.
+
 ---
 
 ## 1d. 📜 Layar RIWAYAT
