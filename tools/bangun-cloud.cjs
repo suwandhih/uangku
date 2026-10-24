@@ -807,6 +807,27 @@ function hutangDipilih(b) {
   return x ? x.hutang : null;
 }
 
+/* Angka induk TIDAK berkurang; yang berkurang adalah SISA.
+   Saat Edit, transaksi ini sudah termasuk dalam h.dibayar/h.sisa dari server.
+   Keluarkan dulu dari dasar perhitungan supaya tidak dihitung dua kali. */
+function rincianSisaHutang(b, i) {
+  if (!barisReimburse(b)) return;
+  var w = document.querySelector('[data-hutang-rincian="' + i + '"]');
+  if (!w) return;
+  var h = hutangDipilih(b);
+  if (!h) { w.textContent = ''; return; }
+  var dibayar = h.dibayar;
+  var sebelum = h.sisa;
+  if (formTes.mode === 'ubah') {
+    dibayar = Math.max(0, h.dibayar - numTes(b.jml));
+    sebelum = h.sisa + numTes(b.jml);
+  }
+  var setelah = Math.max(0, sebelum - numTes(b.jml));
+  w.innerHTML = esc(h.tanggal || '') + ' · ' + t('Hutang awal') + ' ' + rp2(h.jumlah) + '<br>' +
+    t('Sudah dibayar') + ' ' + rp2(dibayar) + ' · ' + t('Sisa sebelum pembayaran ini') + ' ' + rp2(sebelum) +
+    '<br><b>' + t('Sisa setelah pembayaran ini') + ' ' + rp2(setelah) + '</b>';
+}
+
 function pilihHutangUntuk(b, i) {
   var h = hutangDipilih(b);
   var pilihan = HUTANG_TERBUKA.slice();
@@ -825,8 +846,9 @@ function pilihHutangUntuk(b, i) {
       }).join('') +
     '</select>' +
     (HUTANG_DIMUAT && !pilihan.length ? '<small>' + t('Tidak ada hutang belum lunas') + '</small>' : '') +
-    (h ? '<small>' + esc(h.tanggal || '') + ' · ' + t('Hutang') + ' ' + rp2(h.jumlah) +
-      ' · ' + t('Sudah dibayar') + ' ' + rp2(h.dibayar) + ' · <b>' + t('Sisa') + ' ' + rp2(h.sisa) + '</b></small>' : '') +
+    (h ? '<small data-hutang-rincian="' + i + '">' + esc(h.tanggal || '') + ' · ' + t('Hutang awal') + ' ' + rp2(h.jumlah) +
+      '<br>' + t('Sudah dibayar') + ' ' + rp2(h.dibayar) + ' · ' + t('Sisa sebelum pembayaran ini') + ' ' + rp2(h.sisa) +
+      '<br><b>' + t('Sisa setelah pembayaran ini') + ' ' + rp2(Math.max(0, h.sisa - numTes(b.jml))) + '</b></small>' : '') +
     '</div>';
 }
 
@@ -839,6 +861,7 @@ function terapkanPilihanHutang(i, loanId) {
   /* Isi hanya kalau masih kosong — jangan menimpa koreksi Bapak. */
   if (!b.jml) b.jml = rp2(h.sisa);
   if (!formTes.ket.trim()) formTes.ket = t('Pengembalian') + ': ' + h.ket;
+  rincianSisaHutang(b, i);
 }
 
 `;
@@ -913,7 +936,30 @@ skrip = skrip.replace(
 );
 
 skrip = skrip.replace('</script>', blokReimburse + '\n</script>');
-catat.push('Reimburse → pilih Hutang + loan_id + status');
+skrip = skrip.replace(
+  `  var r = document.getElementById('tlRing');
+  if (!r) return;`,
+  `  formTes.baris.forEach(rincianSisaHutang);
+  var r = document.getElementById('tlRing');
+  if (!r) return;`
+);
+catat.push('Reimburse → pilih Hutang + loan_id + status + sisa sebelum/sesudah');
+skrip = skrip.replace(
+  "var TAG_TIDAK_DIHITUNG = ['Transfer', 'Koreksi', 'Pinjam', 'Hutang', 'Reimburse'];",
+  `Object.assign(KAMUS, {
+  'Bayar Hutang': 'Pay debt',
+  '-- Pilih Hutang --': '-- Select debt --',
+  'Memuat hutang…': 'Loading debts…',
+  'Tidak ada hutang belum lunas': 'No outstanding debts',
+  'Hutang awal': 'Original debt',
+  'Sudah dibayar': 'Already paid',
+  'Sisa': 'Remaining',
+  'Sisa sebelum pembayaran ini': 'Remaining before this payment',
+  'Sisa setelah pembayaran ini': 'Remaining after this payment',
+  'Pengembalian': 'Repayment'
+});
+var TAG_TIDAK_DIHITUNG = ['Transfer', 'Koreksi', 'Pinjam', 'Hutang', 'Reimburse'];`
+);
 
 /* ================================================================== */
 /* 2b1h. 🧾 PAJAK BUNGA OTOMATIS (order Bapak 15 Okt 2026)             */

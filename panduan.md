@@ -148,6 +148,8 @@ Transaksi → ＋ → pilih tag Reimburse → arah Debit
 | **Daftar hutang** | Hanya hutang yang **belum lunas**. Terlihat keterangan, fund, dan sisa |
 | **Isi otomatis** | Setelah dipilih, keterangan dan jumlah sisa terisi jika masih kosong. Boleh Bapak ubah |
 | **Bayar sebagian** | Isi jumlah yang lebih kecil dari sisa → status **🟡 Dicicil** |
+| **Rincian sisa** | **Hutang awal** adalah nilai transaksi Hutang dan tidak berkurang. Lihat **Sisa sebelum pembayaran ini** dan **Sisa setelah pembayaran ini** untuk mengetahui sisa yang sebenarnya |
+| **Pembayaran pada tanggal lain** | Buat **Reimburse baru**, pilih hutang yang sama. Jangan mengganti transaksi pembayaran tanggal lama menjadi pembayaran tanggal baru |
 | **Bayar sampai habis** | Total pembayaran mencapai hutang → status **🟢 Lunas** dan hilang dari pilihan berikutnya |
 | **Belum dibayar** | Pada daftar transaksi terlihat **🔴 Belum Diganti** |
 | **Tautan** | Pada baris Reimburse terlihat **🔗 #nomor hutang** |

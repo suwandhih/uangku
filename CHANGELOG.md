@@ -6,6 +6,19 @@
 
 ---
 
+## 24 Oktober 2026 — 💵 RINCIAN SISA HUTANG (K44)
+
+> **Keluhan Bapak:** setelah Reimburse Rp100.000 pada 17 Oktober untuk hutang Rp2.000.000, saat pembayaran kedua 24 Oktober masih terlihat hutang Rp2.000.000, bukan sisa Rp1.900.000.
+
+- Data dan Worker diperiksa: pembayaran 17 Oktober **sudah tertaut** ke hutang; nilai induk tetap Rp2.000.000, **dibayar Rp100.000**, **sisa Rp1.900.000**.
+- Formulir diperjelas: **Hutang awal · Sudah dibayar · Sisa sebelum pembayaran ini · Sisa setelah pembayaran ini**. Angka sesudah mengikuti jumlah yang diketik.
+- Jalur Edit mengeluarkan transaksi yang sedang diedit dari dasar rincian supaya pembayarannya tidak dihitung dua kali.
+- Pembayaran tanggal baru dibuat sebagai **Reimburse baru** pada hutang yang sama; jangan mengganti transaksi tanggal lama.
+- **Uji fokus:** browser 390/960 px, Reimburse baru Rp100.000 menghasilkan Rp1.900.000 → Rp1.800.000; Edit pembayaran lama menghasilkan Rp2.000.000 → Rp1.900.000; 0 luapan, 0 galat, ID → EN → ID lolos. Semua aksi tulis diblokir selama uji.
+- **Tidak ada perubahan Worker, PIN, atau data transaksi.** Backup berkas dan server tersimpan di `backups/`.
+
+---
+
 ## 24 Oktober 2026 — 💵 REIMBURSE = BAYAR HUTANG (K43)
 
 > **Arahan Bapak:** *"uangku > transaksi > tambah transaksi dengan tag: Reimburse artinya bayar hutang — sistem mengeluarkan daftar transaksi tag Hutang mana yang mau dibayar. Konsep bisa dipelajari di keuangan, konsep disamakan di UangKu."*
