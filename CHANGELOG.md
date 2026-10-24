@@ -8,6 +8,8 @@
 
 ## 24 Oktober 2026 — 💵 RINCIAN SISA HUTANG (K44)
 
+> **Keputusan Bapak malam ini:** *"update dokumen selesai besok baru uji"* — dokumentasi selesai; **uji lanjutan ditunda sampai 25 Oktober 2026**.
+
 > **Keluhan Bapak:** setelah Reimburse Rp100.000 pada 17 Oktober untuk hutang Rp2.000.000, saat pembayaran kedua 24 Oktober masih terlihat hutang Rp2.000.000, bukan sisa Rp1.900.000.
 
 - Data dan Worker diperiksa: pembayaran 17 Oktober **sudah tertaut** ke hutang; nilai induk tetap Rp2.000.000, **dibayar Rp100.000**, **sisa Rp1.900.000**.
