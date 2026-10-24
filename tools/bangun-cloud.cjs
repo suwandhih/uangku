@@ -423,6 +423,8 @@ function gbrRiwayat() {
     if (!r.data.length) { kotak.innerHTML = '<div class="empty">' + t('Belum ada riwayat') + '</div>'; return; }
 
     var nama = { CREATE: 'dibuat', UPDATE: 'diubah', DELETE: 'dibatalkan', RESTORE: 'dipulihkan' };
+    var aktif = {};
+    TX().forEach(function (x) { aktif[x.id] = true; });
     kotak.innerHTML = '<div class="cover">' + r.data.map(function (x, i) {
       var isi = '';
       try {
@@ -437,7 +439,10 @@ function gbrRiwayat() {
         }
       } catch (e) { isi = ''; }
       jadikanRiwayat[i] = x;
-      var bisa = (x.action === 'DELETE' || x.action === 'RESTORE');
+      /* Tombol mengikuti TRANSAKSI pada catatan ini, bukan catatan riwayat
+         sebelumnya. CREATE hanya boleh membatalkan transaksi yang masih aktif. */
+      var bisa = (x.action === 'CREATE' && aktif[Number(x.record_id)]) ||
+        (x.action === 'DELETE' && !aktif[Number(x.record_id)]);
       var teksTombol = x.action === 'DELETE' ? ('↩️ ' + t('Pulihkan')) : t('Batalkan');
       return '<div class="crow"><span class="cl"><b>' + esc(String(x.timestamp).slice(5, 16)) + '</b> · ' +
         esc(t(nama[x.action] || x.action)) + '<br><small>' + esc(isi) + '</small></span>' +
@@ -448,7 +453,7 @@ function gbrRiwayat() {
       b.addEventListener('click', function () {
         var x = jadikanRiwayat[+b.getAttribute('data-riw')];
         if (!x) return;
-        var aksi = x.action === 'DELETE' ? 'pulihkan' : 'batalkan';
+        var aksi = x.action === 'DELETE' || x.action === 'RESTORE' ? 'pulihkan' : 'batalkan';
         if (!confirm(t(aksi === 'pulihkan' ? 'Pulihkan transaksi ini?' : 'Batalkan transaksi ini?') + '\\n' +
             t('Saldo fund akan menyesuaikan sendiri.'))) return;
         b.disabled = true;
@@ -751,6 +756,164 @@ skrip = skrip.replace(
   `  if (b.id === 'tlBatalUbah') { formTes = null; barisDipilih = 0; ke('tx'); return; }
   if (b.id === 'tlTambah') {`,
 );
+
+/* ================================================================== */
+/* 2b1g2. 💵 REIMBURSE = BAYAR HUTANG (K43, order Bapak 24 Okt 2026)    */
+/* ------------------------------------------------------------------ */
+const blokReimburse = `
+/* ============================================================
+   14b2. REIMBURSE → pilih induk Hutang, simpan loan_id
+   ============================================================ */
+var HUTANG_TERBUKA = [];
+var HUTANG_DIMUAT = false;
+var HUTANG_JANJI = null;
+
+function muatHutang() {
+  if (HUTANG_DIMUAT) return Promise.resolve(HUTANG_TERBUKA);
+  if (HUTANG_JANJI) return HUTANG_JANJI;
+  HUTANG_DIMUAT = false;
+  HUTANG_JANJI = panggilServer('hutang').then(function (r) {
+    HUTANG_TERBUKA = r.data || [];
+    HUTANG_DIMUAT = true;
+    HUTANG_JANJI = null;
+    return HUTANG_TERBUKA;
+  }).catch(function (e) {
+    HUTANG_JANJI = null;
+    throw e;
+  });
+  return HUTANG_JANJI;
+}
+
+function segarkanHutang() {
+  /* Hanya tandai basi. Pemuatan berikutnya dilakukan ketika formulir dibuka;
+     jangan memicu gambar ulang dari dalam muatDariServer. */
+  HUTANG_TERBUKA = [];
+  HUTANG_DIMUAT = false;
+  HUTANG_JANJI = null;
+}
+
+function barisReimburse(b) {
+  return b && b.tag === 'Reimburse' && (arahTetapTag(b.tag) || b.arah) === 'D';
+}
+
+function hutangDipilih(b) {
+  var id = Number(b.loanId) || 0;
+  var h = HUTANG_TERBUKA.filter(function (x) { return x.id === id; })[0];
+  if (h) return h;
+  /* Saat mengubah transaksi lama, induknya bisa sudah tidak masuk daftar terbuka. */
+  var semua = [];
+  BULAN.forEach(function (bln) { semua = semua.concat(bln.tx || []); });
+  var x = semua.filter(function (y) { return y.id === id && y.hutang; })[0];
+  return x ? x.hutang : null;
+}
+
+function pilihHutangUntuk(b, i) {
+  var h = hutangDipilih(b);
+  var pilihan = HUTANG_TERBUKA.slice();
+  if (h && !pilihan.some(function (x) { return x.id === h.id; })) {
+    /* Hutang yang sedang dibayar tersedia meskipun Reimburse lama sudah
+       membuat sisa server nol — jumlah di bawah menunjukkan sisa SEBELUMNYA. */
+    pilihan.unshift(Object.assign({}, h, { sisa: h.sisa + numTes(b.jml) }));
+  }
+  return '<div class="tl-hutang" data-hutang-baris="' + i + '">' +
+    '<label for="tlHutang' + i + '">🔗 ' + t('Bayar Hutang') + '</label>' +
+    '<select id="tlHutang' + i + '" data-hutang="' + i + '"' + (HUTANG_DIMUAT ? '' : ' disabled') + '>' +
+      '<option value="0">' + (HUTANG_DIMUAT ? t('-- Pilih Hutang --') : t('Memuat hutang…')) + '</option>' +
+      pilihan.map(function (x) {
+        return '<option value="' + x.id + '"' + (Number(b.loanId) === x.id ? ' selected' : '') + '>#' + x.id + ' · ' +
+          esc(x.ket) + ' · ' + esc(x.fund || '') + ' · ' + t('Sisa') + ' ' + rp2(x.sisa) + '</option>';
+      }).join('') +
+    '</select>' +
+    (HUTANG_DIMUAT && !pilihan.length ? '<small>' + t('Tidak ada hutang belum lunas') + '</small>' : '') +
+    (h ? '<small>' + esc(h.tanggal || '') + ' · ' + t('Hutang') + ' ' + rp2(h.jumlah) +
+      ' · ' + t('Sudah dibayar') + ' ' + rp2(h.dibayar) + ' · <b>' + t('Sisa') + ' ' + rp2(h.sisa) + '</b></small>' : '') +
+    '</div>';
+}
+
+function terapkanPilihanHutang(i, loanId) {
+  var b = formTes.baris[i];
+  if (!b) return;
+  b.loanId = Number(loanId) || 0;
+  var h = hutangDipilih(b);
+  if (!h) return;
+  /* Isi hanya kalau masih kosong — jangan menimpa koreksi Bapak. */
+  if (!b.jml) b.jml = rp2(h.sisa);
+  if (!formTes.ket.trim()) formTes.ket = t('Pengembalian') + ': ' + h.ket;
+}
+
+`;
+
+/* Panel harus berada SETELAH .tl-row yang sudah selesai, bukan di dalamnya. */
+const panelLama = "    return '<div class=\"tl-row\">' +";
+const panelBaru = "    return '<div class=\"tl-row\">' +";
+if (!skrip.includes(panelLama)) throw new Error('baris jurnal untuk Reimburse tidak ditemukan');
+skrip = skrip.replace(panelLama, panelBaru);
+skrip = skrip.replace(
+  `      '<button class="tl-del" data-del="' + i + '" title="Hapus baris">✕</button></div>';`,
+  `      '<button class="tl-del" data-del="' + i + '" title="Hapus baris">✕</button></div>' +
+      (barisReimburse(b) ? pilihHutangUntuk(b, i) : '');`
+);
+
+/* Muat daftar setelah form terlihat; pilihan Reimburse baru diaktifkan setelah data tiba. */
+skrip = skrip.replace(
+  '  aturLebarBaris();\n  hitungRingTes();\n}',
+  `  aturLebarBaris();
+  hitungRingTes();
+  if (formTes.baris.some(barisReimburse) && !HUTANG_DIMUAT && !HUTANG_JANJI) {
+    muatHutang().then(function () {
+      if (layar === 'input' && formTes && formTes.baris.some(barisReimburse)) gbrInput();
+    }).catch(function (e) { alert(e.message); });
+  }
+}`,
+);
+
+/* Klik tag/arah hanya menggambar ulang kalau perlu — fokus ketik harga tetap dijaga. */
+skrip = skrip.replace(
+  '  if (b.dataset.arah) {\n    var br = formTes.baris[+b.dataset.i];\n    br.arah = (br.arah === \'D\') ? \'K\' : \'D\';\n    gbrInput();\n    return;\n  }',
+  `  if (b.dataset.arah) {
+    var br = formTes.baris[+b.dataset.i];
+    br.arah = (br.arah === 'D') ? 'K' : 'D';
+    if (br.tag !== 'Reimburse') br.loanId = 0;
+    gbrInput();
+    return;
+  }`,
+);
+
+/* Pemilihan hutang tidak membangun ulang seluruh form, sehingga pilihan tidak hilang. */
+skrip = skrip.replace(
+  "document.getElementById('inputIsi').addEventListener('change', function (e) {",
+  `document.getElementById('inputIsi').addEventListener('change', function (e) {
+  if (e.target.dataset.hutang !== undefined) {
+    terapkanPilihanHutang(Number(e.target.dataset.hutang), e.target.value);
+    gbrInput();
+    return;
+  }`,
+);
+
+/* loan_id ikut ke Worker pada catat dan ubah, termasuk baris tambahan saat mengubah. */
+skrip = skrip.replace(/tag: b\.tag, arah: arahTetapTag\(b\.tag\) \|\| b\.arah, jumlah: numTes\(b\.jml\) \}/g,
+  "tag: b.tag, arah: arahTetapTag(b.tag) || b.arah, jumlah: numTes(b.jml), loanId: Number(b.loanId) || 0 }");
+skrip = skrip.replace('fundId: f0 ? f0.id : 0, tag: b0.tag, arah: arah0, jumlah: numTes(b0.jml)',
+  'fundId: f0 ? f0.id : 0, tag: b0.tag, arah: arah0, jumlah: numTes(b0.jml), loanId: Number(b0.loanId) || 0');
+
+/* Edit membawa tautan lama; tombol baru memuat hutang ketika formulir dibuka. */
+skrip = skrip.replace(
+  "    baris: [{ fund: x.fund, tag: x.tag, arah: x.arah, jml: rp2(x.jumlah) }]",
+  "    baris: [{ fund: x.fund, tag: x.tag, arah: x.arah, jml: rp2(x.jumlah), loanId: x.loanId || 0 }]"
+);
+skrip = skrip.replace(
+  "  barisDipilih = 0;\n  ke('input');",
+  "  barisDipilih = 0;\n  segarkanHutang();\n  ke('input');"
+);
+
+/* Setelah data server berubah, daftar terbuka dihitung ulang dari transaksi aktif. */
+skrip = skrip.replace(
+  "    BULAN = r.data;\n    BULAN_ASLI = null;",
+  "    BULAN = r.data;\n    segarkanHutang();\n    BULAN_ASLI = null;"
+);
+
+skrip = skrip.replace('</script>', blokReimburse + '\n</script>');
+catat.push('Reimburse → pilih Hutang + loan_id + status');
 
 /* ================================================================== */
 /* 2b1h. 🧾 PAJAK BUNGA OTOMATIS (order Bapak 15 Okt 2026)             */
@@ -1370,6 +1533,18 @@ input.sandi{-webkit-text-security:disc; text-security:disc}
   margin:0 0 8px; padding:8px 10px; border:1px solid currentColor; border-radius:8px;
   font-size:12.5px; line-height:1.4;
 }
+/* Reimburse: daftar hutang tetap ringkas dan bisa dibaca di HP maupun PC. */
+.tl-hutang{
+  display:flex; flex-direction:column; gap:5px; margin:8px 0 2px;
+  padding:8px; border:1px solid var(--line); border-radius:7px;
+  font-size:12px; line-height:1.4;
+}
+.tl-hutang select{
+  width:100%; min-width:0; min-height:36px; padding:6px 8px;
+  background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:6px;
+  text-overflow:ellipsis;
+}
+.tl-hutang small{color:var(--muted); overflow-wrap:anywhere}
 @media (prefers-color-scheme: dark){
   #gerbang{background:#000; color:#eee}
   .gerbang-kartu{border-color:#333}

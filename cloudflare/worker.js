@@ -8,7 +8,7 @@
    • Setiap tulis WAJIB tercatat di audit_log (aturan C6 rollback).
 
    BACA  : bulan · dashboard · fund · tag · snapshot · transaksi · saldo
-           · ringkasan · riwayat
+           · ringkasan · riwayat · hutang (belum lunas untuk Reimburse)
    TULIS : catat (1 atau banyak jurnal) · ubah · batalkan · pulihkan
            · bukaBulan (siapkan saldo awal bulan baru)
    ============================================================ */
@@ -77,6 +77,39 @@ function waktuSekarang() {
 
 /** Bulatkan 2 desimal — menghapus debu pembulatan SQLite vs PostgreSQL. */
 function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+/** Status satu induk hutang. Pembayaran dibatalkan tidak ikut dihitung. */
+function statusHutang(jumlah, dibayar, lunasManual) {
+  if (Number(lunasManual) === 1) return "lunas";
+  const total = r2(dibayar);
+  if (total <= 0) return "belum_diganti";
+  return total + 0.000001 >= Number(jumlah) ? "lunas" : "dicicil";
+}
+
+/** Satu sumber status, sisa, dan total pembayaran untuk seluruh induk Hutang. */
+function hitungHutang(transactions) {
+  const induk = new Map();
+  for (const t of transactions) {
+    if (t.tag === "Hutang" && t.arah === "K") induk.set(Number(t.id), t);
+  }
+  const dibayar = new Map();
+  for (const t of transactions) {
+    const id = Number(t.loan_id);
+    if (t.tag !== "Reimburse" || t.arah !== "D" || !induk.has(id)) continue;
+    dibayar.set(id, r2((dibayar.get(id) || 0) + Number(t.amount)));
+  }
+  const hasil = new Map();
+  for (const [id, t] of induk) {
+    const total = dibayar.get(id) || 0;
+    const status = statusHutang(t.amount, total, t.loan_lunas);
+    hasil.set(id, {
+      id, tanggal: t.date, ket: t.description, jumlah: r2(t.amount),
+      dibayar: r2(total), sisa: status === "lunas" ? 0 : r2(Math.max(0, Number(t.amount) - total)),
+      status
+    });
+  }
+  return hasil;
+}
 
 /* ------------------------------------------------------------------
    JALUR KE LAYERBASE
@@ -158,7 +191,7 @@ async function ambilTransaksi(env, skema, id) {
   const r = await jalankanSQL(env,
     `SELECT t.id, t.date, t.description, t.amount, t.source_fund_id, t.journal_id, ` +
     `t.transfer_pair_id, t.tag, t.has_tax, t.deleted_at, t.created_at, t.updated_at, t.notes, ` +
-    `j.type AS arah, f.name AS fund ` +
+    `t.loan_id, t.loan_lunas, j.type AS arah, f.name AS fund ` +
     `FROM ${skema}.transactions t ` +
     `JOIN ${skema}.journals j ON j.id = t.journal_id ` +
     `JOIN ${skema}.source_funds f ON f.id = t.source_fund_id ` +
@@ -216,6 +249,116 @@ async function siapkanBaris(env, skema, b) {
 }
 
 /* ------------------------------------------------------------------
+   HUTANG & REIMBURSE — satu sumber aturan untuk baca dan tulis
+   ------------------------------------------------------------------ */
+
+/** Daftar hutang aktif; dipakai baik untuk pilihan maupun validasi pembayaran. */
+async function daftarHutang(env, skema) {
+  const tx = await jalankanSQL(env,
+    `SELECT t.id, t.date, t.description, t.amount, t.tag, t.loan_id, t.loan_lunas, ` +
+    `t.source_fund_id, j.type AS arah, f.name AS fund ` +
+    `FROM ${skema}.transactions t JOIN ${skema}.journals j ON j.id = t.journal_id ` +
+    `JOIN ${skema}.source_funds f ON f.id = t.source_fund_id ` +
+    `WHERE t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0 ` +
+    `AND ((t.tag = 'Hutang' AND j.type = 'K') OR (t.tag = 'Reimburse' AND j.type = 'D')) ` +
+    `ORDER BY t.date DESC, t.id DESC`);
+  const status = hitungHutang(tx);
+  return tx.filter((t) => status.has(Number(t.id))).map((t) => {
+    const h = status.get(Number(t.id));
+    return { ...h, fund: t.fund, fundId: Number(t.source_fund_id) };
+  }).sort((a, b) => b.tanggal.localeCompare(a.tanggal) || b.id - a.id);
+}
+
+/** Reimburse Debit harus menunjuk hutang nyata dan tidak melebihi sisanya. */
+async function validasiReimburse(env, skema, b, arah, jumlah, idSendiri) {
+  if (b.tag !== "Reimburse") return 0;
+  if (arah !== "D") {
+    if (b.loanId) throw new Error("Reimburse Kredit tidak dapat dihubungkan ke pembayaran hutang");
+    return 0;
+  }
+  const loanId = Number(b.loanId);
+  if (!Number.isInteger(loanId) || loanId <= 0) {
+    throw new Error("Pilih hutang yang akan dibayar dengan Reimburse");
+  }
+  const daftar = await daftarHutang(env, skema);
+  const hutang = daftar.filter((h) => h.id === loanId)[0];
+  if (!hutang) throw new Error("Hutang tidak ditemukan — muat ulang daftar hutang");
+  /* Saat mengedit pelunasan, pengecualian baris sendiri terjadi di bawah.
+     Jangan tolak sebelum menghitung sisa tanpa transaksi yang sedang diedit. */
+  if (Number(hutang.loan_lunas) === 1 || (hutang.status === "lunas" && !idSendiri)) {
+    throw new Error("Hutang itu sudah lunas — pilih hutang lain");
+  }
+  const sudah = await jalankanSQL(env,
+    `SELECT COALESCE(SUM(t.amount), 0) AS total FROM ${skema}.transactions t ` +
+    `JOIN ${skema}.journals j ON j.id = t.journal_id ` +
+    `WHERE t.loan_id = ${bulat(loanId)} AND t.tag = 'Reimburse' AND j.type = 'D' ` +
+    `AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0 ` +
+    (idSendiri ? `AND t.id <> ${bulat(idSendiri)}` : ""));
+  const sisa = r2(Number(hutang.jumlah) - Number(sudah[0].total));
+  if (jumlah > sisa + 0.000001) {
+    throw new Error(`Pembayaran ${r2(jumlah)} melebihi sisa hutang ${sisa}`);
+  }
+  return loanId;
+}
+
+/** Periksa satu per satu sebelum ada transaksi baru yang ditulis. */
+async function validasiDaftarReimburse(env, skema, daftar, terpakai) {
+  const kelompok = new Map();
+  for (let i = 0; i < daftar.length; i++) {
+    const loanId = await validasiReimburse(env, skema, daftar[i], terpakai[i].arah, terpakai[i].jumlah, 0);
+    if (!loanId) continue;
+    kelompok.set(loanId, r2((kelompok.get(loanId) || 0) + terpakai[i].jumlah));
+  }
+  for (const [loanId, jumlah] of kelompok) {
+    const hutang = (await daftarHutang(env, skema)).filter((h) => h.id === loanId)[0];
+    if (!hutang || jumlah > hutang.sisa + 0.000001) {
+      throw new Error(`Total pembayaran melebihi sisa hutang #${loanId}`);
+    }
+  }
+}
+
+/** Ubah tautan pembayaran satu per satu agar batas sisa tetap benar. */
+async function validasiUbahReimburse(env, skema, b, t, id) {
+  const loanId = await validasiReimburse(env, skema, b, t.arah, t.jumlah, id);
+  const lama = await ambilTransaksi(env, skema, id);
+  if (!lama) return loanId;
+
+  /* Memindahkan/menghapus pembayaran lama tidak boleh membuat hutang lama
+     tampak lunas; itu menyembunyikannya dari daftar hutang yang harus dibayar. */
+  if (Number(lama.loan_id) > 0 && Number(lama.loan_id) !== loanId && lama.tag === "Reimburse" && lama.arah === "D") {
+    const induk = (await daftarHutang(env, skema)).filter((h) => h.id === Number(lama.loan_id))[0];
+    if (induk) {
+      const bayarLain = await jalankanSQL(env,
+        `SELECT COALESCE(SUM(t.amount), 0) AS total FROM ${skema}.transactions t ` +
+        `JOIN ${skema}.journals j ON j.id = t.journal_id ` +
+        `WHERE t.loan_id = ${bulat(induk.id)} AND t.tag = 'Reimburse' AND j.type = 'D' ` +
+        `AND t.deleted_at IS NULL AND t.id <> ${bulat(id)} AND COALESCE(t.is_historical, 0) = 0`);
+      if (Number(bayarLain[0].total) + 0.000001 >= induk.jumlah) {
+        throw new Error("Perubahan membuat hutang lama menjadi lunas — batalkan lalu catat pembayaran baru");
+      }
+    }
+  }
+
+  /* Induk yang sudah dibayar tidak boleh diperkecil melewati pembayarannya
+     atau dipindah menjadi transaksi lain. Perbesar nilai tetap boleh. */
+  if (lama.tag === "Hutang" && lama.arah === "K") {
+    const bayar = await jalankanSQL(env,
+      `SELECT COALESCE(SUM(t.amount), 0) AS total FROM ${skema}.transactions t ` +
+      `JOIN ${skema}.journals j ON j.id = t.journal_id ` +
+      `WHERE t.loan_id = ${bulat(id)} AND t.tag = 'Reimburse' AND j.type = 'D' ` +
+      `AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0`);
+    const total = Number(bayar[0].total);
+    if (total > 0 && (t.tag.name !== "Hutang" || t.arah !== "K")) {
+      throw new Error("Hutang yang sudah punya pembayaran tidak dapat diubah jenisnya");
+    }
+    if (t.jumlah + 0.000001 < total) {
+      throw new Error(`Jumlah hutang tidak boleh kurang dari pembayaran ${r2(total)}`);
+    }
+  }
+  return loanId;
+}
+
+/* ------------------------------------------------------------------
    TULIS
    ------------------------------------------------------------------ */
 
@@ -236,26 +379,29 @@ async function aksiCatat(env, skema, isi) {
   /* Dukung dua bentuk: {fundId, tag, jumlah} atau {baris:[...]} */
   const daftar = Array.isArray(isi.baris) && isi.baris.length
     ? isi.baris
-    : [{ fundId: isi.fundId, tag: isi.tag, arah: isi.arah, jumlah: isi.jumlah }];
+    : [{ fundId: isi.fundId, tag: isi.tag, arah: isi.arah, jumlah: isi.jumlah, loanId: isi.loanId }];
 
   if (daftar.length > 12) return balas({ ok: false, error: "Terlalu banyak jurnal (maks 12)" }, 400);
 
   const terpakai = await Promise.all(daftar.map((b) => siapkanBaris(env, skema, b)));
+  await validasiDaftarReimburse(env, skema, daftar, terpakai);
 
   const sekarang = waktuSekarang();
   const grup = isi.grup ? String(isi.grup).slice(0, 60) : `grup:${Date.now()}`;
   const kolom =
     "date, description, amount, source_fund_id, journal_id, qty, tag, has_tax, " +
-    "is_historical, is_belanja, loan_lunas, notes, created_at, created_by";
+    "is_historical, is_belanja, loan_id, loan_lunas, notes, created_at, created_by";
 
-  const perintah = terpakai.map((t) =>
-    `INSERT INTO ${skema}.transactions (${kolom}) VALUES (` +
+  const perintah = terpakai.map((t, i) => {
+    const loanId = t.arah === "D" && t.tag.name === "Reimburse" ? Number(daftar[i].loanId) : 0;
+    return `INSERT INTO ${skema}.transactions (${kolom}) VALUES (` +
     `${teks(tanggal)}, ${teks(keterangan)}, ${angka(t.jumlah)}, ${bulat(t.fundId)}, ` +
-    `${bulat(t.journalId)}, 1, ${teks(t.tag.name)}, ${bulat(t.tag.has_tax)}, 0, 0, 0, ` +
-    `${teks(grup)}, ${teks(sekarang)}, 'hp')`);
+    `${bulat(t.journalId)}, 1, ${teks(t.tag.name)}, ${bulat(t.tag.has_tax)}, 0, 0, ` +
+    `${loanId ? bulat(loanId) : "NULL"}, 0, ${teks(grup)}, ${teks(sekarang)}, 'hp')`;
+  });
 
   perintah.push(catatRiwayat(skema, "CREATE", 0,
-    null, { grup, tanggal, keterangan, baris: terpakai.map((t) => ({ fund: t.fundId, tag: t.tag.name, arah: t.arah, jumlah: t.jumlah })) }));
+    null, { grup, tanggal, keterangan, baris: terpakai.map((t, i) => ({ fund: t.fundId, tag: t.tag.name, arah: t.arah, jumlah: t.jumlah, loanId: t.arah === "D" && t.tag.name === "Reimburse" ? Number(daftar[i].loanId) : 0 })) }));
 
   await jalankanSekaligus(env, perintah);
 
@@ -271,7 +417,7 @@ async function aksiCatat(env, skema, isi) {
 
   return balas({
     ok: true, grup, id: idBaru, jumlahBaris: idBaru.length,
-    baris: terpakai.map((t, i) => ({ id: idBaru[i] || null, fund: t.fundId, tag: t.tag.name, arah: t.arah, jumlah: t.jumlah }))
+    baris: terpakai.map((t, i) => ({ id: idBaru[i] || null, fund: t.fundId, tag: t.tag.name, arah: t.arah, jumlah: t.jumlah, loanId: t.arah === "D" && t.tag.name === "Reimburse" ? Number(daftar[i].loanId) : 0 }))
   });
 }
 
@@ -290,19 +436,21 @@ async function aksiUbah(env, skema, isi) {
   if (!keterangan) return balas({ ok: false, error: "Keterangan wajib diisi" }, 400);
 
   const t = await siapkanBaris(env, skema, isi);
+  const loanId = await validasiUbahReimburse(env, skema, isi, t, id);
   const sekarang = waktuSekarang();
 
   await jalankanSekaligus(env, [
     `UPDATE ${skema}.transactions SET ` +
     `date = ${teks(tanggal)}, description = ${teks(keterangan)}, amount = ${angka(t.jumlah)}, ` +
     `source_fund_id = ${bulat(t.fundId)}, journal_id = ${bulat(t.journalId)}, tag = ${teks(t.tag.name)}, ` +
-    `has_tax = ${bulat(t.tag.has_tax)}, updated_at = ${teks(sekarang)}, updated_by = 'hp' ` +
+    `has_tax = ${bulat(t.tag.has_tax)}, loan_id = ${loanId ? bulat(loanId) : "NULL"}, ` +
+    `updated_at = ${teks(sekarang)}, updated_by = 'hp' ` +
     `WHERE id = ${bulat(id)}`,
     catatRiwayat(skema, "UPDATE", id, lama,
-      { date: tanggal, description: keterangan, amount: t.jumlah, source_fund_id: t.fundId, tag: t.tag.name, arah: t.arah })
+      { date: tanggal, description: keterangan, amount: t.jumlah, source_fund_id: t.fundId, tag: t.tag.name, arah: t.arah, loanId })
   ]);
 
-  return balas({ ok: true, id, arah: t.arah, tag: t.tag.name });
+  return balas({ ok: true, id, arah: t.arah, tag: t.tag.name, loanId });
 }
 
 /** batalkan — soft delete per id ATAU per grup (multi-jurnal sekaligus). */
@@ -532,11 +680,19 @@ async function aksiDashboard(env, skema, isi) {
   const palingAkhir = bulan[0].akhir;
   const tx = await jalankanSQL(env,
     `SELECT t.id, t.date, t.description, t.amount, t.tag, t.has_tax, t.transfer_pair_id, ` +
-    `t.notes, t.source_fund_id, j.type AS arah ` +
+    `t.notes, t.source_fund_id, t.loan_id, t.loan_lunas, j.type AS arah ` +
     `FROM ${skema}.transactions t JOIN ${skema}.journals j ON j.id = t.journal_id ` +
     `WHERE t.date >= ${teks(palingAwal)} AND t.date <= ${teks(palingAkhir)} ` +
     `AND t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0 ` +
     `ORDER BY t.date DESC, t.id DESC`);
+
+  /* --- 2b. status hutang berasal dari seluruh riwayat, bukan hanya 6 bulan tampilan --- */
+  const txHutang = await jalankanSQL(env,
+    `SELECT t.id, t.date, t.description, t.amount, t.tag, t.loan_id, t.loan_lunas, j.type AS arah ` +
+    `FROM ${skema}.transactions t JOIN ${skema}.journals j ON j.id = t.journal_id ` +
+    `WHERE t.deleted_at IS NULL AND COALESCE(t.is_historical, 0) = 0 ` +
+    `AND ((t.tag = 'Hutang' AND j.type = 'K') OR (t.tag = 'Reimburse' AND j.type = 'D'))`);
+  const status = hitungHutang(txHutang);
 
   /* --- 3. susun per bulan (perhitungan di JS — tidak ada query per fund) --- */
   const petaSnap = new Map(snap.map((s) => [`${s.source_fund_id}|${s.year}-${String(s.month).padStart(2, "0")}`, s]));
@@ -616,7 +772,9 @@ async function aksiDashboard(env, skema, isi) {
         fid: Number(t.source_fund_id),
         pasangan: t.transfer_pair_id ? Number(t.transfer_pair_id) : 0,
         pajak: Number(t.has_tax) === 1,
-        catatan: t.notes || ""
+        catatan: t.notes || "",
+        loanId: t.loan_id ? Number(t.loan_id) : 0,
+        hutang: t.tag === "Hutang" && t.arah === "K" ? status.get(Number(t.id)) || null : null
       })),
       ringkas: {
         total: r2(totSaldo), totalAwal: r2(totAwal),
@@ -904,6 +1062,7 @@ export default {
         case "saldo":      return await aksiSaldo(env, skema, isi);
         case "ringkasan":  return await aksiRingkasan(env, skema, isi);
         case "riwayat":    return await aksiRiwayat(env, skema, isi);
+        case "hutang":     return balas({ ok: true, data: (await daftarHutang(env, skema)).filter((h) => h.status !== "lunas") });
 
         case "catat":      return await aksiCatat(env, skema, isi);
         case "ubah":       return await aksiUbah(env, skema, isi);
